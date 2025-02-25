@@ -1,0 +1,160 @@
+<!-- views/llm-response.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - AI Response</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>AI-Generated Paragraph: <%= index %> of <%= total %></h1>
+      
+      <form action="/llm-response" method="POST">
+        <div class="proposition-container">
+          <p>Consider this political statement:</p>
+          <div class="proposition-text">
+            <%= proposition %>
+          </div>
+        </div>
+        
+        <div class="ai-paragraph-container">
+          <p>Here is another paragraph, regarding the same statement you replied to. <br>
+            This paragraph was written by AI, based on the inputs you provided earlier.</p>
+          
+          <div class="ai-paragraph">
+            <textarea id="modelParagraph" name="modelParagraph" rows="7" readonly><%= modelParagraph %></textarea>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="modelStance">What is this paragraph's level of agreement with the statement?</label>
+          <div class="stance-scale">
+            <span>0 = Strongly disagree </span>
+            <span>50 = Ambivalent </span>
+            <span>100 = Strongly agree</span>
+          </div>
+          <input type="range" id="modelStance" name="modelStance" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="modelStanceValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="editedParagraph">Please edit this paragraph until you feel that it captures your opinion.</label>
+          <textarea id="editedParagraph" name="editedParagraph" rows="7" required><%= modelParagraph %></textarea>
+        </div>
+        
+        <div class="comparison-container">
+          <h3>Paragraph Comparison</h3>
+          <p>Imagine you want to explain your opinion to someone. Which of the two paragraphs would you rather use for this purpose?</p>
+          
+          <div class="comparison-columns">
+            <div class="comparison-column">
+              <h4>Your Original Paragraph</h4>
+              <div id="originalPreview" class="preview-box"></div>
+            </div>
+            
+            <div class="comparison-column">
+              <h4>Your Edited AI Paragraph</h4>
+              <div id="editedPreview" class="preview-box"></div>
+            </div>
+          </div>
+          
+          <div class="preference-selection">
+            <div class="radio-group">
+              <input type="radio" id="preferLeft" name="preference" value="original" required>
+              <label for="preferLeft">The paragraph on the left</label>
+            </div>
+            
+            <div class="radio-group">
+              <input type="radio" id="preferEqual" name="preference" value="equal">
+              <label for="preferEqual">Equal preference</label>
+            </div>
+            
+            <div class="radio-group">
+              <input type="radio" id="preferRight" name="preference" value="edited">
+              <label for="preferRight">The paragraph on the right</label>
+            </div>
+          </div>
+          
+          <div id="reasonSection" class="reason-section" style="display: none;">
+            <label>Why did you prefer this paragraph over the other? Please tick all reasons that apply and explain any additional reasons under "other".</label>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion">
+              <label for="reasonOpinion">It better reflects my opinion.</label>
+            </div>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style">
+              <label for="reasonStyle">I prefer the writing style.</label>
+            </div>
+            
+            <div class="form-group">
+              <label for="reasonOther">Other (please specify):</label>
+              <input type="text" id="reasonOther" name="reasonOther">
+            </div>
+          </div>
+        </div>
+        
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: <%= 55 + (index * 15) %>%"></div>
+          </div>
+          <div class="progress-text"><%= 55 + (index * 15) %>% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // Update model stance value display
+    const modelStanceSlider = document.getElementById('modelStance');
+    const modelStanceValue = document.getElementById('modelStanceValue');
+    
+    modelStanceSlider.oninput = function() {
+      modelStanceValue.textContent = this.value;
+    }
+    
+    // Update previews for comparison
+    const editedParagraph = document.getElementById('editedParagraph');
+    const editedPreview = document.getElementById('editedPreview');
+    
+    // Function to fetch original paragraph and update previews
+    const updatePreviews = () => {
+      // In a real implementation, this would fetch the writer_paragraph from the server
+      // For now, we'll use placeholder text
+      const originalPreview = document.getElementById('originalPreview');
+      originalPreview.textContent = "Your original paragraph will appear here. In the actual implementation, this would be fetched from the session data.";
+      
+      editedPreview.textContent = editedParagraph.value;
+    };
+    
+    // Update previews initially and when edited paragraph changes
+    window.onload = updatePreviews;
+    editedParagraph.oninput = () => {
+      editedPreview.textContent = editedParagraph.value;
+    };
+    
+    // Show/hide reason section based on preference
+    const preferenceInputs = document.querySelectorAll('input[name="preference"]');
+    const reasonSection = document.getElementById('reasonSection');
+    
+    preferenceInputs.forEach(input => {
+      input.onchange = () => {
+        if (input.value === 'equal') {
+          reasonSection.style.display = 'none';
+        } else {
+          reasonSection.style.display = 'block';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

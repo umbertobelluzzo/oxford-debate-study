@@ -1,0 +1,85 @@
+<!-- views/demographics.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - Demographics</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>Participant Information</h1>
+      <br>
+      <form action="/demographics" method="POST">
+        <div class="form-group">
+          <label for="age">What is your <b>age</b>?</label>
+          <input type="number" id="age" name="age" min="18" max="100" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="gender">What is your <b>gender</b>?</label>
+          <select id="gender" name="gender" required>
+            <option value="">Please select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="education">What is the <b>highest level of education</b> you have completed?</label>
+          <select id="education" name="education" required>
+            <option value="">Please select</option>
+            <option value="GCSEs or equivalent">GCSEs or equivalent</option>
+            <option value="A-levels or equivalent">A-levels or equivalent</option>
+            <option value="Vocational qualification">Vocational qualification</option>
+            <option value="Undergraduate degree">Undergraduate degree</option>
+            <option value="Postgraduate degree (Master's)">Postgraduate degree (Master's)</option>
+            <option value="Doctorate (PhD)">Doctorate (PhD)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="politicalParty">Which <b>political party</b> do you usually vote for?</label>
+          <select id="politicalParty" name="politicalParty" required>
+            <option value="">Please select</option>
+            <option value="Conservative">Conservative</option>
+            <option value="Labour">Labour</option>
+            <option value="Liberal Democrats">Liberal Democrats</option>
+            <option value="Scottish National Party">Scottish National Party</option>
+            <option value="Greens">Greens</option>
+            <option value="Other">Other</option>
+            <option value="None">None</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="politicalIdeology">How would you describe your <b>political ideology</b>?</label>
+          <select id="politicalIdeology" name="politicalIdeology" required>
+            <option value="">Please select</option>
+            <option value="Very Left-Wing">Very Left-Wing</option>
+            <option value="Moderately Left-Wing">Moderately Left-Wing</option>
+            <option value="Centrist">Centrist</option>
+            <option value="Moderately Right-Wing">Moderately Right-Wing</option>
+            <option value="Very Right-Wing">Very Right-Wing</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: 10%"></div>
+          </div>
+          <div class="progress-text">10% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
