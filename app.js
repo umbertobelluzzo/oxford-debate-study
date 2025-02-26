@@ -8,7 +8,10 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 const redis = require("redis");
-const RedisStore = require("connect-redis").default;
+const connectRedis = require('connect-redis');
+
+// Create Redis store with the session
+const RedisStore = connectRedis.default || connectRedis;
 
 // Get Redis URL from environment variables
 const redis_url = process.env.REDIS_URL || process.env.REDIS_TLS_URL;
