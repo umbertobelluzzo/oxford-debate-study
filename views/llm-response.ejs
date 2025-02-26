@@ -24,7 +24,7 @@
             This paragraph was written by AI, based on the inputs you provided earlier.</p>
           
           <div class="ai-paragraph">
-            <textarea id="modelParagraph" name="modelParagraph" rows="7" readonly><%= modelParagraph %></textarea>
+            <textarea id="modelParagraph" name="modelParagraph" rows=9 readonly><%= modelParagraph %></textarea>
           </div>
         </div>
         
@@ -43,7 +43,7 @@
         
         <div class="form-group">
           <label for="editedParagraph">Please edit this paragraph until you feel that it captures your opinion.</label>
-          <textarea id="editedParagraph" name="editedParagraph" rows="7" required><%= modelParagraph %></textarea>
+          <textarea id="editedParagraph" name="editedParagraph" rows="9" required><%= modelParagraph %></textarea>
         </div>
         
         <div class="comparison-container">
@@ -125,15 +125,13 @@
     // Update previews for comparison
     const editedParagraph = document.getElementById('editedParagraph');
     const editedPreview = document.getElementById('editedPreview');
+    const originalPreview = document.getElementById('originalPreview');
     
     // Function to fetch original paragraph and update previews
     const updatePreviews = () => {
-      // In a real implementation, this would fetch the writer_paragraph from the server
-      // For now, we'll use placeholder text
-      const originalPreview = document.getElementById('originalPreview');
-      originalPreview.textContent = "Your original paragraph will appear here. In the actual implementation, this would be fetched from the session data.";
-      
+      originalPreview.textContent = `<%= writerParagraph %>`;
       editedPreview.textContent = editedParagraph.value;
+      
     };
     
     // Update previews initially and when edited paragraph changes

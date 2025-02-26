@@ -33,15 +33,15 @@
         </div>
         
         <div class="form-group">
-          <label for="bullets">Please explain your opinion in 3-5 <b>bullet points</b>.</label>
+          <label for="bullets">Please explain your opinion in 2-4 <b>bullet points</b>.</label>
           <textarea id="bullets" name="bullets" rows="5" placeholder="- First point&#10;- Second point&#10;- Third point" required></textarea>
           <div id="bulletCount" class="bullet-count">Currently: 0 bullet points</div>
-          <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please provide at least 3 bullet points each starting with "-".</div>
+          <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please provide at least 2 bullet points each starting with "-".</div>
         </div>
         
         <div class="form-group">
-          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> of around 100-200 words, in which you explain your opinion.</label>
-          <textarea id="paragraph" name="paragraph" rows="7" required></textarea>
+          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> of around 100-150 words, in which you explain your opinion.</label>
+          <textarea id="paragraph" name="paragraph" rows="9" required></textarea>
           <div id="wordCount" class="word-count">Currently: 0 words</div>
           <div id="wordError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please write at least 100 words.</div>
         </div>
@@ -84,11 +84,11 @@
       const count = bulletLines.length;
       bulletCount.textContent = count + ' bullet point' + (count !== 1 ? 's' : '');
       
-      if (count < 3) {
+      if (count < 2) {
         bulletCount.classList.add('below-range');
         bulletCount.classList.remove('in-range', 'above-range');
         bulletError.style.display = 'block';
-      } else if (count > 5) {
+      } else if (count > 4) {
         bulletCount.classList.add('above-range');
         bulletCount.classList.remove('in-range', 'below-range');
         bulletError.style.display = 'none';
@@ -113,7 +113,7 @@
         wordCount.classList.add('below-range');
         wordCount.classList.remove('in-range', 'above-range');
         wordError.style.display = 'block';
-      } else if (count > 200) {
+      } else if (count > 150) {
         wordCount.classList.add('above-range');
         wordCount.classList.remove('in-range', 'below-range');
         wordError.style.display = 'none';
@@ -139,7 +139,7 @@
       // Check requirements
       let isValid = true;
       
-      if (bulletLines.length < 3) {
+      if (bulletLines.length < 2) {
         bulletError.style.display = 'block';
         bullets.focus();
         isValid = false;
@@ -149,7 +149,7 @@
       
       if (words.length < 100) {
         wordError.style.display = 'block';
-        if (bulletLines.length >= 3) {
+        if (bulletLines.length >= 2) {
           paragraph.focus();
         }
         isValid = false;

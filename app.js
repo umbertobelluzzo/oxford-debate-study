@@ -183,8 +183,7 @@ app.post('/proposition', (req, res) => {
     });
   });
 
-// LLM response handling
-app.get('/llm-response', (req, res) => {
+app.get('/llm-response', async (req, res) => {
     // Add debugging
     console.log("GET /llm-response - Session:", req.session.participantData);
     
@@ -194,54 +193,65 @@ app.get('/llm-response', (req, res) => {
       return res.redirect('/');
     }
     
-    // Check if propositionResponses exists and has entries
+    // Check if propositionResponses exists and has entries -- necessary for LLM phase
     if (!req.session.participantData.propositionResponses || 
         req.session.participantData.propositionResponses.length === 0) {
       console.log("No proposition responses found");
       return res.redirect('/');
     }
-    
-    // Initialize LLM assignment if not already done
-    if (!req.session.participantData.assignedLLM) {
-      console.log("Assigning LLM");
-      req.session.participantData.assignedLLM = getRandomLLM();
-      req.session.participantData.currentLLMPropositionIndex = 0;
-    }
+
+    // Initialize LLM index if not already done
+    if (req.session.participantData.currentLLMPropositionIndex === undefined) {
+        console.log("Initializing LLM proposition index");
+        req.session.participantData.currentLLMPropositionIndex = 0;
+      }
     
     const index = req.session.participantData.currentLLMPropositionIndex;
     const propositionResponses = req.session.participantData.propositionResponses;
-    
+
     console.log(`LLM proposition index: ${index}, Total responses: ${propositionResponses.length}`);
-    
+
+    // Check if all LLM responses are completed -- if so, redirect to completion
     if (index >= propositionResponses.length) {
-      // All LLM responses completed
       console.log("All LLM responses completed, redirecting to completion");
       return res.redirect('/completion');
     }
     
     const currentResponse = propositionResponses[index];
+
+    // Randomly assign LLM for this proposition
+    const model_name = getRandomLLM();
+    console.log(`Assigned LLM for proposition ${index}: ${model_name}`);
     
     // Randomly assign sub-condition for this proposition
     const subCondition = getRandomSubCondition();
+    console.log(`Assigned sub-condition for proposition ${index}: ${subCondition}`);
     
-    // In real implementation, this would fetch from the LLM API
-    const modelParagraph = generateModelParagraph(
-      currentResponse.proposition,
-      currentResponse.writer_stance,
-      currentResponse.writer_bullets,
-      currentResponse.writer_paragraph,
-      subCondition
-    );
-    
-    res.render('llm-response', {
-      proposition: currentResponse.proposition,
-      modelParagraph: modelParagraph,
-      index: index + 1,
-      total: propositionResponses.length
-    });
-  });
+    try {
+      // Wait for the modelParagraph Promise to resolve
+      const modelParagraph = await generateModelParagraph(
+        currentResponse.proposition,
+        currentResponse.writer_stance,
+        currentResponse.writer_bullets,
+        currentResponse.writer_paragraph,
+        subCondition
+      );
+      
+      res.render('llm-response', {
+        proposition: currentResponse.proposition,
+        modelParagraph: modelParagraph,
+        writerParagraph: currentResponse.writer_paragraph,
+        index: index + 1,
+        total: propositionResponses.length
+      });
+    } catch (error) {
+      console.error("Error generating model paragraph:", error);
+      res.render('error', { message: 'Error generating AI response. Please try again.' });
+    }
+});
 
-  app.post('/llm-response', (req, res) => {
+
+app.post('/llm-response', (req, res) => {
     // Add debugging
     console.log("POST /llm-response - Session data:", req.session.participantData);
     console.log("Form data:", req.body);
@@ -263,11 +273,12 @@ app.get('/llm-response', (req, res) => {
     const response = req.session.participantData.propositionResponses[index];
     
     // Save LLM interaction data
+    response.model_name = req.body.modelName;
     response.model_paragraph = req.body.modelParagraph;
-    response.model_paragraph_stance_first_person = req.body.modelStance;
+    response.model_paragraph_stance = req.body.modelStance;
     response.edited_paragraph = req.body.editedParagraph;
-    response.preference = req.body.preference;
-    response.preference_reason = req.body.preferenceReason;
+    response.writer_preference = req.body.preference;
+    response.writer_preference_reason = req.body.preferenceReason;
     
     // Move to next proposition for LLM phase
     req.session.participantData.currentLLMPropositionIndex++;
@@ -289,7 +300,7 @@ app.get('/llm-response', (req, res) => {
       console.log(`Current LLM index: ${req.session.participantData.currentLLMPropositionIndex}, Total responses: ${req.session.participantData.propositionResponses.length}`);
       res.redirect('/llm-response');
     });
-  });
+});
 
 // Completion page
 app.get('/completion', (req, res) => {
@@ -317,9 +328,9 @@ function getRandomPropositions(allPropositions, count) {
 function getRandomLLM() {
   const llms = [
     "GPT-4o", 
-    "Claude 3.7 Sonnet", 
-    "Llama 3.1 70B Instruct", 
-    "Qwen 2.5 72B Instruct", 
+    "Claude-3.7-Sonnet", 
+    "Llama-3.1-70B", 
+    "Qwen-2.5-72B", 
     "DeepSeek-V3"
   ];
   return llms[Math.floor(Math.random() * llms.length)];
@@ -330,7 +341,7 @@ function getRandomSubCondition() {
     "stance-based",
     "bullets-based",
     "paraphrase",
-    "improvement"
+    "improve"
   ];
   return conditions[Math.floor(Math.random() * conditions.length)];
 }
@@ -343,49 +354,53 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, s
     switch(subCondition) {
       case 'stance-based':
         prompt = `Consider the following political statement: ${proposition}
-  On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
-  Please write a short paragraph of 100-200 words for me which explains my opinion.
-  Reply only with the paragraph, nothing else.`;
+On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
+Please write a short paragraph of 100-200 words for me which explains my opinion.
+Reply only with the paragraph, nothing else.`;
         break;
         
       case 'bullets-based':
         prompt = `Consider the following political statement: ${proposition}
-  My opinion on this issue is described by the following bullet points:
-  ${bullets}
-  Please write a short paragraph of 100-200 words for me which explains my opinion.
-  Reply only with the paragraph, nothing else.`;
+My opinion on this issue is described by the following bullet points:
+${bullets}
+Please write a short paragraph of 100-200 words for me which explains my opinion.
+Reply only with the paragraph, nothing else.`;
         break;
         
       case 'paraphrase':
         prompt = `Consider the following political statement: ${proposition}
-  I wrote the following paragraph to explain my opinion on this issue:
-  "${paragraph}"
-  Please rewrite this paragraph.
-  Reply only with the paragraph, nothing else.`;
+I wrote the following paragraph to explain my opinion on this issue:
+"${paragraph}"
+Please rewrite this paragraph.
+Reply only with the paragraph, nothing else.`;
         break;
         
-      case 'improvement':
+      case 'improve':
         prompt = `Consider the following political statement: ${proposition}
-  I wrote the following paragraph to explain my opinion on this issue:
-  "${paragraph}"
-  Please improve this paragraph.
-  Reply only with the improved paragraph, nothing else.`;
+I wrote the following paragraph to explain my opinion on this issue:
+"${paragraph}"
+Please improve this paragraph.
+Reply only with the improved paragraph, nothing else.`;
         break;
         
       default:
-        return Promise.resolve(`Error: Unknown sub-condition ${subCondition}`);
+        throw new Error(`Unknown sub-condition ${subCondition}`);
     }
 
+    // Get the currently assigned LLM model type - this needs to be accessed from the session
+    // For now, we're using a fixed model since the llmType variable isn't defined
+    const modelToUse = "gpt-4o-mini"; // Default fallback
+    
     console.log("Generating paragraph with:", {
-        llmType,
+        modelToUse,
         subCondition,
-        promptPreview: prompt.substring(0, 100) + "..." // Log just part of the prompt
-      })
+        promptPreview: prompt
+    });
     
     try {
       // Call the OpenAI API
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini", // You can change this to the model you want to use
+        model: modelToUse,
         messages: [
           { role: "system", content: "You are a helpful assistant." },
           { role: "user", content: prompt }
@@ -396,10 +411,9 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, s
       
       // Extract the response
       return completion.choices[0].message.content.trim();
-      //return `This is a placeholder for the LLM-generated paragraph based on ${subCondition} condition. In the actual implementation, this would be fetched from the corresponding LLM API using the appropriate prompt template.`;
     } catch (error) {
       console.error("Error calling OpenAI API:", error);
-      return `Error generating paragraph: ${error.message}. Please try again.`;
+      throw error; // Re-throw to be handled by the caller
     }
 }
 
