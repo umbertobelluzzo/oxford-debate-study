@@ -282,6 +282,7 @@ app.post('/llm-response', (req, res) => {
     response.edited_paragraph = req.body.editedParagraph;
     response.writer_preference = req.body.preference;
     response.writer_preference_reason = req.body.preferenceReason;
+    response.writer_preference_reason_other = req.body.reasonOther;
     
     // Move to next proposition for LLM phase
     req.session.participantData.currentLLMPropositionIndex++;
@@ -311,11 +312,8 @@ app.get('/completion', (req, res) => {
     return res.redirect('/');
   }
   
-  // Generate completion code for Prolific
-  const completionCode = generateCompletionCode();
-  
   res.render('completion', {
-    completionCode: completionCode
+    completionCode: "PLACEHOLDER CODE"
   });
   
   // Clear session after completion
@@ -358,7 +356,7 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, s
       case 'stance-based':
         prompt = `Consider the following political statement: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
-Please write a short paragraph of 100-200 words for me which explains my opinion.
+Please write a short paragraph of 100-150 words for me which explains my opinion.
 Do not mention the numeric rating.
 Reply only with the paragraph, nothing else.`;
         break;
@@ -367,7 +365,7 @@ Reply only with the paragraph, nothing else.`;
         prompt = `Consider the following political statement: ${proposition}
 My opinion on this issue is described by the following bullet points:
 ${bullets}
-Please write a short paragraph of 100-200 words for me which explains my opinion.
+Please write a short paragraph of 100-150 words for me which explains my opinion.
 Reply only with the paragraph, nothing else.`;
         break;
         
@@ -421,9 +419,6 @@ Reply only with the improved paragraph, nothing else.`;
     }
 }
 
-function generateCompletionCode() {
-  return 'OPINION' + Math.random().toString(36).substring(2, 8).toUpperCase();
-}
 
 function saveParticipantData(data) {
   // In production, this would save to a database
