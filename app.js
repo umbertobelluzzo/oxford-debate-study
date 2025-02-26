@@ -106,6 +106,59 @@ app.get('/direct-test', (req, res) => {
     });
   });
 
+// Add a special dev route that bypasses session issues
+
+// Add quick test route that doesn't use redirects
+app.get('/quick-test', (req, res) => {
+    console.log("Quick test route accessed");
+    
+    // Create a complete session in one step
+    req.session.participantData = {
+      prolificId: 'test-user',
+      studyId: 'test-study',
+      sessionId: 'test-session',
+      currentStep: 'demographics',
+      demographics: {},
+      propositionResponses: [],
+      selectedPropositions: propositions.slice(0, 1),
+      currentPropositionIndex: 0
+    };
+    
+    // Render demographics page directly without redirect
+    res.render('demographics');
+  });
+  
+  // Modify all your redirect routes to use session.save() before redirecting
+  // Example modification for the demographics POST handler:
+  app.post('/demographics', (req, res) => {
+    if (!req.session.participantData) {
+      return res.redirect('/');
+    }
+    
+    // Save demographics data
+    req.session.participantData.demographics = {
+      age: req.body.age,
+      gender: req.body.gender,
+      education: req.body.education,
+      politicalParty: req.body.politicalParty,
+      politicalIdeology: req.body.politicalIdeology
+    };
+    
+    // Randomly select 1 proposition
+    const selectedPropositions = getRandomPropositions(propositions, 1);
+    req.session.participantData.selectedPropositions = selectedPropositions;
+    req.session.participantData.currentPropositionIndex = 0;
+    
+    // Save session before redirecting
+    req.session.save(err => {
+      if (err) {
+        console.error("Error saving session:", err);
+        return res.status(500).send("Session error. Please refresh and try again.");
+      }
+      res.redirect('/proposition');
+    });
+  });
+
 // Onboarding route
 app.get('/onboarding', (req, res) => {
   if (!req.session.participantData) {
@@ -124,7 +177,7 @@ app.get('/demographics', (req, res) => {
   res.render('demographics');
 });
 
-app.post('/demographics', (req, res) => {
+app.post('/demographics2', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
