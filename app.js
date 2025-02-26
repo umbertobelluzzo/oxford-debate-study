@@ -8,6 +8,15 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Custom packages
+const { OpenAI } = require('openai');
+require('dotenv').config();
+
+// Initialize OpenAI API
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Load API key from .env
+});
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -326,10 +335,72 @@ function getRandomSubCondition() {
   return conditions[Math.floor(Math.random() * conditions.length)];
 }
 
-function generateModelParagraph(proposition, stance, bullets, paragraph, subCondition) {
-  // In production, this would call the LLM API with the appropriate template
-  // For now, return placeholder text
-  return `This is a placeholder for the LLM-generated paragraph based on ${subCondition} condition. In the actual implementation, this would be fetched from the corresponding LLM API using the appropriate prompt template.`;
+// This function now returns a Promise
+async function generateModelParagraph(proposition, stance, bullets, paragraph, subCondition) {
+    // Construct the prompt based on the sub-condition
+    let prompt = '';
+    
+    switch(subCondition) {
+      case 'stance-based':
+        prompt = `Consider the following political statement: ${proposition}
+  On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
+  Please write a short paragraph of 100-200 words for me which explains my opinion.
+  Reply only with the paragraph, nothing else.`;
+        break;
+        
+      case 'bullets-based':
+        prompt = `Consider the following political statement: ${proposition}
+  My opinion on this issue is described by the following bullet points:
+  ${bullets}
+  Please write a short paragraph of 100-200 words for me which explains my opinion.
+  Reply only with the paragraph, nothing else.`;
+        break;
+        
+      case 'paraphrase':
+        prompt = `Consider the following political statement: ${proposition}
+  I wrote the following paragraph to explain my opinion on this issue:
+  "${paragraph}"
+  Please rewrite this paragraph.
+  Reply only with the paragraph, nothing else.`;
+        break;
+        
+      case 'improvement':
+        prompt = `Consider the following political statement: ${proposition}
+  I wrote the following paragraph to explain my opinion on this issue:
+  "${paragraph}"
+  Please improve this paragraph.
+  Reply only with the improved paragraph, nothing else.`;
+        break;
+        
+      default:
+        return Promise.resolve(`Error: Unknown sub-condition ${subCondition}`);
+    }
+
+    console.log("Generating paragraph with:", {
+        llmType,
+        subCondition,
+        promptPreview: prompt.substring(0, 100) + "..." // Log just part of the prompt
+      })
+    
+    try {
+      // Call the OpenAI API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini", // You can change this to the model you want to use
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+      
+      // Extract the response
+      return completion.choices[0].message.content.trim();
+      //return `This is a placeholder for the LLM-generated paragraph based on ${subCondition} condition. In the actual implementation, this would be fetched from the corresponding LLM API using the appropriate prompt template.`;
+    } catch (error) {
+      console.error("Error calling OpenAI API:", error);
+      return `Error generating paragraph: ${error.message}. Please try again.`;
+    }
 }
 
 function generateCompletionCode() {
