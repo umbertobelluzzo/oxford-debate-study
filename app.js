@@ -82,83 +82,6 @@ app.get('/dev', (req, res) => {
     res.redirect('/onboarding');
   });
 
-app.get('/heroku-test', (req, res) => {
-    // Skip session handling entirely
-    res.render('onboarding');
-  });
-
-app.get('/direct-test', (req, res) => {
-    // Force create a session and render proposition page directly
-    req.session.participantData = {
-      prolificId: 'test-user',
-      studyId: 'test-study',
-      sessionId: 'test-session',
-      demographics: {},
-      selectedPropositions: propositions.slice(0, 1),  // Just use the first proposition
-      currentPropositionIndex: 0
-    };
-    
-    // Render the proposition page directly without redirect
-    res.render('proposition', { 
-      proposition: propositions[0],
-      index: 1,
-      total: 1
-    });
-  });
-
-// Add a special dev route that bypasses session issues
-
-// Add quick test route that doesn't use redirects
-app.get('/quick-test', (req, res) => {
-    console.log("Quick test route accessed");
-    
-    // Create a complete session in one step
-    req.session.participantData = {
-      prolificId: 'test-user',
-      studyId: 'test-study',
-      sessionId: 'test-session',
-      currentStep: 'demographics',
-      demographics: {},
-      propositionResponses: [],
-      selectedPropositions: propositions.slice(0, 1),
-      currentPropositionIndex: 0
-    };
-    
-    // Render demographics page directly without redirect
-    res.render('demographics');
-  });
-  
-  // Modify all your redirect routes to use session.save() before redirecting
-  // Example modification for the demographics POST handler:
-  app.post('/demographics', (req, res) => {
-    if (!req.session.participantData) {
-      return res.redirect('/');
-    }
-    
-    // Save demographics data
-    req.session.participantData.demographics = {
-      age: req.body.age,
-      gender: req.body.gender,
-      education: req.body.education,
-      politicalParty: req.body.politicalParty,
-      politicalIdeology: req.body.politicalIdeology
-    };
-    
-    // Randomly select 1 proposition
-    const selectedPropositions = getRandomPropositions(propositions, 1);
-    req.session.participantData.selectedPropositions = selectedPropositions;
-    req.session.participantData.currentPropositionIndex = 0;
-    
-    // Save session before redirecting
-    req.session.save(err => {
-      if (err) {
-        console.error("Error saving session:", err);
-        return res.status(500).send("Session error. Please refresh and try again.");
-      }
-      res.redirect('/proposition');
-    });
-  });
-
 // Onboarding route
 app.get('/onboarding', (req, res) => {
   if (!req.session.participantData) {
@@ -177,7 +100,7 @@ app.get('/demographics', (req, res) => {
   res.render('demographics');
 });
 
-app.post('/demographics2', (req, res) => {
+app.post('/demographics', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
@@ -435,6 +358,7 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, s
         prompt = `Consider the following political statement: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
 Please write a short paragraph of 100-200 words for me which explains my opinion.
+Do not mention the numeric rating.
 Reply only with the paragraph, nothing else.`;
         break;
         
