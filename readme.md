@@ -1,6 +1,13 @@
 # LLM Opinion Distortion Study Interface
 
-This repository contains the web interface for the "Quantifying the Distortive Impacts of LLM Writing Assistance for Opinion Expression" study. The application is designed to be deployed on Heroku and integrated with Prolific for participant recruitment.
+This repository contains the web interface for the "Quantifying the Distortive Impacts of LLM Writing Assistance for Opinion Expression" study. The application facilitates collecting data on how LLMs may influence opinion expression, with integration for Prolific participant recruitment.
+
+## Study Overview
+
+This study examines whether the use of LLMs for writing assistance systematically distorts opinions expressed by users, as perceived both by the users themselves and by third-party raters. The study is conducted in two phases:
+
+1. **Phase 1 (Writing)**: Participants express opinions on political topics and then interact with LLM-generated content.
+2. **Phase 2 (Rating)**: A separate group of participants evaluate the content produced in Phase 1.
 
 ## Project Structure
 
@@ -9,6 +16,7 @@ llm-opinion-study/
 ├── app.js                # Main application file
 ├── package.json          # Dependencies and scripts
 ├── .env                  # Environment variables (create this file, not included in repo)
+├── .gitignore            # Git ignore configuration
 ├── public/               # Static assets
 │   └── styles.css        # CSS styling
 ├── views/                # EJS templates
@@ -32,7 +40,7 @@ llm-opinion-study/
    ```
    PORT=3000
    NODE_ENV=development
-   SESSION_SECRET=your-secret-key
+   OPENAI_API_KEY=your-openai-api-key
    ```
 
 ## Development
@@ -43,6 +51,28 @@ npm run dev
 ```
 
 This will start the application with nodemon, which automatically restarts the server when changes are detected.
+
+For development testing without Prolific integration, access the application via:
+```
+http://localhost:3000/dev
+```
+
+## LLM Integration
+
+The study currently includes five LLMs for comparison:
+- GPT-4o (OpenAI)
+- Claude 3.7 Sonnet (Anthropic)
+- Llama 3.1 70B Instruct (Meta)
+- Qwen 2.5 72B Instruct (Alibaba)
+- DeepSeek-V3 (DeepSeek)
+
+Each participant is randomly assigned one of these models, along with one of four sub-conditions that determine how the LLM uses their inputs:
+1. Stance-based: LLM generates content based on numerical stance rating
+2. Bullets-based: LLM generates content based on bullet points
+3. Paraphrase: LLM rewrites the participant's paragraph
+4. Improve: LLM enhances the participant's paragraph
+
+Currently, the app is configured to use OpenAI's API. To use additional LLM APIs, add the necessary API keys to your `.env` file and update the model selection logic in `app.js`.
 
 ## Heroku Deployment
 
@@ -63,24 +93,18 @@ This will start the application with nodemon, which automatically restarts the s
    heroku create llm-opinion-study
    ```
 
-3. Add Heroku remote to your Git repository:
-   ```
-   heroku git:remote -a llm-opinion-study
-   ```
-
-4. Set environment variables on Heroku:
+3. Set environment variables on Heroku:
    ```
    heroku config:set NODE_ENV=production
-   heroku config:set SESSION_SECRET=your-secret-key
-   heroku config:set OPENAI_API_KEY=your-openai-key --app llm-opinion-study
+   heroku config:set OPENAI_API_KEY=your-openai-key
    ```
 
-5. Deploy to Heroku:
+4. Deploy to Heroku:
    ```
    git push heroku main
    ```
 
-6. Open the application:
+5. Open the application:
    ```
    heroku open
    ```
@@ -94,32 +118,49 @@ To integrate with Prolific:
    ```
    https://your-heroku-app.herokuapp.com/?PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
    ```
-3. Set "Completion URL" on Prolific to redirect participants after study completion
+3. The application will automatically generate and display a completion code upon study completion
 
-## Customizing the Interface
+## Data Storage
 
-### Adding Propositions
+For development and testing, participant data is saved as JSON files in the `data/` directory with the naming format:
+```
+participant_{PROLIFIC_ID}_{TIMESTAMP}.json
+```
 
-Edit the `propositions` array in `app.js` to include your study's political statements.
-
-### Modifying LLM Integration
-
-The current implementation uses placeholder text for LLM-generated content. To connect with actual LLM APIs:
-
-1. Install appropriate API client libraries:
-   ```
-   npm install openai anthropic
-   ```
-
-2. Update the `generateModelParagraph` function in `app.js` to call the appropriate LLM API based on the assigned conditions.
-
-### Data Storage
-
-For development purposes, data is saved to local JSON files in the `data` directory. For production:
+For production deployment, consider implementing a database solution:
 
 1. Add a database add-on to your Heroku app (e.g., MongoDB, PostgreSQL)
 2. Install the corresponding Node.js driver
-3. Update the data storage functions to use the database instead of local files
+3. Update the `saveParticipantData` function in `app.js` to use the database
+
+## Customizing the Study
+
+### Modifying Propositions
+
+Edit the `propositions` array in `app.js` to change the political statements presented to participants:
+
+```javascript
+const propositions = [
+  "The UK should implement a Universal Basic Income for all citizens.",
+  "The UK should significantly increase its investment in renewable energy.",
+  // Add more propositions as needed
+];
+```
+
+### Adjusting the Flow
+
+- Change the number of propositions assigned to each participant by modifying the count parameter in the `getRandomPropositions` function call
+- Adjust progression percentages in the EJS templates to reflect changes in the number of steps
+
+## Session Management
+
+The application uses Express session middleware to maintain participant state throughout the study. Session data includes:
+- Participant identification (Prolific ID, study ID, session ID)
+- Demographic information
+- Proposition responses
+- LLM interaction data
+
+Session data is cleared upon study completion.
 
 ## Contributing
 
