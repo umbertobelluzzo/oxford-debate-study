@@ -23,13 +23,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-// Session setup
 app.use(session({
-  secret: 'llm-opinion-study-secret-key',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
-}));
+    secret: 'llm-opinion-study-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'  // Add this
+    }
+  }));
 
 // Sample propositions (to be filled with actual study propositions)
 const propositions = [
@@ -78,6 +80,30 @@ app.get('/dev', (req, res) => {
     };
     
     res.redirect('/onboarding');
+  });
+
+app.get('/heroku-test', (req, res) => {
+    // Skip session handling entirely
+    res.render('onboarding');
+  });
+
+app.get('/direct-test', (req, res) => {
+    // Force create a session and render proposition page directly
+    req.session.participantData = {
+      prolificId: 'test-user',
+      studyId: 'test-study',
+      sessionId: 'test-session',
+      demographics: {},
+      selectedPropositions: propositions.slice(0, 1),  // Just use the first proposition
+      currentPropositionIndex: 0
+    };
+    
+    // Render the proposition page directly without redirect
+    res.render('proposition', { 
+      proposition: propositions[0],
+      index: 1,
+      total: 1
+    });
   });
 
 // Onboarding route

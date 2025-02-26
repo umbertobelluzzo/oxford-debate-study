@@ -72,6 +72,7 @@ This will start the application with nodemon, which automatically restarts the s
    ```
    heroku config:set NODE_ENV=production
    heroku config:set SESSION_SECRET=your-secret-key
+   heroku config:set OPENAI_API_KEY=your-openai-key --app llm-opinion-study
    ```
 
 5. Deploy to Heroku:
