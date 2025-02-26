@@ -7,73 +7,16 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
-const redis = require("redis");
-const connectRedis = require('connect-redis');
+const { OpenAI } = require('openai');
 
-// Create Redis store with the session
-const RedisStore = connectRedis.default || connectRedis;
+require('dotenv').config();
 
-// Get Redis URL from environment variables
-const redis_url = process.env.REDIS_URL || process.env.REDIS_TLS_URL;
-
-let redisClient;
-let sessionConfig;
-
-// Configure session with Redis for production or memory store for development
-if (redis_url) {
-  // Production (Heroku) - use Redis
-  console.log("Using Redis session store with URL:", redis_url.substring(0, redis_url.indexOf('@')) + '...');
-  
-  // Parse the Redis URL from the environment
-  const redis_url_obj = new URL(redis_url);
-  
-  // Initialize Redis client as per Heroku's recommendation
-  redisClient = redis.createClient({
-    url: redis_url,
-    socket: {
-      tls: redis_url.match(/rediss:\//) !== null,
-      rejectUnauthorized: false
-    }
-  });
-  
-  // Handle Redis connection
-  redisClient.connect().catch(err => {
-    console.error('Redis connection error:', err);
-  });
-  
-  redisClient.on('error', (err) => {
-    console.error('Redis error:', err);
-  });
-  
-  redisClient.on('connect', () => {
-    console.log('Connected to Redis successfully');
-  });
-  
-  // Configure session with Redis store
-  sessionConfig = {
-    store: new RedisStore({ client: redisClient }),
-    secret: process.env.SESSION_SECRET || 'fallback-development-secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  };
-} else {
-  // Development - use memory store
-  console.log("Using memory session store (development)");
-  sessionConfig = {
+sessionConfig = {
     secret: process.env.SESSION_SECRET || 'fallback-development-secret',
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
-  };
-}
-
-// Custom packages
-const { OpenAI } = require('openai');
-require('dotenv').config();
+};
 
 // Initialize OpenAI API
 const openai = new OpenAI({
