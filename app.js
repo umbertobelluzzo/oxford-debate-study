@@ -19,8 +19,14 @@ sessionConfig = {
 };
 
 // Initialize OpenAI API
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY, // Load API key from .env
+const openai_client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // Load API key from .env
+});
+
+// Initialize OpenRouter API
+const openrouter_client = new OpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY, // Load API key from .env
+  baseURL: 'https://openrouter.ai/api/v1',
 });
 
 // Middleware
@@ -115,9 +121,9 @@ app.post('/demographics', (req, res) => {
     politicalIdeology: req.body.politicalIdeology
   };
   
-  // Randomly select 1 proposition
-  const selectedPropositions = getRandomPropositions(propositions, 1);
-  req.session.participantData.selectedPropositions = selectedPropositions;
+  // Randomly assign 1 proposition
+  const assignedPropositions = getRandomPropositions(propositions, 1);
+  req.session.participantData.assignedPropositions = assignedPropositions;
   req.session.participantData.currentPropositionIndex = 0;
   
   res.redirect('/proposition');
@@ -126,12 +132,12 @@ app.post('/demographics', (req, res) => {
 // Proposition handling
 app.get('/proposition', (req, res) => {
 
-  if (!req.session.participantData || !req.session.participantData.selectedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     return res.redirect('/');
   }
   
   const index = req.session.participantData.currentPropositionIndex;
-  const propositions = req.session.participantData.selectedPropositions;
+  const propositions = req.session.participantData.assignedPropositions;
   
   if (index >= propositions.length) {
     // All propositions completed, move to LLM phase
@@ -151,7 +157,7 @@ app.post('/proposition', (req, res) => {
     console.log("POST /proposition - Session:", req.session.participantData);
     console.log("Form data:", req.body);
     
-    if (!req.session.participantData || !req.session.participantData.selectedPropositions) {
+    if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
       console.log("Missing session data, redirecting to root");
       return res.redirect('/');
     }
@@ -162,7 +168,7 @@ app.post('/proposition', (req, res) => {
     }
     
     const index = req.session.participantData.currentPropositionIndex;
-    const currentProposition = req.session.participantData.selectedPropositions[index];
+    const currentProposition = req.session.participantData.assignedPropositions[index];
     
     // Save user response for this proposition
     req.session.participantData.propositionResponses.push({
@@ -223,12 +229,12 @@ app.get('/llm-response', async (req, res) => {
     const currentResponse = propositionResponses[index];
 
     // Randomly assign LLM for this proposition
-    const model_name = getRandomLLM();
-    console.log(`Assigned LLM for proposition ${index}: ${model_name}`);
+    currentResponse.model_name = getRandomLLM();
+    console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
     
     // Randomly assign sub-condition for this proposition
-    const subCondition = getRandomSubCondition();
-    console.log(`Assigned sub-condition for proposition ${index}: ${subCondition}`);
+    currentResponse.model_input_condition = getRandomSubCondition();
+    console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
     
     try {
       // Wait for the modelParagraph Promise to resolve
@@ -237,12 +243,15 @@ app.get('/llm-response', async (req, res) => {
         currentResponse.writer_stance,
         currentResponse.writer_bullets,
         currentResponse.writer_paragraph,
-        subCondition
+        currentResponse.model_input_condition,
+        currentResponse.model_name
       );
+
+      currentResponse.model_paragraph = modelParagraph;
       
       res.render('llm-response', {
         proposition: currentResponse.proposition,
-        modelParagraph: modelParagraph,
+        modelParagraph: currentResponse.model_paragraph,
         writerParagraph: currentResponse.writer_paragraph,
         index: index + 1,
         total: propositionResponses.length
@@ -259,7 +268,7 @@ app.post('/llm-response', (req, res) => {
     console.log("POST /llm-response - Session data:", req.session.participantData);
     console.log("Form data:", req.body);
   
-    // Fix the validation check - was checking incorrect condition
+    // Validate session data
     if (!req.session.participantData) {
       console.log("No participant data in session");
       return res.redirect('/');
@@ -276,7 +285,6 @@ app.post('/llm-response', (req, res) => {
     const response = req.session.participantData.propositionResponses[index];
     
     // Save LLM interaction data
-    response.model_name = req.body.modelName;
     response.model_paragraph = req.body.modelParagraph;
     response.model_paragraph_stance = req.body.modelStance;
     response.edited_paragraph = req.body.editedParagraph;
@@ -326,13 +334,14 @@ function getRandomPropositions(allPropositions, count) {
   return shuffled.slice(0, count);
 }
 
+// Assign a random LLM. Eventually this will be between GPT-4o, Claude-3.7-Sonnet, Llama-3.1-70B, Qwen-2.5-72B, DeepSeek-V3.
+// For now we just return a random cheap model for testing.
 function getRandomLLM() {
   const llms = [
-    "GPT-4o", 
-    "Claude-3.7-Sonnet", 
-    "Llama-3.1-70B", 
-    "Qwen-2.5-72B", 
-    "DeepSeek-V3"
+    "openai/gpt-4o-mini",
+    "anthropic/claude-3.5-sonnet",
+    "qwen/qwen-2.5-7b-instruct",
+    "meta-llama/llama-3.1-8b-instruct:free",
   ];
   return llms[Math.floor(Math.random() * llms.length)];
 }
@@ -348,11 +357,12 @@ function getRandomSubCondition() {
 }
 
 // This function now returns a Promise
-async function generateModelParagraph(proposition, stance, bullets, paragraph, subCondition) {
+async function generateModelParagraph(proposition, stance, bullets, paragraph, model_input_condition, model_name) {
+    
     // Construct the prompt based on the sub-condition
     let prompt = '';
     
-    switch(subCondition) {
+    switch(model_input_condition) {
       case 'stance-based':
         prompt = `Consider the following political statement: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
@@ -366,6 +376,7 @@ Reply only with the paragraph, nothing else.`;
 My opinion on this issue is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
+Do not include any preamble, like “Based on the bullet points…”.
 Reply only with the paragraph, nothing else.`;
         break;
         
@@ -386,23 +397,19 @@ Reply only with the improved paragraph, nothing else.`;
         break;
         
       default:
-        throw new Error(`Unknown sub-condition ${subCondition}`);
+        throw new Error(`Unknown sub-condition ${model_input_condition}`);
     }
 
-    // Get the currently assigned LLM model type - this needs to be accessed from the session
-    // For now, we're using a fixed model since the llmType variable isn't defined
-    const modelToUse = "gpt-4o-mini"; // Default fallback
-    
     console.log("Generating paragraph with:", {
-        modelToUse,
-        subCondition,
-        promptPreview: prompt
+      model_name,
+      model_input_condition,
+      prompt
     });
     
     try {
-      // Call the OpenAI API
-      const completion = await openai.chat.completions.create({
-        model: modelToUse,
+      // Call the OpenRouter API
+      const completion = await openrouter_client.chat.completions.create({
+        model: model_name,
         messages: [
           { role: "system", content: "You are a helpful assistant." },
           { role: "user", content: prompt }
@@ -411,14 +418,13 @@ Reply only with the improved paragraph, nothing else.`;
         temperature: 0.7,
       });
       
-      // Extract the response
+      // Extract the response from the completion
       return completion.choices[0].message.content.trim();
     } catch (error) {
-      console.error("Error calling OpenAI API:", error);
+      console.error("Error calling OpenRouter API:", error);
       throw error; // Re-throw to be handled by the caller
     }
 }
-
 
 function saveParticipantData(data) {
   // In production, this would save to a database
