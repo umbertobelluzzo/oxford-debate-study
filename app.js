@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 const { OpenAI } = require('openai');
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 require('dotenv').config();
 
@@ -58,15 +58,6 @@ const propositions = [
   "The UK should make public education free and accessible for all students up to the university level.",
   "The UK should adopt a single-payer healthcare system.",
 ];
-
-// Helper function to convert stream to string
-async function streamToString(stream) {
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks).toString('utf-8');
-}
 
 // Route to handle Prolific integration
 app.get('/', (req, res) => {
@@ -140,8 +131,8 @@ app.post('/demographics', (req, res) => {
     politicalIdeology: req.body.politicalIdeology
   };
 
-  // Randomly assign 1 proposition
-  const assignedPropositions = getRandomPropositions(propositions, 1);
+  // Randomly assign 2 proposition
+  const assignedPropositions = getRandomPropositions(propositions, 2);
   req.session.participantData.assignedPropositions = assignedPropositions;
   req.session.participantData.currentPropositionIndex = 0;
 
