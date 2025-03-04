@@ -59,43 +59,6 @@ const propositions = [
   "The UK should adopt a single-payer healthcare system.",
 ];
 
-// Function to test S3 connection
-async function testS3Connection() {
-  try {
-    // Create a simple test file
-    const testData = {
-      message: 'S3 connection test',
-      timestamp: new Date().toISOString()
-    };
-
-    // Upload test file to S3
-    const putParams = {
-      Bucket: bucketName,
-      Key: 'test-connection.json',
-      Body: JSON.stringify(testData),
-      ContentType: 'application/json'
-    };
-
-    const putResult = await s3Client.send(new PutObjectCommand(putParams));
-    console.log('Test file uploaded successfully:', putResult);
-
-    // Try to read it back
-    const getParams = {
-      Bucket: bucketName,
-      Key: 'test-connection.json'
-    };
-
-    const getResult = await s3Client.send(new GetObjectCommand(getParams));
-    const responseBody = await streamToString(getResult.Body);
-
-    console.log('Test file retrieved successfully:', JSON.parse(responseBody));
-    return { success: true, message: 'S3 connection test successful' };
-  } catch (error) {
-    console.error('S3 connection test failed:', error);
-    return { success: false, message: error.message };
-  }
-}
-
 // Helper function to convert stream to string
 async function streamToString(stream) {
   const chunks = [];
@@ -131,8 +94,6 @@ app.get('/', (req, res) => {
 
 // Development mode route - add this right after the existing '/' route
 app.get('/dev', async (req, res) => {
-  // Test S3 connection first
-  const s3TestResult = await testS3Connection();
 
   // Initialize session with test data
   req.session.participantData = {
@@ -142,18 +103,9 @@ app.get('/dev', async (req, res) => {
     currentStep: 'onboarding',
     demographics: {},
     propositionResponses: [],
-    s3Test: s3TestResult // Include the S3 test result in the session for debugging
   };
 
-  if (s3TestResult.success) {
-    console.log('S3 connection successful! Ready to save data.');
-    res.redirect('/onboarding');
-  } else {
-    // If S3 connection fails, show an error
-    res.render('error', {
-      message: `S3 connection failed. Please check your credentials and bucket setup. Error: ${s3TestResult.message}`
-    });
-  }
+  res.redirect('/onboarding');
 });
 
 // Onboarding route
@@ -221,8 +173,6 @@ app.get('/proposition', (req, res) => {
 });
 
 app.post('/proposition', (req, res) => {
-  console.log("POST /proposition - Session:", req.session.participantData);
-  console.log("Form data:", req.body);
 
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     console.log("Missing session data, redirecting to root");
@@ -249,19 +199,10 @@ app.post('/proposition', (req, res) => {
   // Move to next proposition
   req.session.participantData.currentPropositionIndex++;
 
-  // Save the session explicitly
-  req.session.save(err => {
-    if (err) {
-      console.error("Error saving session:", err);
-    }
-    console.log("After update - Session:", req.session.participantData);
-    res.redirect('/proposition');
-  });
+  res.redirect('/proposition');
 });
 
 app.get('/llm-response', async (req, res) => {
-  // Add debugging
-  console.log("GET /llm-response - Session:", req.session.participantData);
 
   // Check if session exists first
   if (!req.session.participantData) {
@@ -331,9 +272,6 @@ app.get('/llm-response', async (req, res) => {
 
 
 app.post('/llm-response', async (req, res) => {
-  // Add debugging
-  console.log("POST /llm-response - Session data:", req.session.participantData);
-  console.log("Form data:", req.body);
 
   // Validate session data
   if (!req.session.participantData) {
@@ -369,16 +307,8 @@ app.post('/llm-response', async (req, res) => {
   } catch (error) {
     console.error("Error saving data:", error);
   }
-
-  // Explicitly save the session before redirecting
-  req.session.save(err => {
-    if (err) {
-      console.error("Error saving session:", err);
-    }
-    console.log("After update - Session:", req.session.participantData);
-    console.log(`Current LLM index: ${req.session.participantData.currentLLMPropositionIndex}, Total responses: ${req.session.participantData.propositionResponses.length}`);
-    res.redirect('/llm-response');
-  });
+  
+  res.redirect('/llm-response');
 });
 
 // Completion page
@@ -402,7 +332,7 @@ function getRandomPropositions(allPropositions, count) {
 }
 
 // Assign a random LLM. Eventually this will be between GPT-4o, Claude-3.7-Sonnet, Llama-3.1-70B, Qwen-2.5-72B, DeepSeek-V3.
-// For now we just return a random cheap model for testing.
+// For now we just return a random cheap model from the list below for testing.
 function getRandomLLM() {
   const llms = [
     "openai/gpt-4o-mini",
