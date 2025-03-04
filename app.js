@@ -181,6 +181,7 @@ app.post('/proposition', (req, res) => {
   // Save user response for this proposition
   req.session.participantData.propositionResponses.push({
     proposition: currentProposition,
+    writer_knowledge: req.body.knowledge,
     writer_stance: req.body.stance,
     writer_bullets: req.body.bullets,
     writer_paragraph: req.body.paragraph,
@@ -210,7 +211,6 @@ app.get('/llm-response', async (req, res) => {
 
   // Initialize LLM index if not already done
   if (req.session.participantData.currentLLMPropositionIndex === undefined) {
-    console.log("Initializing LLM proposition index");
     req.session.participantData.currentLLMPropositionIndex = 0;
   }
 
@@ -291,25 +291,33 @@ app.post('/llm-response', async (req, res) => {
   // Move to next proposition for LLM phase
   req.session.participantData.currentLLMPropositionIndex++;
 
-  // Save data to database/file (simplified here with file storage)
-  try {
-    await saveParticipantData(req.session.participantData);
-    console.log("Data saved successfully");
-  } catch (error) {
-    console.error("Error saving data:", error);
-  }
-  
   res.redirect('/llm-response');
 });
 
-// Completion page
-app.get('/completion', (req, res) => {
+// Completion route
+app.get('/completion', async (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
 
+  // Save the final, complete participant data
+  try {
+    // Add a completion timestamp
+    req.session.participantData.completionTimestamp = new Date().toISOString();
+    
+    // Save the full participant data
+    await saveParticipantData(req.session.participantData);
+    console.log("Participant data saved successfully at completion");
+  } catch (error) {
+    console.error("Error saving final participant data:", error);
+    // Still show completion page even if save fails
+  }
+
+  // Generate a completion code - can be more sophisticated if needed
+  const completionCode = `STUDY-${Date.now().toString(36).substring(4)}`;
+
   res.render('completion', {
-    completionCode: "PLACEHOLDER CODE"
+    completionCode: completionCode
   });
 
   // Clear session after completion
@@ -420,7 +428,6 @@ async function saveParticipantData(data) {
     const s3Result = await saveParticipantDataToS3(data);
     return s3Result;
   } catch (error) {
-    console.error("Error in primary save function:", error);
     // Fallback to local file storage
     saveParticipantDataToFile(data);
     return { success: false, error: error.message };

@@ -20,6 +20,19 @@
         </div>
         
         <div class="form-group">
+          <label for="knowledge">How much do you <b>know about this issue</b>?</label>
+          <div class="stance-scale">
+            <span>0 = No knowledge at all </span>
+            <span>50 = Some understanding </span>
+            <span>100 = Expert knowledge</span>
+          </div>
+          <input type="range" id="knowledge" name="knowledge" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="knowledgeValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
           <label for="stance">What is your <b>level of agreement</b> with this statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
@@ -60,6 +73,14 @@
     </div>
   </div>
   <script>
+    // Update knowledge value display
+    const knowledgeSlider = document.getElementById('knowledge');
+    const knowledgeValue = document.getElementById('knowledgeValue');
+    
+    knowledgeSlider.oninput = function() {
+      knowledgeValue.textContent = this.value;
+    }
+    
     // Update stance value display
     const stanceSlider = document.getElementById('stance');
     const stanceValue = document.getElementById('stanceValue');
@@ -74,7 +95,7 @@
     const bulletError = document.getElementById('bulletError');
     
     bullets.oninput = function() {
-      // Count bullet points by looking for lines starting with - or •
+      // Count bullet points by looking for lines starting with - or • or *
       const bulletLines = this.value.split('\n').filter(line => 
         line.trim().startsWith('-') || 
         line.trim().startsWith('•') || 
@@ -160,6 +181,6 @@
       return isValid;
     }
   </script>
-<!-- <script src="/prevent-paste.js"></script> %> -->
+<!-- <script src="/prevent-paste.js"></script> -->
 </body>
 </html>
