@@ -1,0 +1,41 @@
+<!-- views/llm-edit.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - Edit AI Paragraph</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>Edit AI-Generated Paragraph: <%= index %> of <%= total %></h1>
+      
+      <form action="/llm-edit" method="POST">
+        <div class="proposition-container">
+          <p>Consider this political statement:</p>
+          <div class="proposition-text">
+            <%= proposition %>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="editedParagraph">Now you have the chance to <b>edit the AI-written paragraph</b>. If you feel that the paragraph already reflects your opinion, you do not have to edit it. Otherwise please edit it until it does.</label>
+          <textarea id="editedParagraph" name="editedParagraph" rows="12" required><%= modelParagraph %></textarea>
+        </div>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: <%= 55 + (index * 15) / 3 + 5 %>%"></div>
+          </div>
+          <div class="progress-text"><%= Math.round(55 + (index * 15) / 3 + 5) %>% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

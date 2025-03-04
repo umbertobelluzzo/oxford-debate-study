@@ -1,0 +1,41 @@
+<!-- views/ai-usage.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - AI Usage</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>About Your Participation</h1>
+      
+      <form action="/ai-usage" method="POST">
+        <div class="form-group">
+          <label><b>Did you use AI to help you compose any of your own replies?</b> Your answer will not affect your compensation in any way or have any other negative consequences. We really appreciate your honesty.</label>
+          <div class="radio-group" style="margin-top: 20px;">
+            <input type="radio" id="usedAIYes" name="usedAI" value="yes" required>
+            <label for="usedAIYes">Yes</label>
+          </div>
+          <div class="radio-group">
+            <input type="radio" id="usedAINo" name="usedAI" value="no" required>
+            <label for="usedAINo">No</label>
+          </div>
+        </div>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: 95%"></div>
+          </div>
+          <div class="progress-text">95% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

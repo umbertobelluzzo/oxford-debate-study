@@ -75,7 +75,6 @@ app.get('/', (req, res) => {
     prolificId,
     studyId,
     sessionId,
-    currentStep: 'onboarding',
     demographics: {},
     propositionResponses: []
   };
@@ -91,7 +90,6 @@ app.get('/dev', async (req, res) => {
     prolificId: 'test-user',
     studyId: 'test-study',
     sessionId: 'test-session',
-    currentStep: 'onboarding',
     demographics: {},
     propositionResponses: [],
   };
@@ -151,8 +149,7 @@ app.get('/proposition', (req, res) => {
 
   if (index >= propositions.length) {
     // All propositions completed, move to LLM phase
-    req.session.participantData.currentStep = 'llm-assignment';
-    return res.redirect('/llm-response');
+    return res.redirect('/llm-stance');
   }
 
   const currentProposition = propositions[index];
@@ -194,15 +191,15 @@ app.post('/proposition', (req, res) => {
   res.redirect('/proposition');
 });
 
-app.get('/llm-response', async (req, res) => {
-
-  // Check if session exists first
+// LLM Response Phase Routes - Step 1: Show LLM paragraph and get stance rating
+app.get('/llm-stance', async (req, res) => {
+  // Check if session exists
   if (!req.session.participantData) {
     console.log("No participant data in session");
     return res.redirect('/');
   }
 
-  // Check if propositionResponses exists and has entries -- necessary for LLM phase
+  // Check if propositionResponses exists and has entries
   if (!req.session.participantData.propositionResponses ||
     req.session.participantData.propositionResponses.length === 0) {
     console.log("No proposition responses found");
@@ -219,41 +216,46 @@ app.get('/llm-response', async (req, res) => {
 
   console.log(`LLM proposition index: ${index}, Total responses: ${propositionResponses.length}`);
 
-  // Check if all LLM responses are completed -- if so, redirect to completion
+  // Check if all LLM responses are completed
   if (index >= propositionResponses.length) {
-    console.log("All LLM responses completed, redirecting to completion");
-    return res.redirect('/completion');
+    console.log("All LLM responses completed, redirecting to final AI usage question");
+    return res.redirect('/ai-usage');
   }
 
   const currentResponse = propositionResponses[index];
 
-  // Randomly assign LLM for this proposition
-  currentResponse.model_name = getRandomLLM();
-  console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
+  // Randomly assign LLM for this proposition if not already assigned
+  if (!currentResponse.model_name) {
+    currentResponse.model_name = getRandomLLM();
+    console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
+  }
 
-  // Randomly assign sub-condition for this proposition
-  currentResponse.model_input_condition = getRandomSubCondition();
-  console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
+  // Randomly assign sub-condition for this proposition if not already assigned
+  if (!currentResponse.model_input_condition) {
+    currentResponse.model_input_condition = getRandomSubCondition();
+    console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
+  }
 
   try {
-    // Wait for the modelParagraph Promise to resolve
-    const modelParagraph = await generateModelParagraph(
-      currentResponse.proposition,
-      currentResponse.writer_stance,
-      currentResponse.writer_bullets,
-      currentResponse.writer_paragraph,
-      currentResponse.model_input_condition,
-      currentResponse.model_name
-    );
+    // Generate model paragraph if not already generated
+    if (!currentResponse.model_paragraph) {
+      const modelParagraph = await generateModelParagraph(
+        currentResponse.proposition,
+        currentResponse.writer_stance,
+        currentResponse.writer_bullets,
+        currentResponse.writer_paragraph,
+        currentResponse.model_input_condition,
+        currentResponse.model_name
+      );
 
-    currentResponse.model_paragraph = modelParagraph;
+      currentResponse.model_paragraph = modelParagraph;
+    }
 
-    res.render('llm-response', {
+    res.render('llm-stance', {
       proposition: currentResponse.proposition,
       modelParagraph: currentResponse.model_paragraph,
-      writerParagraph: currentResponse.writer_paragraph,
       index: index + 1,
-      total: propositionResponses.length
+      total: req.session.participantData.assignedPropositions.length
     });
   } catch (error) {
     console.error("Error generating model paragraph:", error);
@@ -261,9 +263,7 @@ app.get('/llm-response', async (req, res) => {
   }
 });
 
-
-app.post('/llm-response', async (req, res) => {
-
+app.post('/llm-stance', (req, res) => {
   // Validate session data
   if (!req.session.participantData) {
     console.log("No participant data in session");
@@ -280,10 +280,120 @@ app.post('/llm-response', async (req, res) => {
   const index = req.session.participantData.currentLLMPropositionIndex;
   const response = req.session.participantData.propositionResponses[index];
 
-  // Save LLM interaction data
-  response.model_paragraph = req.body.modelParagraph;
-  response.model_paragraph_stance = req.body.modelStance;
+  // Save stance data
+  response.model_paragraph_stance_first_person = req.body.modelStance;
+
+  // Move to edit page
+  res.redirect('/llm-edit');
+});
+
+// LLM Response Phase Routes - Step 2: Edit LLM paragraph
+app.get('/llm-edit', (req, res) => {
+  // Check if session exists
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Check if propositionResponses exists and has entries
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
+
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const response = req.session.participantData.propositionResponses[index];
+
+  // Make sure we have a model paragraph before proceeding
+  if (!response.model_paragraph) {
+    console.log("No model paragraph found, redirecting to stance step");
+    return res.redirect('/llm-stance');
+  }
+
+  res.render('llm-edit', {
+    proposition: response.proposition,
+    modelParagraph: response.model_paragraph,
+    index: index + 1,
+    total: req.session.participantData.assignedPropositions.length
+  });
+});
+
+app.post('/llm-edit', (req, res) => {
+  // Validate session data
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Check if propositionResponses exists and has entries
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
+
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const response = req.session.participantData.propositionResponses[index];
+
+  // Save edited paragraph
   response.edited_paragraph = req.body.editedParagraph;
+
+  // Move to compare page
+  res.redirect('/llm-compare');
+});
+
+// LLM Response Phase Routes - Step 3: Compare paragraphs
+app.get('/llm-compare', (req, res) => {
+  // Check if session exists
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Check if propositionResponses exists and has entries
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
+
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const response = req.session.participantData.propositionResponses[index];
+
+  // Make sure we have the required data before proceeding
+  if (!response.edited_paragraph) {
+    console.log("No edited paragraph found, redirecting to edit step");
+    return res.redirect('/llm-edit');
+  }
+
+  res.render('llm-compare', {
+    proposition: response.proposition,
+    writerParagraph: response.writer_paragraph,
+    editedParagraph: response.edited_paragraph,
+    index: index + 1,
+    total: req.session.participantData.assignedPropositions.length
+  });
+});
+
+app.post('/llm-compare', (req, res) => {
+  // Validate session data
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Check if propositionResponses exists and has entries
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
+
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const response = req.session.participantData.propositionResponses[index];
+
+  // Save preference data
   response.writer_preference = req.body.preference;
   response.writer_preference_reason = req.body.preferenceReason;
   response.writer_preference_reason_other = req.body.reasonOther;
@@ -291,7 +401,31 @@ app.post('/llm-response', async (req, res) => {
   // Move to next proposition for LLM phase
   req.session.participantData.currentLLMPropositionIndex++;
 
-  res.redirect('/llm-response');
+  // Redirect back to first step for next proposition
+  res.redirect('/llm-stance');
+});
+
+// Final AI usage question
+app.get('/ai-usage', (req, res) => {
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  res.render('ai-usage');
+});
+
+app.post('/ai-usage', async (req, res) => {
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Save AI usage response
+  req.session.participantData.used_ai = req.body.usedAI === 'yes';
+
+  // Redirect to completion
+  res.redirect('/completion');
 });
 
 // Completion route
