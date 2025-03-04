@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@aws-sdk/client-s3": "^3.758.0",
     "body-parser": "^1.20.2",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.9",

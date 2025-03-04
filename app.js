@@ -8,20 +8,17 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 const { OpenAI } = require('openai');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 
 require('dotenv').config();
 
+// Session configuration
 sessionConfig = {
-    secret: process.env.SESSION_SECRET || 'fallback-development-secret',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  secret: process.env.SESSION_SECRET || 'fallback-development-secret',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 };
-
-// Initialize OpenAI API
-const openai_client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // Load API key from .env
-});
 
 // Initialize OpenRouter API
 const openrouter_client = new OpenAI({
@@ -29,26 +26,84 @@ const openrouter_client = new OpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
 });
 
+// Initialize S3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+const bucketName = process.env.AWS_S3_BUCKET
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
-
 // Apply session middleware
 app.use(session(sessionConfig));
 
-
 // Sample propositions (to be filled with actual study propositions)
 const propositions = [
-  "The UK should implement a Universal Basic Income for all citizens.",
-  "The UK should significantly increase its investment in renewable energy.",
-  "The UK should require ID verification for all social media accounts.",
-  "Immigration to the UK should be significantly reduced.",
-  "The UK should rejoin the European Union.",
-  // Add more propositions as needed
+  "The UK should impose economic sanctions on Israel in response to the 2023 invasion of Gaza.",
+  "The UK should implement strict regulations on the development and deployment of artificial intelligence technologies",
+  "The UK should implement a legally binding target to achieve net-zero carbon emissions by 2030.",
+  "The UK should increase military and humanitarian support to Ukraine in response to the 2022 Russian invasion.",
+  "The UK should mandate COVID-19 vaccinations for all eligible citizens.",
+  "Abortion should be legal and accessible on demand in the UK.",
+  "The UK should transition to a socialist economic system, replacing capitalism.",
+  "The UK should legalize marijuana for recreational use.",
+  "The UK should make public education free and accessible for all students up to the university level.",
+  "The UK should adopt a single-payer healthcare system.",
 ];
+
+// Function to test S3 connection
+async function testS3Connection() {
+  try {
+    // Create a simple test file
+    const testData = {
+      message: 'S3 connection test',
+      timestamp: new Date().toISOString()
+    };
+
+    // Upload test file to S3
+    const putParams = {
+      Bucket: bucketName,
+      Key: 'test-connection.json',
+      Body: JSON.stringify(testData),
+      ContentType: 'application/json'
+    };
+
+    const putResult = await s3Client.send(new PutObjectCommand(putParams));
+    console.log('Test file uploaded successfully:', putResult);
+
+    // Try to read it back
+    const getParams = {
+      Bucket: bucketName,
+      Key: 'test-connection.json'
+    };
+
+    const getResult = await s3Client.send(new GetObjectCommand(getParams));
+    const responseBody = await streamToString(getResult.Body);
+
+    console.log('Test file retrieved successfully:', JSON.parse(responseBody));
+    return { success: true, message: 'S3 connection test successful' };
+  } catch (error) {
+    console.error('S3 connection test failed:', error);
+    return { success: false, message: error.message };
+  }
+}
+
+// Helper function to convert stream to string
+async function streamToString(stream) {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
 
 // Route to handle Prolific integration
 app.get('/', (req, res) => {
@@ -56,11 +111,11 @@ app.get('/', (req, res) => {
   const prolificId = req.query.PROLIFIC_PID;
   const studyId = req.query.STUDY_ID;
   const sessionId = req.query.SESSION_ID;
-  
+
   if (!prolificId) {
     return res.render('error', { message: 'No Prolific ID provided. This study must be accessed through Prolific.' });
   }
-  
+
   // Initialize session
   req.session.participantData = {
     prolificId,
@@ -70,31 +125,43 @@ app.get('/', (req, res) => {
     demographics: {},
     propositionResponses: []
   };
-  
+
   res.redirect('/onboarding');
 });
 
 // Development mode route - add this right after the existing '/' route
-app.get('/dev', (req, res) => {
-    // Initialize session with test data
-    req.session.participantData = {
-      prolificId: 'test-user',
-      studyId: 'test-study',
-      sessionId: 'test-session',
-      currentStep: 'onboarding',
-      demographics: {},
-      propositionResponses: []
-    };
-    
+app.get('/dev', async (req, res) => {
+  // Test S3 connection first
+  const s3TestResult = await testS3Connection();
+
+  // Initialize session with test data
+  req.session.participantData = {
+    prolificId: 'test-user',
+    studyId: 'test-study',
+    sessionId: 'test-session',
+    currentStep: 'onboarding',
+    demographics: {},
+    propositionResponses: [],
+    s3Test: s3TestResult // Include the S3 test result in the session for debugging
+  };
+
+  if (s3TestResult.success) {
+    console.log('S3 connection successful! Ready to save data.');
     res.redirect('/onboarding');
-  });
+  } else {
+    // If S3 connection fails, show an error
+    res.render('error', {
+      message: `S3 connection failed. Please check your credentials and bucket setup. Error: ${s3TestResult.message}`
+    });
+  }
+});
 
 // Onboarding route
 app.get('/onboarding', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
-  
+
   res.render('onboarding');
 });
 
@@ -103,7 +170,7 @@ app.get('/demographics', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
-  
+
   res.render('demographics');
 });
 
@@ -111,7 +178,7 @@ app.post('/demographics', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
-  
+
   // Save demographics data
   req.session.participantData.demographics = {
     age: req.body.age,
@@ -120,12 +187,12 @@ app.post('/demographics', (req, res) => {
     politicalParty: req.body.politicalParty,
     politicalIdeology: req.body.politicalIdeology
   };
-  
+
   // Randomly assign 1 proposition
   const assignedPropositions = getRandomPropositions(propositions, 1);
   req.session.participantData.assignedPropositions = assignedPropositions;
   req.session.participantData.currentPropositionIndex = 0;
-  
+
   res.redirect('/proposition');
 });
 
@@ -135,18 +202,18 @@ app.get('/proposition', (req, res) => {
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     return res.redirect('/');
   }
-  
+
   const index = req.session.participantData.currentPropositionIndex;
   const propositions = req.session.participantData.assignedPropositions;
-  
+
   if (index >= propositions.length) {
     // All propositions completed, move to LLM phase
     req.session.participantData.currentStep = 'llm-assignment';
     return res.redirect('/llm-response');
   }
-  
+
   const currentProposition = propositions[index];
-  res.render('proposition', { 
+  res.render('proposition', {
     proposition: currentProposition,
     index: index + 1,
     total: propositions.length
@@ -154,164 +221,164 @@ app.get('/proposition', (req, res) => {
 });
 
 app.post('/proposition', (req, res) => {
-    console.log("POST /proposition - Session:", req.session.participantData);
-    console.log("Form data:", req.body);
-    
-    if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
-      console.log("Missing session data, redirecting to root");
-      return res.redirect('/');
-    }
-    
-    // Ensure propositionResponses array exists
-    if (!req.session.participantData.propositionResponses) {
-      req.session.participantData.propositionResponses = [];
-    }
-    
-    const index = req.session.participantData.currentPropositionIndex;
-    const currentProposition = req.session.participantData.assignedPropositions[index];
-    
-    // Save user response for this proposition
-    req.session.participantData.propositionResponses.push({
-      proposition: currentProposition,
-      writer_stance: req.body.stance,
-      writer_bullets: req.body.bullets,
-      writer_paragraph: req.body.paragraph,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Move to next proposition
-    req.session.participantData.currentPropositionIndex++;
-    
-    // Save the session explicitly
-    req.session.save(err => {
-      if (err) {
-        console.error("Error saving session:", err);
-      }
-      console.log("After update - Session:", req.session.participantData);
-      res.redirect('/proposition');
-    });
+  console.log("POST /proposition - Session:", req.session.participantData);
+  console.log("Form data:", req.body);
+
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Ensure propositionResponses array exists
+  if (!req.session.participantData.propositionResponses) {
+    req.session.participantData.propositionResponses = [];
+  }
+
+  const index = req.session.participantData.currentPropositionIndex;
+  const currentProposition = req.session.participantData.assignedPropositions[index];
+
+  // Save user response for this proposition
+  req.session.participantData.propositionResponses.push({
+    proposition: currentProposition,
+    writer_stance: req.body.stance,
+    writer_bullets: req.body.bullets,
+    writer_paragraph: req.body.paragraph,
+    timestamp: new Date().toISOString()
   });
 
+  // Move to next proposition
+  req.session.participantData.currentPropositionIndex++;
+
+  // Save the session explicitly
+  req.session.save(err => {
+    if (err) {
+      console.error("Error saving session:", err);
+    }
+    console.log("After update - Session:", req.session.participantData);
+    res.redirect('/proposition');
+  });
+});
+
 app.get('/llm-response', async (req, res) => {
-    // Add debugging
-    console.log("GET /llm-response - Session:", req.session.participantData);
-    
-    // Check if session exists first
-    if (!req.session.participantData) {
-      console.log("No participant data in session");
-      return res.redirect('/');
-    }
-    
-    // Check if propositionResponses exists and has entries -- necessary for LLM phase
-    if (!req.session.participantData.propositionResponses || 
-        req.session.participantData.propositionResponses.length === 0) {
-      console.log("No proposition responses found");
-      return res.redirect('/');
-    }
+  // Add debugging
+  console.log("GET /llm-response - Session:", req.session.participantData);
 
-    // Initialize LLM index if not already done
-    if (req.session.participantData.currentLLMPropositionIndex === undefined) {
-        console.log("Initializing LLM proposition index");
-        req.session.participantData.currentLLMPropositionIndex = 0;
-      }
-    
-    const index = req.session.participantData.currentLLMPropositionIndex;
-    const propositionResponses = req.session.participantData.propositionResponses;
+  // Check if session exists first
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
 
-    console.log(`LLM proposition index: ${index}, Total responses: ${propositionResponses.length}`);
+  // Check if propositionResponses exists and has entries -- necessary for LLM phase
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
 
-    // Check if all LLM responses are completed -- if so, redirect to completion
-    if (index >= propositionResponses.length) {
-      console.log("All LLM responses completed, redirecting to completion");
-      return res.redirect('/completion');
-    }
-    
-    const currentResponse = propositionResponses[index];
+  // Initialize LLM index if not already done
+  if (req.session.participantData.currentLLMPropositionIndex === undefined) {
+    console.log("Initializing LLM proposition index");
+    req.session.participantData.currentLLMPropositionIndex = 0;
+  }
 
-    // Randomly assign LLM for this proposition
-    currentResponse.model_name = getRandomLLM();
-    console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
-    
-    // Randomly assign sub-condition for this proposition
-    currentResponse.model_input_condition = getRandomSubCondition();
-    console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
-    
-    try {
-      // Wait for the modelParagraph Promise to resolve
-      const modelParagraph = await generateModelParagraph(
-        currentResponse.proposition,
-        currentResponse.writer_stance,
-        currentResponse.writer_bullets,
-        currentResponse.writer_paragraph,
-        currentResponse.model_input_condition,
-        currentResponse.model_name
-      );
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
-      currentResponse.model_paragraph = modelParagraph;
-      
-      res.render('llm-response', {
-        proposition: currentResponse.proposition,
-        modelParagraph: currentResponse.model_paragraph,
-        writerParagraph: currentResponse.writer_paragraph,
-        index: index + 1,
-        total: propositionResponses.length
-      });
-    } catch (error) {
-      console.error("Error generating model paragraph:", error);
-      res.render('error', { message: 'Error generating AI response. Please try again.' });
-    }
+  console.log(`LLM proposition index: ${index}, Total responses: ${propositionResponses.length}`);
+
+  // Check if all LLM responses are completed -- if so, redirect to completion
+  if (index >= propositionResponses.length) {
+    console.log("All LLM responses completed, redirecting to completion");
+    return res.redirect('/completion');
+  }
+
+  const currentResponse = propositionResponses[index];
+
+  // Randomly assign LLM for this proposition
+  currentResponse.model_name = getRandomLLM();
+  console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
+
+  // Randomly assign sub-condition for this proposition
+  currentResponse.model_input_condition = getRandomSubCondition();
+  console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
+
+  try {
+    // Wait for the modelParagraph Promise to resolve
+    const modelParagraph = await generateModelParagraph(
+      currentResponse.proposition,
+      currentResponse.writer_stance,
+      currentResponse.writer_bullets,
+      currentResponse.writer_paragraph,
+      currentResponse.model_input_condition,
+      currentResponse.model_name
+    );
+
+    currentResponse.model_paragraph = modelParagraph;
+
+    res.render('llm-response', {
+      proposition: currentResponse.proposition,
+      modelParagraph: currentResponse.model_paragraph,
+      writerParagraph: currentResponse.writer_paragraph,
+      index: index + 1,
+      total: propositionResponses.length
+    });
+  } catch (error) {
+    console.error("Error generating model paragraph:", error);
+    res.render('error', { message: 'Error generating AI response. Please try again.' });
+  }
 });
 
 
-app.post('/llm-response', (req, res) => {
-    // Add debugging
-    console.log("POST /llm-response - Session data:", req.session.participantData);
-    console.log("Form data:", req.body);
-  
-    // Validate session data
-    if (!req.session.participantData) {
-      console.log("No participant data in session");
-      return res.redirect('/');
+app.post('/llm-response', async (req, res) => {
+  // Add debugging
+  console.log("POST /llm-response - Session data:", req.session.participantData);
+  console.log("Form data:", req.body);
+
+  // Validate session data
+  if (!req.session.participantData) {
+    console.log("No participant data in session");
+    return res.redirect('/');
+  }
+
+  // Check if propositionResponses exists and has entries
+  if (!req.session.participantData.propositionResponses ||
+    req.session.participantData.propositionResponses.length === 0) {
+    console.log("No proposition responses found");
+    return res.redirect('/');
+  }
+
+  const index = req.session.participantData.currentLLMPropositionIndex;
+  const response = req.session.participantData.propositionResponses[index];
+
+  // Save LLM interaction data
+  response.model_paragraph = req.body.modelParagraph;
+  response.model_paragraph_stance = req.body.modelStance;
+  response.edited_paragraph = req.body.editedParagraph;
+  response.writer_preference = req.body.preference;
+  response.writer_preference_reason = req.body.preferenceReason;
+  response.writer_preference_reason_other = req.body.reasonOther;
+
+  // Move to next proposition for LLM phase
+  req.session.participantData.currentLLMPropositionIndex++;
+
+  // Save data to database/file (simplified here with file storage)
+  try {
+    await saveParticipantData(req.session.participantData);
+    console.log("Data saved successfully");
+  } catch (error) {
+    console.error("Error saving data:", error);
+  }
+
+  // Explicitly save the session before redirecting
+  req.session.save(err => {
+    if (err) {
+      console.error("Error saving session:", err);
     }
-  
-    // Check if propositionResponses exists and has entries
-    if (!req.session.participantData.propositionResponses || 
-        req.session.participantData.propositionResponses.length === 0) {
-      console.log("No proposition responses found");
-      return res.redirect('/');
-    }
-    
-    const index = req.session.participantData.currentLLMPropositionIndex;
-    const response = req.session.participantData.propositionResponses[index];
-    
-    // Save LLM interaction data
-    response.model_paragraph = req.body.modelParagraph;
-    response.model_paragraph_stance = req.body.modelStance;
-    response.edited_paragraph = req.body.editedParagraph;
-    response.writer_preference = req.body.preference;
-    response.writer_preference_reason = req.body.preferenceReason;
-    response.writer_preference_reason_other = req.body.reasonOther;
-    
-    // Move to next proposition for LLM phase
-    req.session.participantData.currentLLMPropositionIndex++;
-    
-    // Save data to database/file (simplified here with file storage)
-    try {
-      saveParticipantData(req.session.participantData);
-      console.log("Data saved successfully");
-    } catch (error) {
-      console.error("Error saving data:", error);
-    }
-    
-    // Explicitly save the session before redirecting
-    req.session.save(err => {
-      if (err) {
-        console.error("Error saving session:", err);
-      }
-      console.log("After update - Session:", req.session.participantData);
-      console.log(`Current LLM index: ${req.session.participantData.currentLLMPropositionIndex}, Total responses: ${req.session.participantData.propositionResponses.length}`);
-      res.redirect('/llm-response');
-    });
+    console.log("After update - Session:", req.session.participantData);
+    console.log(`Current LLM index: ${req.session.participantData.currentLLMPropositionIndex}, Total responses: ${req.session.participantData.propositionResponses.length}`);
+    res.redirect('/llm-response');
+  });
 });
 
 // Completion page
@@ -319,11 +386,11 @@ app.get('/completion', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
-  
+
   res.render('completion', {
     completionCode: "PLACEHOLDER CODE"
   });
-  
+
   // Clear session after completion
   req.session.destroy();
 });
@@ -358,85 +425,121 @@ function getRandomSubCondition() {
 
 // This function now returns a Promise
 async function generateModelParagraph(proposition, stance, bullets, paragraph, model_input_condition, model_name) {
-    
-    // Construct the prompt based on the sub-condition
-    let prompt = '';
-    
-    switch(model_input_condition) {
-      case 'stance-based':
-        prompt = `Consider the following political statement: ${proposition}
+
+  // Construct the prompt based on the sub-condition
+  let prompt = '';
+
+  switch (model_input_condition) {
+    case 'stance-based':
+      prompt = `Consider the following political statement: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
 Please write a short paragraph of 100-150 words for me which explains my opinion.
 Do not mention the numeric rating.
 Reply only with the paragraph, nothing else.`;
-        break;
-        
-      case 'bullets-based':
-        prompt = `Consider the following political statement: ${proposition}
+      break;
+
+    case 'bullets-based':
+      prompt = `Consider the following political statement: ${proposition}
 My opinion on this issue is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
 Do not include any preamble, like “Based on the bullet points…”.
 Reply only with the paragraph, nothing else.`;
-        break;
-        
-      case 'paraphrase':
-        prompt = `Consider the following political statement: ${proposition}
+      break;
+
+    case 'paraphrase':
+      prompt = `Consider the following political statement: ${proposition}
 I wrote the following paragraph to explain my opinion on this issue:
 "${paragraph}"
 Please rewrite this paragraph.
 Reply only with the paragraph, nothing else.`;
-        break;
-        
-      case 'improve':
-        prompt = `Consider the following political statement: ${proposition}
+      break;
+
+    case 'improve':
+      prompt = `Consider the following political statement: ${proposition}
 I wrote the following paragraph to explain my opinion on this issue:
 "${paragraph}"
 Please improve this paragraph.
 Reply only with the improved paragraph, nothing else.`;
-        break;
-        
-      default:
-        throw new Error(`Unknown sub-condition ${model_input_condition}`);
-    }
+      break;
 
-    console.log("Generating paragraph with:", {
-      model_name,
-      model_input_condition,
-      prompt
+    default:
+      throw new Error(`Unknown sub-condition ${model_input_condition}`);
+  }
+
+  console.log("Generating paragraph with:", {
+    model_name,
+    model_input_condition,
+    prompt
+  });
+
+  try {
+    // Call the OpenRouter API
+    const completion = await openrouter_client.chat.completions.create({
+      model: model_name,
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: prompt }
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
     });
-    
-    try {
-      // Call the OpenRouter API
-      const completion = await openrouter_client.chat.completions.create({
-        model: model_name,
-        messages: [
-          { role: "system", content: "You are a helpful assistant." },
-          { role: "user", content: prompt }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      });
-      
-      // Extract the response from the completion
-      return completion.choices[0].message.content.trim();
-    } catch (error) {
-      console.error("Error calling OpenRouter API:", error);
-      throw error; // Re-throw to be handled by the caller
-    }
+
+    // Extract the response from the completion
+    return completion.choices[0].message.content.trim();
+  } catch (error) {
+    console.error("Error calling OpenRouter API:", error);
+    throw error; // Re-throw to be handled by the caller
+  }
 }
 
-function saveParticipantData(data) {
-  // In production, this would save to a database
-  // For development/demo, save to a local file
+async function saveParticipantData(data) {
+  try {
+    // First try to save to S3
+    const s3Result = await saveParticipantDataToS3(data);
+    return s3Result;
+  } catch (error) {
+    console.error("Error in primary save function:", error);
+    // Fallback to local file storage
+    saveParticipantDataToFile(data);
+    return { success: false, error: error.message };
+  }
+}
+
+// Function to save participant data to S3
+async function saveParticipantDataToS3(data) {
+  try {
+    const filename = `participant_${data.prolificId}_${Date.now()}.json`;
+
+    const params = {
+      Bucket: bucketName,
+      Key: `participants/${filename}`,
+      Body: JSON.stringify(data, null, 2),
+      ContentType: 'application/json'
+    };
+
+    const result = await s3Client.send(new PutObjectCommand(params));
+    console.log(`Data saved to S3: participants/${filename}`);
+    return { success: true, key: `participants/${filename}` };
+  } catch (error) {
+    console.error('Error saving data to S3:', error);
+    // Fall back to local storage if S3 fails
+    saveParticipantDataToFile(data);
+    return { success: false, error: error.message };
+  }
+}
+
+// Keep your existing file storage function as a backup
+function saveParticipantDataToFile(data) {
   const filename = `data/participant_${data.prolificId}_${Date.now()}.json`;
   const dir = path.dirname(filename);
-  
+
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  
+
   fs.writeFileSync(filename, JSON.stringify(data, null, 2));
+  console.log(`Data saved locally to ${filename} (S3 backup)`);
 }
 
 // Start server
