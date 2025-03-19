@@ -84,7 +84,6 @@ app.get('/', (req, res) => {
 
 // Development mode route - add this right after the existing '/' route
 app.get('/dev', async (req, res) => {
-
   // Initialize session with test data
   req.session.participantData = {
     prolificId: 'test-user',
@@ -137,7 +136,7 @@ app.post('/demographics', (req, res) => {
   const assignedPropositions = getRandomPropositions(propositions, 1);
   req.session.participantData.assignedPropositions = assignedPropositions;
 
-  // Initialize the current proposition index
+  // Initialize the current proposition index to 0 (zero-based)
   req.session.participantData.currentPropositionIndex = 0;
 
   // Continue to the first proposition
@@ -148,41 +147,42 @@ app.post('/demographics', (req, res) => {
 
 // SCREEN 3: PROPOSITION STANCE
 app.get('/proposition', (req, res) => {
-
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
-  // Increment the current proposition index
-  req.session.participantData.currentPropositionIndex++;
-
-  // Get the current proposition index
+  // Get the current proposition index (zero-based)
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
   const propositions = req.session.participantData.assignedPropositions;
-  
+
   // Check if all propositions are completed
-  if (index > propositions.length) {
+  if (index >= propositions.length) {
     // If all propositions are completed, move to LLM phase
+    // Reset the LLM proposition index to 0 for starting LLM phase
+    req.session.participantData.currentLLMPropositionIndex = 0;
     return res.redirect('/llm-stance');
   }
 
   // Select the current proposition
-  const currentProposition = propositions[index - 1];
+  const currentProposition = propositions[index];
+
+  // Calculate progress percentage for progress bar
+  // Demographics is 10%, each proposition cycle is 15% (45% total for 3 propositions)
+  const progressPercentage = 10 + (index * 15);
 
   res.render('proposition', {
     proposition: currentProposition,
-    index: index,
+    index: index + 1, // Display 1-based index to the user
     total: propositions.length
   });
 });
 
 // SCREEN 3: PROPOSITION STANCE - POST
 app.post('/proposition', (req, res) => {
-
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     console.log("Missing session data, redirecting to root");
@@ -210,7 +210,6 @@ app.post('/proposition', (req, res) => {
 
 // SCREEN 4: PROPOSITION EMOTIONS
 app.get('/proposition-emotions', (req, res) => {
-  
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
@@ -220,25 +219,27 @@ app.get('/proposition-emotions', (req, res) => {
   // Get the last proposition response (the one we just saved)
   const responses = req.session.participantData.propositionResponses;
   const lastResponse = responses[responses.length - 1];
-  
+
   // Get current proposition index
   const index = req.session.participantData.currentPropositionIndex;
   const total = req.session.participantData.assignedPropositions.length;
 
+  // Calculate progress percentage: 10% for demographics + index*15% + 5% for emotions screen
+  const progressPercentage = 10 + (index * 15) + 5;
+
   res.render('proposition-emotions', {
     proposition: lastResponse.proposition,
     writerParagraph: lastResponse.writer_paragraph,
-    index: index,
+    index: index + 1, // Display 1-based index to the user
     total: total
   });
 });
 
 // SCREEN 4: PROPOSITION EMOTIONS - POST
 app.post('/proposition-emotions', (req, res) => {
-
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root"); 
+    console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
@@ -269,15 +270,18 @@ app.get('/affect-grid', (req, res) => {
   // Get the last proposition response
   const responses = req.session.participantData.propositionResponses;
   const lastResponse = responses[responses.length - 1];
-  
+
   // Get current proposition index
   const index = req.session.participantData.currentPropositionIndex;
   const total = req.session.participantData.assignedPropositions.length;
 
+  // Calculate progress percentage: 10% for demographics + index*15% + 10% for emotions + affect grid
+  const progressPercentage = 10 + (index * 15) + 10;
+
   res.render('affect-grid', {
     proposition: lastResponse.proposition,
     writerParagraph: lastResponse.writer_paragraph,
-    index: index,
+    index: index + 1, // Display 1-based index to the user
     total: total
   });
 });
@@ -298,7 +302,10 @@ app.post('/affect-grid', (req, res) => {
     y: req.body.gridY
   };
 
-  // Return to the proposition screen from where we can move to the next proposition or LLM phase
+  // Increment the proposition index after completing the full cycle for one proposition
+  req.session.participantData.currentPropositionIndex++;
+
+  // Return to the proposition screen to start the next proposition cycle or move to LLM phase
   return res.redirect('/proposition');
 });
 
@@ -306,7 +313,6 @@ app.post('/affect-grid', (req, res) => {
 
 // SCREEN 6: LLM STANCE
 app.get('/llm-stance', async (req, res) => {
-  
   // Check if session exists
   if (!req.session.participantData) {
     console.log("No participant data in session");
@@ -318,11 +324,6 @@ app.get('/llm-stance', async (req, res) => {
     req.session.participantData.propositionResponses.length === 0) {
     console.log("No proposition responses found");
     return res.redirect('/');
-  }
-
-  // Initialize LLM index if not already done
-  if (req.session.participantData.currentLLMPropositionIndex === undefined) {
-    req.session.participantData.currentLLMPropositionIndex = 0;
   }
 
   const index = req.session.participantData.currentLLMPropositionIndex;
@@ -365,11 +366,15 @@ app.get('/llm-stance', async (req, res) => {
       currentResponse.model_paragraph = modelParagraph;
     }
 
+    // Calculate progress for LLM phase (55% - 85%)
+    // 55% baseline (all propositions done) + up to 30% for LLM phase
+    const progressPercentage = 55 + (index * 10);
+
     res.render('llm-stance', {
       proposition: currentResponse.proposition,
       modelParagraph: currentResponse.model_paragraph,
-      index: index + 1,
-      total: req.session.participantData.assignedPropositions.length
+      index: index + 1, // Display 1-based index to the user  
+      total: propositionResponses.length
     });
   } catch (error) {
     console.error("Error generating model paragraph:", error);
@@ -426,11 +431,15 @@ app.get('/llm-edit', (req, res) => {
     return res.redirect('/llm-stance');
   }
 
+  // Calculate progress for LLM phase (55% - 85%)
+  // 55% baseline + (index * 10%) for stance + 3% for edit
+  const progressPercentage = 55 + (index * 10) + 3;
+
   res.render('llm-edit', {
     proposition: response.proposition,
     modelParagraph: response.model_paragraph,
-    index: index + 1,
-    total: req.session.participantData.assignedPropositions.length
+    index: index + 1, // Display 1-based index to the user
+    total: req.session.participantData.propositionResponses.length
   });
 });
 
@@ -459,7 +468,6 @@ app.post('/llm-edit', (req, res) => {
   res.redirect('/llm-compare');
 });
 
-
 // SCREEN 8: LLM COMPARE
 app.get('/llm-compare', (req, res) => {
   // Check if session exists
@@ -484,12 +492,16 @@ app.get('/llm-compare', (req, res) => {
     return res.redirect('/llm-edit');
   }
 
+  // Calculate progress for LLM phase (55% - 85%)
+  // 55% baseline + (index * 10%) + 3% for edit + 2% for compare = 10% per proposition
+  const progressPercentage = 55 + (index * 10) + 5;
+
   res.render('llm-compare', {
     proposition: response.proposition,
     writerParagraph: response.writer_paragraph,
     editedParagraph: response.edited_paragraph,
-    index: index + 1,
-    total: req.session.participantData.assignedPropositions.length
+    index: index + 1, // Display 1-based index to the user
+    total: req.session.participantData.propositionResponses.length
   });
 });
 
@@ -547,7 +559,6 @@ app.post('/ai-usage', async (req, res) => {
   res.redirect('/completion');
 });
 
-
 // SCREEN 10: COMPLETION
 app.get('/completion', async (req, res) => {
   if (!req.session.participantData) {
@@ -558,7 +569,7 @@ app.get('/completion', async (req, res) => {
   try {
     // Add a completion timestamp
     req.session.participantData.completionTimestamp = new Date().toISOString();
-    
+
     // Save the full participant data
     await saveParticipantData(req.session.participantData);
     console.log("Participant data saved successfully at completion");
@@ -626,7 +637,7 @@ Reply only with the paragraph, nothing else.`;
 My opinion on this issue is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
-Do not include any preamble, like “Based on the bullet points…”.
+Do not include any preamble, like "Based on the bullet points…".
 Reply only with the paragraph, nothing else.`;
       break;
 

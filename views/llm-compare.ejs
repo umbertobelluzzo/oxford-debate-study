@@ -11,7 +11,7 @@
     <div class="study-card">
       <h1>Paragraph Comparison: <%= index %> of <%= total %></h1>
       
-      <form action="/llm-compare" method="POST">
+      <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
         <div class="proposition-container">
           <p>Consider this political statement:</p>
           <div class="proposition-text">
@@ -60,18 +60,22 @@
             <label><b>Why did you prefer this paragraph over the other?</b> Please tick all reasons that apply and explain any additional reasons under "other".</label>
             
             <div class="checkbox-group">
-              <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion">
+              <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion" class="reason-checkbox">
               <label for="reasonOpinion">It better reflects my opinion.</label>
             </div>
             
             <div class="checkbox-group">
-              <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style">
+              <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style" class="reason-checkbox">
               <label for="reasonStyle">I prefer the writing style.</label>
             </div>
             
             <div class="form-group">
               <label for="reasonOther">Other (please specify):</label>
               <input type="text" id="reasonOther" name="reasonOther">
+            </div>
+            
+            <div id="reasonError" class="error-message" style="display: none; color: red; margin-top: 5px;">
+              Please provide at least one reason for your preference.
             </div>
           </div>
         </div>
@@ -94,6 +98,9 @@
     // Show/hide reason section based on preference
     const preferenceInputs = document.querySelectorAll('input[name="preference"]');
     const reasonSection = document.getElementById('reasonSection');
+    const reasonCheckboxes = document.querySelectorAll('.reason-checkbox');
+    const reasonOther = document.getElementById('reasonOther');
+    const reasonError = document.getElementById('reasonError');
     
     preferenceInputs.forEach(input => {
       input.onchange = () => {
@@ -104,6 +111,33 @@
         }
       }
     });
+    
+    // Form validation function
+    function validateForm() {
+      const selectedPreference = document.querySelector('input[name="preference"]:checked');
+      
+      // If no preference is selected, the browser's built-in validation will handle it
+      if (!selectedPreference) {
+        return false;
+      }
+      
+      // If "equal preference" is selected, no need to validate reasons
+      if (selectedPreference.value === 'equal') {
+        return true;
+      }
+      
+      // For other preferences, at least one reason must be provided
+      const anyCheckboxChecked = Array.from(reasonCheckboxes).some(checkbox => checkbox.checked);
+      const otherReasonProvided = reasonOther.value.trim() !== '';
+      
+      if (!anyCheckboxChecked && !otherReasonProvided) {
+        reasonError.style.display = 'block';
+        return false;
+      } else {
+        reasonError.style.display = 'none';
+        return true;
+      }
+    }
   </script>
 </body>
 </html>
