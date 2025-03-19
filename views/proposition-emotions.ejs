@@ -1,0 +1,138 @@
+<!-- views/proposition-emotions.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - Your Emotions</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>Your Emotions: <%= index %> of <%= total %></h1>
+      
+      <form action="/proposition-emotions" method="POST">
+        <div class="proposition-container">
+          <p>Consider this political statement:</p>
+          <div class="proposition-text">
+            <%= proposition %>
+          </div>
+        </div>
+        
+        <div class="paragraph-container" style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+          <p>Your paragraph:</p>
+          <div style="font-style: italic;">
+            <%= writerParagraph %>
+          </div>
+        </div>
+        
+        <p>Next, we would like to understand <b>how you felt while writing your paragraph</b>.</p>
+        
+        <div class="form-group">
+          <label for="happy">How <b>happy</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not happy at all </span>
+            <span>50 = Moderately happy </span>
+            <span>100 = Extremely happy</span>
+          </div>
+          <input type="range" id="happy" name="happy" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="happyValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="sad">How <b>sad</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not sad at all </span>
+            <span>50 = Moderately sad </span>
+            <span>100 = Extremely sad</span>
+          </div>
+          <input type="range" id="sad" name="sad" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="sadValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="afraid">How <b>afraid</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not afraid at all </span>
+            <span>50 = Moderately afraid </span>
+            <span>100 = Extremely afraid</span>
+          </div>
+          <input type="range" id="afraid" name="afraid" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="afraidValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="disgusted">How <b>disgusted</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not disgusted at all </span>
+            <span>50 = Moderately disgusted </span>
+            <span>100 = Extremely disgusted</span>
+          </div>
+          <input type="range" id="disgusted" name="disgusted" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="disgustedValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="surprised">How <b>surprised</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not surprised at all </span>
+            <span>50 = Moderately surprised </span>
+            <span>100 = Extremely surprised</span>
+          </div>
+          <input type="range" id="surprised" name="surprised" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="surprisedValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="angry">How <b>angry</b> did you feel?</label>
+          <div class="stance-scale">
+            <span>0 = Not angry at all </span>
+            <span>50 = Moderately angry </span>
+            <span>100 = Extremely angry</span>
+          </div>
+          <input type="range" id="angry" name="angry" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="angryValue">50</span>
+          </div>
+        </div>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: <%= 10 + (index * 10) + 3 %>%"></div>
+          </div>
+          <div class="progress-text"><%= 10 + (index * 10) + 3 %>% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    // Update slider value displays
+    const updateValue = (slider, valueSpan) => {
+      slider.oninput = function() {
+        valueSpan.textContent = this.value;
+      }
+    };
+    
+    updateValue(document.getElementById('happy'), document.getElementById('happyValue'));
+    updateValue(document.getElementById('sad'), document.getElementById('sadValue'));
+    updateValue(document.getElementById('afraid'), document.getElementById('afraidValue'));
+    updateValue(document.getElementById('disgusted'), document.getElementById('disgustedValue'));
+    updateValue(document.getElementById('surprised'), document.getElementById('surprisedValue'));
+    updateValue(document.getElementById('angry'), document.getElementById('angryValue'));
+  </script>
+</body>
+</html>

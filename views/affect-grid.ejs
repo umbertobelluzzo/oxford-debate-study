@@ -1,0 +1,172 @@
+<!-- views/affect-grid.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LLM Opinion Study - Affect Grid</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .affect-grid-container {
+      margin: 20px auto;
+      width: 400px;
+      height: 400px;
+      position: relative;
+      border: 2px solid #333;
+      background-color: #f9f9f9;
+    }
+    
+    .grid-labels {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .horizontal-label {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .vertical-label {
+      position: absolute;
+      transform: rotate(-90deg);
+      font-weight: bold;
+    }
+    
+    .corner-label {
+      position: absolute;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    .x-axis, .y-axis {
+      position: absolute;
+      background-color: #333;
+      pointer-events: none;
+    }
+    
+    .x-axis {
+      width: 100%;
+      height: 1px;
+      top: 50%;
+    }
+    
+    .y-axis {
+      height: 100%;
+      width: 1px;
+      left: 50%;
+    }
+    
+    #gridSelection {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="study-card">
+      <h1>Your Emotional State: <%= index %> of <%= total %></h1>
+      
+      <form action="/affect-grid" method="POST">
+        <div class="proposition-container">
+          <p>Consider this political statement:</p>
+          <div class="proposition-text">
+            <%= proposition %>
+          </div>
+        </div>
+        
+        <div class="paragraph-container" style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+          <p>Your paragraph:</p>
+          <div style="font-style: italic;">
+            <%= writerParagraph %>
+          </div>
+        </div>
+        
+        <p>The grid below helps us understand your emotional state even better. Please place yourself on the grid (by clicking) based on how you felt while writing the paragraph:</p>
+        
+        <div class="affect-grid-container" id="affectGrid">
+          <!-- Grid axes -->
+          <div class="x-axis"></div>
+          <div class="y-axis"></div>
+          
+          <!-- Grid labels -->
+          <div class="grid-labels">
+            <div class="horizontal-label" style="bottom: 5px;">Unpleasant</div>
+            <div class="horizontal-label" style="top: 5px;">Pleasant</div>
+            <div class="vertical-label" style="right: 5px; top: 45%;">High Arousal</div>
+            <div class="vertical-label" style="left: 5px; top: 45%;">Low Arousal</div>
+            
+            <div class="corner-label" style="top: 10px; right: 10px;">Excited</div>
+            <div class="corner-label" style="top: 10px; left: 10px;">Happy</div>
+            <div class="corner-label" style="bottom: 10px; right: 10px;">Distressed</div>
+            <div class="corner-label" style="bottom: 10px; left: 10px;">Depressed</div>
+          </div>
+          
+          <!-- Selection dot -->
+          <div id="gridSelection"></div>
+        </div>
+        
+        <!-- Hidden inputs to store grid coordinates -->
+        <input type="hidden" id="gridX" name="gridX" required>
+        <input type="hidden" id="gridY" name="gridY" required>
+        
+        <p id="gridInstruction" style="color: red; text-align: center; display: none;">Please click on the grid to indicate how you felt.</p>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
+          </div>
+          <div class="progress-text"><%= 10 + (index * 10) + 6 %>% complete</div>
+        </div>
+        
+        <div class="button-container">
+          <button type="submit" id="continueButton" class="button" disabled>Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    const affectGrid = document.getElementById('affectGrid');
+    const gridSelection = document.getElementById('gridSelection');
+    const gridX = document.getElementById('gridX');
+    const gridY = document.getElementById('gridY');
+    const continueButton = document.getElementById('continueButton');
+    const gridInstruction = document.getElementById('gridInstruction');
+    
+    gridInstruction.style.display = 'block'; // Show the instruction initially
+    
+    affectGrid.addEventListener('click', function(e) {
+      // Get click coordinates relative to the grid
+      const rect = affectGrid.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Update the selection marker position
+      gridSelection.style.left = x + 'px';
+      gridSelection.style.top = y + 'px';
+      gridSelection.style.display = 'block';
+      
+      // Convert to normalized coordinates (-1 to 1)
+      // Where (0,0) is the center of the grid
+      const normalizedX = ((x / rect.width) * 2) - 1;
+      const normalizedY = 1 - ((y / rect.height) * 2);
+      
+      // Store the values
+      gridX.value = normalizedX.toFixed(2);
+      gridY.value = normalizedY.toFixed(2);
+      
+      // Enable the continue button
+      continueButton.disabled = false;
+      gridInstruction.style.display = 'none'; // Hide the instruction once the grid is clicked
+    });
+  </script>
+</body>
+</html>

@@ -33,6 +33,19 @@
         </div>
         
         <div class="form-group">
+          <label for="importance">How <b>important is this issue</b> to you?</label>
+          <div class="stance-scale">
+            <span>0 = Not important at all </span>
+            <span>50 = Moderately important </span>
+            <span>100 = Extremely important</span>
+          </div>
+          <input type="range" id="importance" name="importance" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="importanceValue">50</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
           <label for="stance">What is your <b>level of agreement</b> with this statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
@@ -46,24 +59,37 @@
         </div>
         
         <div class="form-group">
-          <label for="bullets">Please explain your opinion in 2-4 <b>bullet points</b>.</label>
+          <label for="bullets">Please explain the <b>key reasons</b> for your opinion in 2-4 bullet points.</label>
           <textarea id="bullets" name="bullets" rows="5" placeholder="- First point&#10;- Second point&#10;- Third point" required></textarea>
           <div id="bulletCount" class="bullet-count">Currently: 0 bullet points</div>
           <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please provide at least 2 bullet points each starting with "-".</div>
         </div>
         
         <div class="form-group">
-          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> of around 100-150 words, in which you explain your opinion.</label>
+          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> (around 100-150 words), in which you explain your opinion.</label>
           <textarea id="paragraph" name="paragraph" rows="9" required></textarea>
           <div id="wordCount" class="word-count">Currently: 0 words</div>
           <div id="wordError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please write at least 100 words.</div>
         </div>
+        
+        <div class="form-group">
+          <label for="confidence">How <b>confident are you</b> in your opinion on this issue?</label>
+          <div class="stance-scale">
+            <span>0 = Not confident at all </span>
+            <span>50 = Moderately confident </span>
+            <span>100 = Extremely confident</span>
+          </div>
+          <input type="range" id="confidence" name="confidence" min="0" max="100" value="50" class="slider" required>
+          <div class="stance-value">
+            Current value: <span id="confidenceValue">50</span>
+          </div>
+        </div>
         <br>
         <div class="progress-container">
           <div class="progress-bar">
-            <div class="progress" style="width: <%= 10 + (index * 15) %>%"></div>
+            <div class="progress" style="width: <%= 10 + (index * 10) %>%"></div>
           </div>
-          <div class="progress-text"><%= 10 + (index * 15) %>% complete</div>
+          <div class="progress-text"><%= 10 + (index * 10) %>% complete</div>
         </div>
         
         <div class="button-container">
@@ -81,12 +107,28 @@
       knowledgeValue.textContent = this.value;
     }
     
+    // Update importance value display
+    const importanceSlider = document.getElementById('importance');
+    const importanceValue = document.getElementById('importanceValue');
+    
+    importanceSlider.oninput = function() {
+      importanceValue.textContent = this.value;
+    }
+    
     // Update stance value display
     const stanceSlider = document.getElementById('stance');
     const stanceValue = document.getElementById('stanceValue');
     
     stanceSlider.oninput = function() {
       stanceValue.textContent = this.value;
+    }
+    
+    // Update confidence value display
+    const confidenceSlider = document.getElementById('confidence');
+    const confidenceValue = document.getElementById('confidenceValue');
+    
+    confidenceSlider.oninput = function() {
+      confidenceValue.textContent = this.value;
     }
     
     // Count bullet points
@@ -181,6 +223,5 @@
       return isValid;
     }
   </script>
-<!-- <script src="/prevent-paste.js"></script> -->
 </body>
 </html>
