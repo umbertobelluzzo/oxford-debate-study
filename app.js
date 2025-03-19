@@ -133,9 +133,11 @@ app.post('/demographics', (req, res) => {
     politicalIdeology: req.body.politicalIdeology
   };
 
-  // Randomly assign 3 propositions to the participant and initialize index
-  const assignedPropositions = getRandomPropositions(propositions, 3);
+  // Randomly assign propositions to the participant 
+  const assignedPropositions = getRandomPropositions(propositions, 1);
   req.session.participantData.assignedPropositions = assignedPropositions;
+
+  // Initialize the current proposition index
   req.session.participantData.currentPropositionIndex = 0;
 
   // Continue to the first proposition
@@ -154,7 +156,10 @@ app.get('/proposition', (req, res) => {
   }
 
   // Increment the current proposition index
-  const index = req.session.participantData.currentPropositionIndex + 1;
+  req.session.participantData.currentPropositionIndex++;
+
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
   const propositions = req.session.participantData.assignedPropositions;
@@ -293,14 +298,8 @@ app.post('/affect-grid', (req, res) => {
     y: req.body.gridY
   };
 
-  // Check if we've processed all propositions
-  if (req.session.participantData.currentPropositionIndex >= req.session.participantData.assignedPropositions.length) {
-    // If all propositions are done, move to LLM phase
-    return res.redirect('/llm-stance');
-  } else {
-    // Otherwise, proceed to next proposition
-    return res.redirect('/proposition');
-  }
+  // Return to the proposition screen from where we can move to the next proposition or LLM phase
+  return res.redirect('/proposition');
 });
 
 // PHASE 2: LLM RESPONSES
