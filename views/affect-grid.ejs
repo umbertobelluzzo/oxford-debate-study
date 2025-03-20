@@ -12,44 +12,43 @@
       position: relative;
       border: 2px solid #333;
       background-color: #f9f9f9;
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(9, 1fr);
       margin: 40px 0;
-    }
-    
-    .grid-cell {
-      border: 1px solid #333;
       cursor: pointer;
     }
     
-    .grid-cell.selected {
+    .selected-point {
+      position: absolute;
+      width: 12px;
+      height: 12px;
       background-color: #3498db;
-    }
-    
-    .grid-labels {
-      position: relative;
-      width: 400px;
-      height: 400px;
-      margin: 20px auto;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
       pointer-events: none;
     }
     
-    .horizontal-label {
+    .grid-lines {
       position: absolute;
-      text-align: center;
-      font-weight: bold;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
     
-    .vertical-label {
+    .horizontal-line, .vertical-line {
       position: absolute;
-      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.1);
+      pointer-events: none;
     }
     
-    .corner-label {
-      position: absolute;
-      font-weight: bold;
-      font-size: 12px;
+    .horizontal-line {
+      width: 100%;
+      height: 1px;
+    }
+    
+    .vertical-line {
+      height: 100%;
+      width: 1px;
     }
   </style>
 </head>
@@ -73,7 +72,7 @@
           </div>
         </div>
         
-        <p>The grid below helps us understand your emotional state even better. Please select a cell in the grid (by clicking) based on how you felt while writing the paragraph:</p>
+        <p>The grid below helps us understand your emotional state even better. Please click anywhere in the grid based on how you felt while writing the paragraph:</p>
         <br>
         
         <div style="position: relative; width: 400px; margin: 0 auto;">
@@ -92,15 +91,17 @@
           <div style="position: absolute; bottom: -30px; left: 0; font-weight: bold; font-size: 12px;">Depression</div>
           
           <div class="affect-grid-container" id="affectGrid">
-            <!-- Grid cells will be created by JavaScript -->
+            <!-- Grid lines will be added via JavaScript -->
+            <div class="grid-lines" id="gridLines"></div>
+            <!-- Selected point will be added when user clicks -->
           </div>
         </div>
         
-        <!-- Hidden inputs to store grid coordinates -->
+        <!-- Hidden inputs to store grid coordinates (as percentages) -->
         <input type="hidden" id="gridX" name="gridX" required>
         <input type="hidden" id="gridY" name="gridY" required>
         
-        <p id="gridInstruction" style="color: red; text-align: center; display: none;">Please select a cell on the grid to indicate how you felt.</p>
+        <p id="gridInstruction" style="color: red; text-align: center;">Please click anywhere on the grid to indicate how you felt.</p>
         <br>
         <div class="progress-container">
           <div class="progress-bar">
@@ -121,53 +122,61 @@
     const gridY = document.getElementById('gridY');
     const continueButton = document.getElementById('continueButton');
     const gridInstruction = document.getElementById('gridInstruction');
+    const gridLines = document.getElementById('gridLines');
     
-    gridInstruction.style.display = 'block'; // Show the instruction initially
-    
-    // Create a 9x9 grid
-    for (let y = 0; y < 9; y++) {
-      for (let x = 0; x < 9; x++) {
-        const cell = document.createElement('div');
-        cell.className = 'grid-cell';
-        cell.dataset.x = x;
-        cell.dataset.y = y;
-        affectGrid.appendChild(cell);
+    // Add grid lines for visual reference
+    function createGridLines() {
+      // Add 8 horizontal lines (creating 9 sections)
+      for (let i = 1; i <= 8; i++) {
+        const hLine = document.createElement('div');
+        hLine.className = 'horizontal-line';
+        hLine.style.top = `${i * (100 / 9)}%`;
+        gridLines.appendChild(hLine);
+      }
+      
+      // Add 8 vertical lines (creating 9 sections)
+      for (let i = 1; i <= 8; i++) {
+        const vLine = document.createElement('div');
+        vLine.className = 'vertical-line';
+        vLine.style.left = `${i * (100 / 9)}%`;
+        gridLines.appendChild(vLine);
       }
     }
     
-    // Add click event to grid cells
-    const gridCells = document.querySelectorAll('.grid-cell');
-    let selectedCell = null;
+    createGridLines();
     
-    gridCells.forEach(cell => {
-      cell.addEventListener('click', function() {
-        // Remove selection from previously selected cell
-        if (selectedCell) {
-          selectedCell.classList.remove('selected');
-        }
-        
-        // Mark this cell as selected
-        this.classList.add('selected');
-        selectedCell = this;
-        
-        // Get coordinates (0-8 for both x and y)
-        const x = parseInt(this.dataset.x);
-        const y = parseInt(this.dataset.y);
-        
-        // Convert to 1-9 coordinates
-        // Add 1 to make it 1-based instead of 0-based
-        // Invert Y so that bottom left is 1,1 and top right is 9,9
-        const gridCoordX = x + 1; // 1 to 9 where 1 is left, 9 is right
-        const gridCoordY = 9 - y; // 1 to 9 where 1 is bottom, 9 is top
-        
-        // Store the values
-        gridX.value = gridCoordX;
-        gridY.value = gridCoordY;
-        
-        // Enable the continue button
-        continueButton.disabled = false;
-        gridInstruction.style.display = 'none'; // Hide the instruction once a cell is selected
-      });
+    // Handle grid click
+    affectGrid.addEventListener('click', function(e) {
+      // Remove any previously selected point
+      const existingPoint = affectGrid.querySelector('.selected-point');
+      if (existingPoint) {
+        existingPoint.remove();
+      }
+      
+      // Get click coordinates relative to the grid
+      const rect = affectGrid.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Create a visible point at click position
+      const point = document.createElement('div');
+      point.className = 'selected-point';
+      point.style.left = `${x}px`;
+      point.style.top = `${y}px`;
+      affectGrid.appendChild(point);
+      
+      // Calculate coordinates as percentages (0-100)
+      const xPercent = (x / rect.width) * 100;
+      const yPercent = (y / rect.height) * 100;
+      
+      // Store values with 2 decimal precision
+      // Note: We're keeping the traditional y-axis where 0 is top and 100 is bottom
+      gridX.value = xPercent.toFixed(2);
+      gridY.value = yPercent.toFixed(2);
+      
+      // Enable the continue button
+      continueButton.disabled = false;
+      gridInstruction.style.display = 'none';
     });
   </script>
 </body>
