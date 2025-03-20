@@ -96,7 +96,7 @@ app.get('/dev', async (req, res) => {
   res.redirect('/onboarding');
 });
 
-// SCREEN 1: ONBOARDING
+// ONBOARDING
 app.get('/onboarding', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
@@ -105,7 +105,7 @@ app.get('/onboarding', (req, res) => {
   res.render('onboarding');
 });
 
-// SCREEN 2: DEMOGRAPHICS
+// DEMOGRAPHICS
 app.get('/demographics', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
@@ -114,7 +114,7 @@ app.get('/demographics', (req, res) => {
   res.render('demographics');
 });
 
-// SCREEN 2: DEMOGRAPHICS - POST
+// DEMOGRAPHICS - POST
 app.post('/demographics', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
@@ -145,7 +145,7 @@ app.post('/demographics', (req, res) => {
 
 // PHASE 1: PROPOSITION RESPONSES
 
-// SCREEN 3: PROPOSITION STANCE
+// PROPOSITION STANCE
 app.get('/proposition', (req, res) => {
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
@@ -181,7 +181,7 @@ app.get('/proposition', (req, res) => {
   });
 });
 
-// SCREEN 3: PROPOSITION STANCE - POST
+// PROPOSITION STANCE - POST
 app.post('/proposition', (req, res) => {
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
@@ -204,64 +204,11 @@ app.post('/proposition', (req, res) => {
     timestamp: new Date().toISOString()
   });
 
-  // Continue to the emotions screen
-  res.redirect('/proposition-emotions');
-});
-
-// SCREEN 4: PROPOSITION EMOTIONS
-app.get('/proposition-emotions', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the last proposition response (the one we just saved)
-  const responses = req.session.participantData.propositionResponses;
-  const lastResponse = responses[responses.length - 1];
-
-  // Get current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
-  const total = req.session.participantData.assignedPropositions.length;
-
-  // Calculate progress percentage: 10% for demographics + index*15% + 5% for emotions screen
-  const progressPercentage = 10 + (index * 15) + 5;
-
-  res.render('proposition-emotions', {
-    proposition: lastResponse.proposition,
-    writerParagraph: lastResponse.writer_paragraph,
-    index: index + 1, // Display 1-based index to the user
-    total: total
-  });
-});
-
-// SCREEN 4: PROPOSITION EMOTIONS - POST
-app.post('/proposition-emotions', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the last proposition response and update it with emotion data
-  const responses = req.session.participantData.propositionResponses;
-  const lastResponse = responses[responses.length - 1];
-
-  // Add emotion data to the last response
-  lastResponse.writer_emotions = {
-    happy: req.body.happy,
-    sad: req.body.sad,
-    afraid: req.body.afraid,
-    disgusted: req.body.disgusted,
-    surprised: req.body.surprised,
-    angry: req.body.angry
-  };
-
-  // Redirect to affect grid page
+  // Continue to the affect grid screen
   res.redirect('/affect-grid');
 });
 
-// SCREEN 5: PROPOSITION AFFECT GRID
+// PROPOSITION AFFECT GRID
 app.get('/affect-grid', (req, res) => {
   if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
@@ -286,7 +233,7 @@ app.get('/affect-grid', (req, res) => {
   });
 });
 
-// SCREEN 5: PROPOSITION AFFECT GRID - POST
+// PROPOSITION AFFECT GRID - POST
 app.post('/affect-grid', (req, res) => {
   if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
@@ -311,7 +258,7 @@ app.post('/affect-grid', (req, res) => {
 
 // PHASE 2: LLM RESPONSES
 
-// SCREEN 6: LLM STANCE
+// LLM STANCE
 app.get('/llm-stance', async (req, res) => {
   // Check if session exists
   if (!req.session.participantData) {
@@ -382,7 +329,7 @@ app.get('/llm-stance', async (req, res) => {
   }
 });
 
-// SCREEN 6: LLM STANCE - POST
+// LLM STANCE - POST
 app.post('/llm-stance', (req, res) => {
   // Validate session data
   if (!req.session.participantData) {
@@ -407,7 +354,7 @@ app.post('/llm-stance', (req, res) => {
   res.redirect('/llm-edit');
 });
 
-// SCREEN 7: LLM EDIT
+// LLM EDIT
 app.get('/llm-edit', (req, res) => {
   // Check if session exists
   if (!req.session.participantData) {
@@ -443,7 +390,7 @@ app.get('/llm-edit', (req, res) => {
   });
 });
 
-// SCREEN 7: LLM EDIT - POST
+// LLM EDIT - POST
 app.post('/llm-edit', (req, res) => {
   // Validate session data
   if (!req.session.participantData) {
@@ -468,7 +415,7 @@ app.post('/llm-edit', (req, res) => {
   res.redirect('/llm-compare');
 });
 
-// SCREEN 8: LLM COMPARE
+// LLM COMPARE
 app.get('/llm-compare', (req, res) => {
   // Check if session exists
   if (!req.session.participantData) {
@@ -505,7 +452,7 @@ app.get('/llm-compare', (req, res) => {
   });
 });
 
-// SCREEN 8: LLM COMPARE - POST
+// SCREEN: LLM COMPARE - POST
 app.post('/llm-compare', (req, res) => {
   // Validate session data
   if (!req.session.participantData) {
@@ -535,7 +482,7 @@ app.post('/llm-compare', (req, res) => {
   res.redirect('/llm-stance');
 });
 
-// SCREEN 9: AI USAGE
+// AI USAGE
 app.get('/ai-usage', (req, res) => {
   if (!req.session.participantData) {
     console.log("No participant data in session");
@@ -545,7 +492,7 @@ app.get('/ai-usage', (req, res) => {
   res.render('ai-usage');
 });
 
-// SCREEN 9: AI USAGE - POST
+// AI USAGE - POST
 app.post('/ai-usage', async (req, res) => {
   if (!req.session.participantData) {
     console.log("No participant data in session");
