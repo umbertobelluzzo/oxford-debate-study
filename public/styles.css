@@ -231,22 +231,11 @@ input[type="radio"] {
   border-left-color: #9b59b6; /* Purple for AI-generated content */
 }
 
-.content-container-comparison {
-  border-left: none; /* No left border for comparison containers */
-  background-color: #f8f9fa;
-  padding: 20px;
-}
-
 /* Content styling inside containers */
 .content-text {
   font-size: 16px;
   line-height: 1.4;
 }
-
-.content-text-proposition {
-  font-weight: 600;
-}
-
 
 .content-preview {
   min-height: 150px;
@@ -415,7 +404,7 @@ input[type="radio"] {
   height: 400px;
   position: relative;
   border: 2px solid #333;
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
   margin: 40px auto;
   cursor: pointer;
 }

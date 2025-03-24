@@ -27,17 +27,16 @@
       <div class="scrollable-content">
         <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below would you rather
             use for this purpose?</b></p>
-        <div class="content-container content-container-comparison">
           <div class="comparison-columns">
             <div class="comparison-column">
-              <p>Your <b>original paragraph</b></p>
-              <div id="originalPreview" class="content-preview" style="border-left: 4px solid #27ae60;">
+              <p>Your <b>original paragraph</b>:</p>
+              <div id="originalPreview" class="content-container content-container-writer">
                 <%= writerParagraph %>
               </div>
             </div>
             <div class="comparison-column">
-              <p>Your <b>edited AI paragraph</b></p>
-              <div id="editedPreview" class="content-preview" style="border-left: 4px solid #9b59b6;">
+              <p>Your <b>edited AI paragraph</b>:</p>
+              <div id="editedPreview" class="content-container content-container-ai">
                 <%= editedParagraph %>
               </div>
             </div>
@@ -61,7 +60,7 @@
           </div>
 
           <div id="reasonSection" class="reason-section" style="display: none;">
-            <label><b>Why did you prefer this paragraph over the other?</b> Please tick all reasons that apply and
+            <label><b>Why do you prefer this paragraph over the other?</b> Please tick all reasons that apply and
               explain any additional reasons under "other".</label>
 
             <div class="checkbox-group">
@@ -83,7 +82,6 @@
               Please provide at least one reason for your preference.
             </div>
           </div>
-        </div>
         <br>
         <div class="progress-container">
           <div class="progress-bar">
