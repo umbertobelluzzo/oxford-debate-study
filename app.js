@@ -75,6 +75,7 @@ app.get('/', (req, res) => {
     prolificId,
     studyId,
     sessionId,
+    startTimestamp: new Date().toISOString,
     demographics: {},
     propositionResponses: []
   };
@@ -89,6 +90,7 @@ app.get('/dev', async (req, res) => {
     prolificId: 'test-user',
     studyId: 'test-study',
     sessionId: 'test-session',
+    startTimestamp: new Date().toISOString(),
     demographics: {},
     propositionResponses: [],
   };
@@ -201,7 +203,6 @@ app.post('/proposition', (req, res) => {
     writer_bullets: req.body.bullets,
     writer_paragraph: req.body.paragraph,
     writer_confidence: req.body.confidence,
-    timestamp: new Date().toISOString()
   });
 
   // Continue to the affect grid screen

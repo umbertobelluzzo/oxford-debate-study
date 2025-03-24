@@ -58,21 +58,22 @@
       <h1>Your Emotional State: <%= index %> of <%= total %></h1>
       
       <form action="/affect-grid" method="POST">
+        <p>Consider this <b>political statement</b>:</p>
         <div class="proposition-container">
-          <p>Consider this political statement:</p>
           <div class="proposition-text">
             <%= proposition %>
           </div>
         </div>
         
+        <p>Here is the paragraph you wrote:</p>
         <div class="paragraph-container" style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-          <p>Your paragraph:</p>
           <div style="font-style: italic;">
             <%= writerParagraph %>
           </div>
         </div>
         
-        <p>The grid below helps us understand your emotional state even better. Please click anywhere in the grid based on how you felt while writing the paragraph:</p>
+        <p>Next, we would like to understand <b>how you felt while writing your paragraph</b>. Please place yourself by clicking anywhere on the grid below:
+          </p>
         <br>
         
         <div style="position: relative; width: 400px; margin: 0 auto;">

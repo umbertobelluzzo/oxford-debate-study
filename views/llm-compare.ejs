@@ -1,28 +1,32 @@
 <!-- views/llm-compare.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>LLM Opinion Study - Compare Paragraphs</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Paragraph Comparison: <%= index %> of <%= total %></h1>
-      
+      <h1>Paragraph Comparison: <%= index %> of <%= total %>
+      </h1>
+
       <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
+        <p>Consider this <b>political statement</b>:</p>
         <div class="proposition-container">
-          <p>Consider this political statement:</p>
           <div class="proposition-text">
             <%= proposition %>
           </div>
         </div>
-        
+
         <div class="comparison-container">
           <h3>Paragraph Comparison</h3>
-          <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs would you rather use for this purpose?</b></p>
-          
+          <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs would you rather use
+              for this purpose?</b></p>
+
           <div class="comparison-columns">
             <div class="comparison-column">
               <h4>Your Original Paragraph</h4>
@@ -30,7 +34,7 @@
                 <%= writerParagraph %>
               </div>
             </div>
-            
+
             <div class="comparison-column">
               <h4>Your Edited AI Paragraph</h4>
               <div id="editedPreview" class="preview-box">
@@ -38,42 +42,43 @@
               </div>
             </div>
           </div>
-          
+
           <div class="preference-selection">
             <div class="radio-group">
               <input type="radio" id="preferLeft" name="preference" value="original" required>
               <label for="preferLeft">The paragraph on the left</label>
             </div>
-            
+
             <div class="radio-group">
               <input type="radio" id="preferEqual" name="preference" value="equal">
               <label for="preferEqual">Equal preference</label>
             </div>
-            
+
             <div class="radio-group">
               <input type="radio" id="preferRight" name="preference" value="edited">
               <label for="preferRight">The paragraph on the right</label>
             </div>
           </div>
-          
+
           <div id="reasonSection" class="reason-section" style="display: none;">
-            <label><b>Why did you prefer this paragraph over the other?</b> Please tick all reasons that apply and explain any additional reasons under "other".</label>
-            
+            <label><b>Why did you prefer this paragraph over the other?</b> Please tick all reasons that apply and
+              explain any additional reasons under "other".</label>
+
             <div class="checkbox-group">
               <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion" class="reason-checkbox">
               <label for="reasonOpinion">It better reflects my opinion.</label>
             </div>
-            
+
             <div class="checkbox-group">
               <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style" class="reason-checkbox">
               <label for="reasonStyle">I prefer the writing style.</label>
             </div>
-            
+
             <div class="form-group">
               <label for="reasonOther">Other (please specify):</label>
               <input type="text" id="reasonOther" name="reasonOther">
             </div>
-            
+
             <div id="reasonError" class="error-message" style="display: none; color: red; margin-top: 5px;">
               Please provide at least one reason for your preference.
             </div>
@@ -84,16 +89,18 @@
           <div class="progress-bar">
             <div class="progress" style="width: <%= 55 + (index * 15) / 3 + 10 %>%"></div>
           </div>
-          <div class="progress-text"><%= Math.round(55 + (index * 15) / 3 + 10) %>% complete</div>
+          <div class="progress-text">
+            <%= Math.round(55 + (index * 15) / 3 + 10) %>% complete
+          </div>
         </div>
-        
+
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
       </form>
     </div>
   </div>
-  
+
   <script>
     // Show/hide reason section based on preference
     const preferenceInputs = document.querySelectorAll('input[name="preference"]');
@@ -101,7 +108,7 @@
     const reasonCheckboxes = document.querySelectorAll('.reason-checkbox');
     const reasonOther = document.getElementById('reasonOther');
     const reasonError = document.getElementById('reasonError');
-    
+
     preferenceInputs.forEach(input => {
       input.onchange = () => {
         if (input.value === 'equal') {
@@ -111,25 +118,25 @@
         }
       }
     });
-    
+
     // Form validation function
     function validateForm() {
       const selectedPreference = document.querySelector('input[name="preference"]:checked');
-      
+
       // If no preference is selected, the browser's built-in validation will handle it
       if (!selectedPreference) {
         return false;
       }
-      
+
       // If "equal preference" is selected, no need to validate reasons
       if (selectedPreference.value === 'equal') {
         return true;
       }
-      
+
       // For other preferences, at least one reason must be provided
       const anyCheckboxChecked = Array.from(reasonCheckboxes).some(checkbox => checkbox.checked);
       const otherReasonProvided = reasonOther.value.trim() !== '';
-      
+
       if (!anyCheckboxChecked && !otherReasonProvided) {
         reasonError.style.display = 'block';
         return false;
@@ -140,4 +147,5 @@
     }
   </script>
 </body>
+
 </html>

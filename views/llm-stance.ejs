@@ -1,35 +1,39 @@
 <!-- views/llm-stance.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>LLM Opinion Study - AI Response Stance</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>AI-Generated Paragraph: <%= index %> of <%= total %></h1>
-      
+      <h1>AI-Generated Paragraph: <%= index %> of <%= total %>
+      </h1>
+
       <form action="/llm-stance" method="POST">
+        <p>Consider this <b>political statement</b>:</p>
         <div class="proposition-container">
-          <p>Consider this political statement:</p>
           <div class="proposition-text">
             <%= proposition %>
           </div>
         </div>
-        
+
+        <p>Here is another paragraph, regarding the same statement you replied to. <br>
+          This paragraph was <b>written by AI</b>, based on the inputs you provided earlier.</p>
         <div class="ai-paragraph-container">
-          <p>Here is another paragraph, regarding the same statement you replied to. <br>
-            This paragraph was <b>written by AI</b>, based on the inputs you provided earlier.</p>
-          
+
           <div class="ai-paragraph">
             <textarea id="modelParagraph" name="modelParagraph" rows=12 readonly><%= modelParagraph %></textarea>
           </div>
         </div>
-        
+
         <div class="form-group">
-          <label for="modelStance">What is this paragraph's <b>level of agreement</b> with the political statement?</label>
+          <label for="modelStance">What is this paragraph's <b>level of agreement</b> with the political
+            statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
             <span>50 = Ambivalent </span>
@@ -45,24 +49,27 @@
           <div class="progress-bar">
             <div class="progress" style="width: <%= 55 + (index * 15) / 3 %>%"></div>
           </div>
-          <div class="progress-text"><%= Math.round(55 + (index * 15) / 3) %>% complete</div>
+          <div class="progress-text">
+            <%= Math.round(55 + (index * 15) / 3) %>% complete
+          </div>
         </div>
-        
+
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
       </form>
     </div>
   </div>
-  
+
   <script>
     // Update model stance value display
     const modelStanceSlider = document.getElementById('modelStance');
     const modelStanceValue = document.getElementById('modelStanceValue');
-    
-    modelStanceSlider.oninput = function() {
+
+    modelStanceSlider.oninput = function () {
       modelStanceValue.textContent = this.value;
     }
   </script>
 </body>
+
 </html>
