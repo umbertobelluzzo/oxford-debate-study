@@ -1,6 +1,7 @@
 <!-- views/affect-grid.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>LLM Opinion Study - Affect Grid</title>
   <link rel="stylesheet" href="/styles.css">
@@ -15,7 +16,7 @@
       margin: 40px 0;
       cursor: pointer;
     }
-    
+
     .selected-point {
       position: absolute;
       width: 12px;
@@ -25,7 +26,7 @@
       transform: translate(-50%, -50%);
       pointer-events: none;
     }
-    
+
     .grid-lines {
       position: absolute;
       top: 0;
@@ -34,88 +35,104 @@
       height: 100%;
       pointer-events: none;
     }
-    
-    .horizontal-line, .vertical-line {
+
+    .horizontal-line,
+    .vertical-line {
       position: absolute;
       background-color: rgba(0, 0, 0, 0.1);
       pointer-events: none;
     }
-    
+
     .horizontal-line {
       width: 100%;
       height: 1px;
     }
-    
+
     .vertical-line {
       height: 100%;
       width: 1px;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Your Emotional State: <%= index %> of <%= total %></h1>
-      
-      <form action="/affect-grid" method="POST">
-        <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container">
-          <div class="proposition-text">
-            <%= proposition %>
+      <div class="sticky-header">
+        <h1>Your Emotional State: <%= index %> of <%= total %>
+        </h1>
+
+        <form action="/affect-grid" method="POST">
+          <p>Consider this <b>political statement</b>:</p>
+          <div class="proposition-container">
+            <div class="proposition-text">
+              <%= proposition %>
+            </div>
           </div>
+      </div>
+
+      <div class="scrollable-content">
+      <p>Here is the paragraph you wrote:</p>
+      <div class="paragraph-container"
+        style="background-color: #f8f9fa; border-radius: 6px; padding: 10px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+        <div style="font-style: italic;">
+          <%= writerParagraph %>
         </div>
-        
-        <p>Here is the paragraph you wrote:</p>
-        <div class="paragraph-container" style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-          <div style="font-style: italic;">
-            <%= writerParagraph %>
-          </div>
+      </div>
+
+      <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on the
+        grid below:
+      </p>
+      <br>
+
+      <div style="position: relative; width: 400px; margin: 0 auto;">
+        <!-- Vertical & corner labels - top -->
+        <div style="position: absolute; top: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">High
+          Arousal</div>
+        <div style="position: absolute; top: -30px; right: 0; font-weight: bold; font-size: 12px;">Excitement</div>
+        <div style="position: absolute; top: -30px; left: 0; font-weight: bold; font-size: 12px;">Stress</div>
+
+        <!-- Horizontal labels -->
+        <div style="position: absolute; top: 43%; right: -80px; text-align: left; font-weight: bold;">
+          Pleasant<br>Feelings</div>
+        <div style="position: absolute; top: 43%; left: -100px; text-align: right; font-weight: bold;">
+          Unpleasant<br>Feelings</div>
+
+        <!-- Vertical & corner labels - bottom -->
+        <div style="position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">
+          Sleepiness</div>
+        <div style="position: absolute; bottom: -30px; right: 0; font-weight: bold; font-size: 12px;">Relaxation</div>
+        <div style="position: absolute; bottom: -30px; left: 0; font-weight: bold; font-size: 12px;">Depression</div>
+
+        <div class="affect-grid-container" id="affectGrid">
+          <!-- Grid lines will be added via JavaScript -->
+          <div class="grid-lines" id="gridLines"></div>
+          <!-- Selected point will be added when user clicks -->
         </div>
-        
-        <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on the grid below:
-          </p>
-        <br>
-        
-        <div style="position: relative; width: 400px; margin: 0 auto;">
-          <!-- Vertical & corner labels - top -->
-          <div style="position: absolute; top: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">High Arousal</div>
-          <div style="position: absolute; top: -30px; right: 0; font-weight: bold; font-size: 12px;">Excitement</div>
-          <div style="position: absolute; top: -30px; left: 0; font-weight: bold; font-size: 12px;">Stress</div>
-          
-          <!-- Horizontal labels -->
-          <div style="position: absolute; top: 43%; right: -80px; text-align: left; font-weight: bold;">Pleasant<br>Feelings</div>
-          <div style="position: absolute; top: 43%; left: -100px; text-align: right; font-weight: bold;">Unpleasant<br>Feelings</div>
-          
-          <!-- Vertical & corner labels - bottom -->
-          <div style="position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">Sleepiness</div>
-          <div style="position: absolute; bottom: -30px; right: 0; font-weight: bold; font-size: 12px;">Relaxation</div>
-          <div style="position: absolute; bottom: -30px; left: 0; font-weight: bold; font-size: 12px;">Depression</div>
-          
-          <div class="affect-grid-container" id="affectGrid">
-            <!-- Grid lines will be added via JavaScript -->
-            <div class="grid-lines" id="gridLines"></div>
-            <!-- Selected point will be added when user clicks -->
-          </div>
+      </div>
+
+      <!-- Hidden inputs to store grid coordinates (as percentages) -->
+      <input type="hidden" id="gridX" name="gridX" required>
+      <input type="hidden" id="gridY" name="gridY" required>
+
+      <p id="gridInstruction" style="color: red; text-align: center;">Please click anywhere on the grid to indicate how
+        you felt.</p>
+      <br>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
         </div>
-        
-        <!-- Hidden inputs to store grid coordinates (as percentages) -->
-        <input type="hidden" id="gridX" name="gridX" required>
-        <input type="hidden" id="gridY" name="gridY" required>
-        
-        <p id="gridInstruction" style="color: red; text-align: center;">Please click anywhere on the grid to indicate how you felt.</p>
-        <br>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
-          </div>
-          <div class="progress-text"><%= 10 + (index * 10) + 6 %>% complete</div>
+        <div class="progress-text">
+          <%= 10 + (index * 10) + 6 %>% complete
         </div>
-        
-        <div class="button-container">
-          <button type="submit" id="continueButton" class="button" disabled>Continue</button>
-        </div>
+      </div>
+
+      <div class="button-container">
+        <button type="submit" id="continueButton" class="button" disabled>Continue</button>
+      </div>
       </form>
     </div>
+  </div>
   </div>
   <script>
     const affectGrid = document.getElementById('affectGrid');
@@ -124,7 +141,7 @@
     const continueButton = document.getElementById('continueButton');
     const gridInstruction = document.getElementById('gridInstruction');
     const gridLines = document.getElementById('gridLines');
-    
+
     // Add grid lines for visual reference
     function createGridLines() {
       // Add 8 horizontal lines (creating 9 sections)
@@ -134,7 +151,7 @@
         hLine.style.top = `${i * (100 / 9)}%`;
         gridLines.appendChild(hLine);
       }
-      
+
       // Add 8 vertical lines (creating 9 sections)
       for (let i = 1; i <= 8; i++) {
         const vLine = document.createElement('div');
@@ -143,42 +160,43 @@
         gridLines.appendChild(vLine);
       }
     }
-    
+
     createGridLines();
-    
+
     // Handle grid click
-    affectGrid.addEventListener('click', function(e) {
+    affectGrid.addEventListener('click', function (e) {
       // Remove any previously selected point
       const existingPoint = affectGrid.querySelector('.selected-point');
       if (existingPoint) {
         existingPoint.remove();
       }
-      
+
       // Get click coordinates relative to the grid
       const rect = affectGrid.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       // Create a visible point at click position
       const point = document.createElement('div');
       point.className = 'selected-point';
       point.style.left = `${x}px`;
       point.style.top = `${y}px`;
       affectGrid.appendChild(point);
-      
+
       // Calculate coordinates as percentages (0-100)
       const xPercent = (x / rect.width) * 100;
       const yPercent = (y / rect.height) * 100;
-      
+
       // Store values with 2 decimal precision
       // Note: We're keeping the traditional y-axis where 0 is top and 100 is bottom
       gridX.value = xPercent.toFixed(2);
       gridY.value = yPercent.toFixed(2);
-      
+
       // Enable the continue button
       continueButton.disabled = false;
       gridInstruction.style.display = 'none';
     });
   </script>
 </body>
+
 </html>

@@ -11,17 +11,20 @@
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Edit AI-Generated Paragraph: <%= index %> of <%= total %>
-      </h1>
+      <div class="sticky-header">
+        <h1>Edit AI-Generated Paragraph: <%= index %> of <%= total %>
+        </h1>
 
-      <form action="/llm-edit" method="POST">
-        <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container">
-          <div class="proposition-text">
-            <%= proposition %>
+        <form action="/llm-edit" method="POST">
+          <p>Consider this <b>political statement</b>:</p>
+          <div class="proposition-container">
+            <div class="proposition-text">
+              <%= proposition %>
+            </div>
           </div>
-        </div>
+      </div>
 
+      <div class="scrollable-content">
         <div class="form-group">
           <label for="editedParagraph">Now you have the chance to <b>edit the AI-written paragraph</b>. If you feel that
             the paragraph already reflects your opinion, you do not have to edit it. Otherwise please edit it until it
@@ -41,7 +44,8 @@
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </body>

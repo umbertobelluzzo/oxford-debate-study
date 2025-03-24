@@ -11,32 +11,33 @@
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Paragraph Comparison: <%= index %> of <%= total %>
-      </h1>
+      <div class="sticky-header">
+        <h1>Paragraph Comparison: <%= index %> of <%= total %>
+        </h1>
 
-      <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
-        <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container">
-          <div class="proposition-text">
-            <%= proposition %>
+        <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
+          <p>Consider this <b>political statement</b>:</p>
+          <div class="proposition-container">
+            <div class="proposition-text">
+              <%= proposition %>
+            </div>
           </div>
-        </div>
+      </div>
 
+      <div class="scrollable-content">
+        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below would you rather use for this purpose?</b></p>
         <div class="comparison-container">
-          <h3>Paragraph Comparison</h3>
-          <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs would you rather use
-              for this purpose?</b></p>
 
           <div class="comparison-columns">
             <div class="comparison-column">
-              <h4>Your Original Paragraph</h4>
+              <p>Your <b>original paragraph</b></p>
               <div id="originalPreview" class="preview-box">
                 <%= writerParagraph %>
               </div>
             </div>
 
             <div class="comparison-column">
-              <h4>Your Edited AI Paragraph</h4>
+              <p>Your <b>edited AI paragraph</b></p>
               <div id="editedPreview" class="preview-box">
                 <%= editedParagraph %>
               </div>
@@ -97,7 +98,8 @@
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 

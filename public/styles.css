@@ -214,7 +214,7 @@ input[type="radio"] {
   margin-bottom: 30px;
   background-color: #f8f9fa;
   border-radius: 6px;
-  padding: 20px;
+  padding: 10px;
   border-left: 4px solid #3498db;
 }
 
@@ -259,12 +259,67 @@ input[type="radio"] {
   color: #e67e22;
 }
 
+/* Add this to your styles.css file */
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin: -30px -30px 20px -30px;
+  padding: 20px 30px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #eee;
+}
+
+/* Keep any proposition containers inside the sticky header from having bottom margin */
+.sticky-header .proposition-container {
+  margin-bottom: 0;
+}
+
+/* Create space for the scrollable content below the sticky header */
+.scrollable-content {
+  margin-top: 20px;
+}
+
+/* Adjust header title position when inside sticky header */
+.sticky-header h1 {
+  margin-bottom: 15px;
+}
+
+/* Style for previewing paragraphs within sticky headers */
+.paragraph-preview {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-left: 4px solid #3498db;
+  max-height: 100px;
+  overflow-y: auto;
+  font-style: italic;
+}
+
+/* Add a fading effect at the bottom of paragraph previews to indicate more content */
+.paragraph-preview.with-fade {
+  position: relative;
+}
+
+.paragraph-preview.with-fade:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
+}
+
 /* AI paragraph styles */
 .ai-paragraph-container {
   margin-bottom: 30px;
   background-color: #f8f9fa;
   border-radius: 6px;
-  padding: 20px;
+  padding: 10px;
   border-left: 4px solid #9b59b6;
 }
 

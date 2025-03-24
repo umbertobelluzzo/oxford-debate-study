@@ -11,16 +11,20 @@
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>AI-Generated Paragraph: <%= index %> of <%= total %>
-      </h1>
+      <div class="sticky-header">
+        <h1>AI-Generated Paragraph: <%= index %> of <%= total %>
+        </h1>
 
-      <form action="/llm-stance" method="POST">
-        <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container">
-          <div class="proposition-text">
-            <%= proposition %>
+        <form action="/llm-stance" method="POST">
+          <p>Consider this <b>political statement</b>:</p>
+          <div class="proposition-container">
+            <div class="proposition-text">
+              <%= proposition %>
+            </div>
           </div>
-        </div>
+      </div>
+
+      <div class="scrollable-content">
 
         <p>Here is another paragraph, regarding the same statement you replied to. <br>
           This paragraph was <b>written by AI</b>, based on the inputs you provided earlier.</p>
@@ -57,7 +61,8 @@
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 

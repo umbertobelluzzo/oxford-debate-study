@@ -5,36 +5,17 @@
   <title>LLM Opinion Study - Political Statement</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    .fixed-proposition {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      margin: -30px -30px 20px -30px;
-      padding: 20px 30px;
-      background-color: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border-bottom: 1px solid #eee;
-    }
-
-    .fixed-proposition .proposition-container {
-      margin-bottom: 0;
-    }
-
-    .questions-section {
-      margin-top: 20px;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Political Statement: <%= index %> of <%= total %></h1>
       
-      <!-- Fixed position proposition section -->
-      <div class="fixed-proposition">
+      <!-- Sticky header section -->
+      <div class="sticky-header">
+        <h1>Political Statement: <%= index %> of <%= total %></h1>
+        
         <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container" style="margin-bottom: 0;">
+        <div class="proposition-container">
           <div class="proposition-text">
             <%= proposition %>
           </div>
@@ -42,7 +23,7 @@
       </div>
       
       <!-- Scrollable questions section -->
-      <div class="questions-section">
+      <div class="scrollable-content">
         <form id="propositionForm" action="/proposition" method="POST" onsubmit="return validateForm()">
           <div class="form-group">
             <label for="knowledge">How much do you <b>know about this issue</b>?</label>
