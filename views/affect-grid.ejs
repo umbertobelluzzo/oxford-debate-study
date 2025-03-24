@@ -6,61 +6,13 @@
   <title>LLM Opinion Study - Affect Grid</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    .affect-grid-container {
-      width: 400px;
-      height: 400px;
-      position: relative;
-      border: 2px solid #333;
-      background-color: #f9f9f9;
-      margin: 40px 0;
-      cursor: pointer;
-    }
-
-    .selected-point {
-      position: absolute;
-      width: 12px;
-      height: 12px;
-      background-color: #3498db;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-
-    .grid-lines {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    .horizontal-line,
-    .vertical-line {
-      position: absolute;
-      background-color: rgba(0, 0, 0, 0.1);
-      pointer-events: none;
-    }
-
-    .horizontal-line {
-      width: 100%;
-      height: 1px;
-    }
-
-    .vertical-line {
-      height: 100%;
-      width: 1px;
-    }
-  </style>
 </head>
 
 <body>
   <div class="container">
     <div class="study-card">
       <div class="sticky-header">
-        <h1>Your Emotional State: <%= index %> of <%= total %>
-        </h1>
+        <h1>Your Emotional State: <%= index %> of <%= total %></h1>
 
         <form action="/affect-grid" method="POST">
           <p>Consider this <b>political statement</b>:</p>
@@ -72,64 +24,57 @@
       </div>
 
       <div class="scrollable-content">
-      <p>Here is the paragraph you wrote:</p>
-      <div class="paragraph-container"
-        style="background-color: #f8f9fa; border-radius: 6px; padding: 10px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-        <div style="font-style: italic;">
-          <%= writerParagraph %>
+        <p>Here is the paragraph you wrote:</p>
+        <div class="paragraph-container">
+          <div class="paragraph-italic">
+            <%= writerParagraph %>
+          </div>
         </div>
-      </div>
 
-      <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on the
-        grid below:
-      </p>
-      <br>
+        <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on the
+          grid below:</p>
+        <br>
 
-      <div style="position: relative; width: 400px; margin: 0 auto;">
-        <!-- Vertical & corner labels - top -->
-        <div style="position: absolute; top: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">High
-          Arousal</div>
-        <div style="position: absolute; top: -30px; right: 0; font-weight: bold; font-size: 12px;">Excitement</div>
-        <div style="position: absolute; top: -30px; left: 0; font-weight: bold; font-size: 12px;">Stress</div>
+        <div class="affect-grid-wrapper">
+          <!-- Vertical & corner labels - top -->
+          <div class="grid-label-top">High Arousal</div>
+          <div class="grid-label-right-top">Excitement</div>
+          <div class="grid-label-left-top">Stress</div>
 
-        <!-- Horizontal labels -->
-        <div style="position: absolute; top: 43%; right: -80px; text-align: left; font-weight: bold;">
-          Pleasant<br>Feelings</div>
-        <div style="position: absolute; top: 43%; left: -100px; text-align: right; font-weight: bold;">
-          Unpleasant<br>Feelings</div>
+          <!-- Horizontal labels -->
+          <div class="grid-label-left">Unpleasant<br>Feelings</div>
+          <div class="grid-label-right">Pleasant<br>Feelings</div>
 
-        <!-- Vertical & corner labels - bottom -->
-        <div style="position: absolute; bottom: -30px; left: 0; width: 100%; text-align: center; font-weight: bold;">
-          Sleepiness</div>
-        <div style="position: absolute; bottom: -30px; right: 0; font-weight: bold; font-size: 12px;">Relaxation</div>
-        <div style="position: absolute; bottom: -30px; left: 0; font-weight: bold; font-size: 12px;">Depression</div>
+          <!-- Vertical & corner labels - bottom -->
+          <div class="grid-label-bottom">Sleepiness</div>
+          <div class="grid-label-right-bottom">Relaxation</div>
+          <div class="grid-label-left-bottom">Depression</div>
 
-        <div class="affect-grid-container" id="affectGrid">
-          <!-- Grid lines will be added via JavaScript -->
-          <div class="grid-lines" id="gridLines"></div>
-          <!-- Selected point will be added when user clicks -->
+          <div class="affect-grid-container" id="affectGrid">
+            <!-- Grid lines will be added via JavaScript -->
+            <div class="grid-lines" id="gridLines"></div>
+            <!-- Selected point will be added when user clicks -->
+          </div>
         </div>
-      </div>
 
-      <!-- Hidden inputs to store grid coordinates (as percentages) -->
-      <input type="hidden" id="gridX" name="gridX" required>
-      <input type="hidden" id="gridY" name="gridY" required>
+        <!-- Hidden inputs to store grid coordinates (as percentages) -->
+        <input type="hidden" id="gridX" name="gridX" required>
+        <input type="hidden" id="gridY" name="gridY" required>
 
-      <p id="gridInstruction" style="color: red; text-align: center;">Please click anywhere on the grid to indicate how
-        you felt.</p>
-      <br>
-      <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
+        <p id="gridInstruction" class="grid-instruction">Please click anywhere on the grid to indicate how you felt.</p>
+        <br>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
+          </div>
+          <div class="progress-text">
+            <%= 10 + (index * 10) + 6 %>% complete
+          </div>
         </div>
-        <div class="progress-text">
-          <%= 10 + (index * 10) + 6 %>% complete
-        </div>
-      </div>
 
-      <div class="button-container">
-        <button type="submit" id="continueButton" class="button" disabled>Continue</button>
-      </div>
+        <div class="button-container">
+          <button type="submit" id="continueButton" class="button" disabled>Continue</button>
+        </div>
       </form>
     </div>
   </div>

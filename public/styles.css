@@ -287,33 +287,6 @@ input[type="radio"] {
   margin-bottom: 15px;
 }
 
-/* Style for previewing paragraphs within sticky headers */
-.paragraph-preview {
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-left: 4px solid #3498db;
-  max-height: 100px;
-  overflow-y: auto;
-  font-style: italic;
-}
-
-/* Add a fading effect at the bottom of paragraph previews to indicate more content */
-.paragraph-preview.with-fade {
-  position: relative;
-}
-
-.paragraph-preview.with-fade:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 20px;
-  background: linear-gradient(to bottom, rgba(248, 249, 250, 0), rgba(248, 249, 250, 1));
-}
-
 /* AI paragraph styles */
 .ai-paragraph-container {
   margin-bottom: 30px;
@@ -421,4 +394,141 @@ input[type="radio"] {
   .radio-group {
     margin-bottom: 10px;
   }
+}
+
+/* Affect Grid Styles */
+.affect-grid-container {
+  width: 400px;
+  height: 400px;
+  position: relative;
+  border: 2px solid #333;
+  background-color: #f9f9f9;
+  margin: 40px auto;
+  cursor: pointer;
+}
+
+.affect-grid-wrapper {
+  position: relative;
+  width: 400px;
+  margin: 0 auto;
+}
+
+.selected-point {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: #3498db;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.horizontal-line,
+.vertical-line {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+.horizontal-line {
+  width: 100%;
+  height: 1px;
+}
+
+.vertical-line {
+  height: 100%;
+  width: 1px;
+}
+
+/* Affect grid labels */
+.grid-label-top {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.grid-label-right-top {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.grid-label-left-top {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.grid-label-right {
+  position: absolute;
+  top: 43%;
+  right: -80px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.grid-label-left {
+  position: absolute;
+  top: 43%;
+  left: -100px;
+  text-align: right;
+  font-weight: bold;
+}
+
+.grid-label-bottom {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+.grid-label-right-bottom {
+  position: absolute;
+  bottom: -30px;
+  right: 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.grid-label-left-bottom {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.grid-instruction {
+  color: red;
+  text-align: center;
+}
+
+.paragraph-container {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-left: 4px solid #3498db;
+}
+
+.paragraph-italic {
+  font-style: italic;
 }
