@@ -237,25 +237,6 @@ input[type="radio"] {
   line-height: 1.4;
 }
 
-.content-preview {
-  min-height: 150px;
-  padding: 10px;
-  line-height: 1.4;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-}
-
-/* For wrapping text in a textarea that is readonly */
-.content-readonly-textarea {
-  width: 100%;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  resize: none;
-  font-family: inherit;
-  padding: 10px;
-}
-
 /* Bullet count styles */
 .bullet-count {
   text-align: right;
@@ -521,8 +502,4 @@ input[type="radio"] {
 .grid-instruction {
   color: red;
   text-align: center;
-}
-
-.paragraph-italic {
-  font-style: italic;
 }
