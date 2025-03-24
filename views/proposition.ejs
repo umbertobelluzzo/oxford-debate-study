@@ -1,161 +1,178 @@
 <!-- views/proposition.ejs -->
 <!DOCTYPE html>
 <html>
-
 <head>
   <title>LLM Opinion Study - Political Statement</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
+  <style>
+    .fixed-proposition {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      margin: -30px -30px 20px -30px;
+      padding: 20px 30px;
+      background-color: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid #eee;
+    }
 
+    .fixed-proposition .proposition-container {
+      margin-bottom: 0;
+    }
+
+    .questions-section {
+      margin-top: 20px;
+    }
+  </style>
+</head>
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Political Statement: <%= index %> of <%= total %>
-      </h1>
-
-      <form id="propositionForm" action="/proposition" method="POST" onsubmit="return validateForm()">
+      <h1>Political Statement: <%= index %> of <%= total %></h1>
+      
+      <!-- Fixed position proposition section -->
+      <div class="fixed-proposition">
         <p>Consider this <b>political statement</b>:</p>
-        <div class="proposition-container">
+        <div class="proposition-container" style="margin-bottom: 0;">
           <div class="proposition-text">
             <%= proposition %>
           </div>
         </div>
-
-        <div class="form-group">
-          <label for="knowledge">How much do you <b>know about this issue</b>?</label>
-          <div class="stance-scale">
-            <span>0 = No knowledge at all </span>
-            <span>50 = Some understanding </span>
-            <span>100 = Expert knowledge</span>
+      </div>
+      
+      <!-- Scrollable questions section -->
+      <div class="questions-section">
+        <form id="propositionForm" action="/proposition" method="POST" onsubmit="return validateForm()">
+          <div class="form-group">
+            <label for="knowledge">How much do you <b>know about this issue</b>?</label>
+            <div class="stance-scale">
+              <span>0 = No knowledge at all </span>
+              <span>50 = Some understanding </span>
+              <span>100 = Expert knowledge</span>
+            </div>
+            <input type="range" id="knowledge" name="knowledge" min="0" max="100" value="50" class="slider" required>
+            <div class="stance-value">
+              Current value: <span id="knowledgeValue">50</span>
+            </div>
           </div>
-          <input type="range" id="knowledge" name="knowledge" min="0" max="100" value="50" class="slider" required>
-          <div class="stance-value">
-            Current value: <span id="knowledgeValue">50</span>
+          
+          <div class="form-group">
+            <label for="importance">How <b>important is this issue</b> to you?</label>
+            <div class="stance-scale">
+              <span>0 = Not important at all </span>
+              <span>50 = Moderately important </span>
+              <span>100 = Extremely important</span>
+            </div>
+            <input type="range" id="importance" name="importance" min="0" max="100" value="50" class="slider" required>
+            <div class="stance-value">
+              Current value: <span id="importanceValue">50</span>
+            </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="importance">How <b>important is this issue</b> to you?</label>
-          <div class="stance-scale">
-            <span>0 = Not important at all </span>
-            <span>50 = Moderately important </span>
-            <span>100 = Extremely important</span>
+          
+          <div class="form-group">
+            <label for="stance">What is your <b>level of agreement</b> with this statement?</label>
+            <div class="stance-scale">
+              <span>0 = Strongly disagree </span>
+              <span>50 = Ambivalent </span>
+              <span>100 = Strongly agree</span>
+            </div>
+            <input type="range" id="stance" name="stance" min="0" max="100" value="50" class="slider" required>
+            <div class="stance-value">
+              Current value: <span id="stanceValue">50</span>
+            </div>
           </div>
-          <input type="range" id="importance" name="importance" min="0" max="100" value="50" class="slider" required>
-          <div class="stance-value">
-            Current value: <span id="importanceValue">50</span>
+          
+          <div class="form-group">
+            <label for="bullets">Please explain the <b>key reasons</b> for your opinion in 2-4 bullet points.</label>
+            <textarea id="bullets" name="bullets" rows="5" placeholder="- First point&#10;- Second point&#10;- Third point" required></textarea>
+            <div id="bulletCount" class="bullet-count">Currently: 0 bullet points</div>
+            <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please provide at least 2 bullet points each starting with "-".</div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="stance">What is your <b>level of agreement</b> with this statement?</label>
-          <div class="stance-scale">
-            <span>0 = Strongly disagree </span>
-            <span>50 = Ambivalent </span>
-            <span>100 = Strongly agree</span>
+          
+          <div class="form-group">
+            <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> (around 100-150 words), in which you explain your opinion.</label>
+            <textarea id="paragraph" name="paragraph" rows="9" required></textarea>
+            <div id="wordCount" class="word-count">Currently: 0 words</div>
+            <div id="wordError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please write at least 100 words.</div>
           </div>
-          <input type="range" id="stance" name="stance" min="0" max="100" value="50" class="slider" required>
-          <div class="stance-value">
-            Current value: <span id="stanceValue">50</span>
+          
+          <div class="form-group">
+            <label for="confidence">How <b>confident are you</b> in your opinion on this issue?</label>
+            <div class="stance-scale">
+              <span>0 = Not confident at all </span>
+              <span>50 = Moderately confident </span>
+              <span>100 = Extremely confident</span>
+            </div>
+            <input type="range" id="confidence" name="confidence" min="0" max="100" value="50" class="slider" required>
+            <div class="stance-value">
+              Current value: <span id="confidenceValue">50</span>
+            </div>
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="bullets">Please explain the <b>key reasons</b> for your opinion in 2-4 bullet points.</label>
-          <textarea id="bullets" name="bullets" rows="5"
-            placeholder="- First point&#10;- Second point&#10;- Third point" required></textarea>
-          <div id="bulletCount" class="bullet-count">Currently: 0 bullet points</div>
-          <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please provide
-            at least 2 bullet points each starting with "-".</div>
-        </div>
-
-        <div class="form-group">
-          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> (around 100-150 words),
-            in which you explain your opinion.</label>
-          <textarea id="paragraph" name="paragraph" rows="9" required></textarea>
-          <div id="wordCount" class="word-count">Currently: 0 words</div>
-          <div id="wordError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please write at
-            least 100 words.</div>
-        </div>
-
-        <div class="form-group">
-          <label for="confidence">How <b>confident are you</b> in your opinion on this issue?</label>
-          <div class="stance-scale">
-            <span>0 = Not confident at all </span>
-            <span>50 = Moderately confident </span>
-            <span>100 = Extremely confident</span>
+          <br>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress" style="width: <%= 10 + (index * 10) %>%"></div>
+            </div>
+            <div class="progress-text"><%= 10 + (index * 10) %>% complete</div>
           </div>
-          <input type="range" id="confidence" name="confidence" min="0" max="100" value="50" class="slider" required>
-          <div class="stance-value">
-            Current value: <span id="confidenceValue">50</span>
+          
+          <div class="button-container">
+            <button type="submit" class="button">Continue</button>
           </div>
-        </div>
-        <br>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress" style="width: <%= 10 + (index * 10) %>%"></div>
-          </div>
-          <div class="progress-text">
-            <%= 10 + (index * 10) %>% complete
-          </div>
-        </div>
-
-        <div class="button-container">
-          <button type="submit" class="button">Continue</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
   <script>
     // Update knowledge value display
     const knowledgeSlider = document.getElementById('knowledge');
     const knowledgeValue = document.getElementById('knowledgeValue');
-
-    knowledgeSlider.oninput = function () {
+    
+    knowledgeSlider.oninput = function() {
       knowledgeValue.textContent = this.value;
     }
-
+    
     // Update importance value display
     const importanceSlider = document.getElementById('importance');
     const importanceValue = document.getElementById('importanceValue');
-
-    importanceSlider.oninput = function () {
+    
+    importanceSlider.oninput = function() {
       importanceValue.textContent = this.value;
     }
-
+    
     // Update stance value display
     const stanceSlider = document.getElementById('stance');
     const stanceValue = document.getElementById('stanceValue');
-
-    stanceSlider.oninput = function () {
+    
+    stanceSlider.oninput = function() {
       stanceValue.textContent = this.value;
     }
-
+    
     // Update confidence value display
     const confidenceSlider = document.getElementById('confidence');
     const confidenceValue = document.getElementById('confidenceValue');
-
-    confidenceSlider.oninput = function () {
+    
+    confidenceSlider.oninput = function() {
       confidenceValue.textContent = this.value;
     }
-
+    
     // Count bullet points
     const bullets = document.getElementById('bullets');
     const bulletCount = document.getElementById('bulletCount');
     const bulletError = document.getElementById('bulletError');
-
-    bullets.oninput = function () {
+    
+    bullets.oninput = function() {
       // Count bullet points by looking for lines starting with - or • or *
-      const bulletLines = this.value.split('\n').filter(line =>
-        line.trim().startsWith('-') ||
-        line.trim().startsWith('•') ||
+      const bulletLines = this.value.split('\n').filter(line => 
+        line.trim().startsWith('-') || 
+        line.trim().startsWith('•') || 
         line.trim().startsWith('*')
       );
-
+      
       const count = bulletLines.length;
       bulletCount.textContent = count + ' bullet point' + (count !== 1 ? 's' : '');
-
+      
       if (count < 2) {
         bulletCount.classList.add('below-range');
         bulletCount.classList.remove('in-range', 'above-range');
@@ -170,17 +187,17 @@
         bulletError.style.display = 'none';
       }
     }
-
+    
     // Word count for paragraph
     const paragraph = document.getElementById('paragraph');
     const wordCount = document.getElementById('wordCount');
     const wordError = document.getElementById('wordError');
-
-    paragraph.oninput = function () {
+    
+    paragraph.oninput = function() {
       const words = this.value.match(/\S+/g) || [];
       const count = words.length;
       wordCount.textContent = count + ' word' + (count !== 1 ? 's' : '');
-
+      
       if (count < 100) {
         wordCount.classList.add('below-range');
         wordCount.classList.remove('in-range', 'above-range');
@@ -195,22 +212,22 @@
         wordError.style.display = 'none';
       }
     }
-
+    
     // Form validation
     function validateForm() {
       // Count bullet points
-      const bulletLines = bullets.value.split('\n').filter(line =>
-        line.trim().startsWith('-') ||
-        line.trim().startsWith('•') ||
+      const bulletLines = bullets.value.split('\n').filter(line => 
+        line.trim().startsWith('-') || 
+        line.trim().startsWith('•') || 
         line.trim().startsWith('*')
       );
-
+      
       // Count words
       const words = paragraph.value.match(/\S+/g) || [];
-
+      
       // Check requirements
       let isValid = true;
-
+      
       if (bulletLines.length < 2) {
         bulletError.style.display = 'block';
         bullets.focus();
@@ -218,7 +235,7 @@
       } else {
         bulletError.style.display = 'none';
       }
-
+      
       if (words.length < 100) {
         wordError.style.display = 'block';
         if (bulletLines.length >= 2) {
@@ -228,10 +245,9 @@
       } else {
         wordError.style.display = 'none';
       }
-
+      
       return isValid;
     }
   </script>
 </body>
-
 </html>
