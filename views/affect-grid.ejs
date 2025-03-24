@@ -12,12 +12,13 @@
   <div class="container">
     <div class="study-card">
       <div class="sticky-header">
-        <h1>Your Emotional State: <%= index %> of <%= total %></h1>
+        <h1>Your Emotional State: <%= index %> of <%= total %>
+        </h1>
 
         <form action="/affect-grid" method="POST">
           <p>Consider this <b>political statement</b>:</p>
-          <div class="proposition-container">
-            <div class="proposition-text">
+          <div class="content-container content-container-proposition">
+            <div class="content-text content-text-proposition">
               <%= proposition %>
             </div>
           </div>
@@ -25,13 +26,14 @@
 
       <div class="scrollable-content">
         <p>Here is the paragraph you wrote:</p>
-        <div class="paragraph-container">
-          <div class="paragraph-italic">
+        <div class="content-container content-container-writer">
+          <div class="content-text content-text-writer">
             <%= writerParagraph %>
           </div>
         </div>
 
-        <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on the
+        <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on
+          the
           grid below:</p>
         <br>
 
@@ -75,9 +77,9 @@
         <div class="button-container">
           <button type="submit" id="continueButton" class="button" disabled>Continue</button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
-  </div>
   </div>
   <script>
     const affectGrid = document.getElementById('affectGrid');

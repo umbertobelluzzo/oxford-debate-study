@@ -209,19 +209,65 @@ input[type="radio"] {
   color: #666;
 }
 
-/* Proposition styles */
-.proposition-container {
-  margin-bottom: 30px;
+/* Standardized paragraph containers */
+.content-container {
+  margin-bottom: 20px;
   background-color: #f8f9fa;
   border-radius: 6px;
-  padding: 10px;
-  border-left: 4px solid #3498db;
+  padding: 15px;
+  border-left: 4px solid #3498db; /* Default border color */
 }
 
-.proposition-text {
+/* Specific container types with different border colors */
+.content-container-proposition {
+  border-left-color: #3498db; /* Blue for propositions */
+}
+
+.content-container-writer {
+  border-left-color: #27ae60; /* Green for user-written content */
+}
+
+.content-container-ai {
+  border-left-color: #9b59b6; /* Purple for AI-generated content */
+}
+
+.content-container-comparison {
+  border-left: none; /* No left border for comparison containers */
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+/* Content styling inside containers */
+.content-text {
   font-size: 16px;
-  font-weight: 1000;
   line-height: 1.5;
+}
+
+.content-text-proposition {
+  font-weight: 600;
+}
+
+.content-text-writer {
+  font-style: italic;
+}
+
+/* This replaces the previous preview-box */
+.content-preview {
+  min-height: 150px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+}
+
+/* For wrapping text in a textarea that is readonly */
+.content-readonly-textarea {
+  width: 100%;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  resize: none;
+  font-family: inherit;
+  padding: 10px;
 }
 
 /* Bullet count styles */
@@ -259,7 +305,6 @@ input[type="radio"] {
   color: #e67e22;
 }
 
-/* Add this to your styles.css file */
 
 .sticky-header {
   position: sticky;
@@ -271,15 +316,8 @@ input[type="radio"] {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #eee;
 }
-
-/* Keep any proposition containers inside the sticky header from having bottom margin */
 .sticky-header .proposition-container {
   margin-bottom: 0;
-}
-
-/* Create space for the scrollable content below the sticky header */
-.scrollable-content {
-  margin-top: 20px;
 }
 
 /* Adjust header title position when inside sticky header */
@@ -287,27 +325,13 @@ input[type="radio"] {
   margin-bottom: 15px;
 }
 
-/* AI paragraph styles */
-.ai-paragraph-container {
-  margin-bottom: 30px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 10px;
-  border-left: 4px solid #9b59b6;
+/* Create space for the scrollable content below the sticky header */
+.scrollable-content {
+  margin-top: 20px;
 }
 
-.ai-paragraph textarea {
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-}
 
 /* Comparison section */
-.comparison-container {
-  margin: 30px 0;
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-}
 
 .comparison-columns {
   display: flex;
@@ -317,14 +341,6 @@ input[type="radio"] {
 
 .comparison-column {
   flex: 1;
-}
-
-.preview-box {
-  min-height: 150px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
 }
 
 .preference-selection {
@@ -417,7 +433,7 @@ input[type="radio"] {
   position: absolute;
   width: 12px;
   height: 12px;
-  background-color: #3498db;
+  background-color: #27ae60;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
@@ -519,14 +535,6 @@ input[type="radio"] {
 .grid-instruction {
   color: red;
   text-align: center;
-}
-
-.paragraph-container {
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 20px;
-  border-left: 4px solid #3498db;
 }
 
 .paragraph-italic {

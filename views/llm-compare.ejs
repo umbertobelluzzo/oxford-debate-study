@@ -17,28 +17,27 @@
 
         <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
           <p>Consider this <b>political statement</b>:</p>
-          <div class="proposition-container">
-            <div class="proposition-text">
+          <div class="content-container content-container-proposition">
+            <div class="content-text content-text-proposition">
               <%= proposition %>
             </div>
           </div>
       </div>
 
       <div class="scrollable-content">
-        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below would you rather use for this purpose?</b></p>
-        <div class="comparison-container">
-
+        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below would you rather
+            use for this purpose?</b></p>
+        <div class="content-container content-container-comparison">
           <div class="comparison-columns">
             <div class="comparison-column">
               <p>Your <b>original paragraph</b></p>
-              <div id="originalPreview" class="preview-box">
+              <div id="originalPreview" class="content-preview" style="border-left: 4px solid #27ae60;">
                 <%= writerParagraph %>
               </div>
             </div>
-
             <div class="comparison-column">
               <p>Your <b>edited AI paragraph</b></p>
-              <div id="editedPreview" class="preview-box">
+              <div id="editedPreview" class="content-preview" style="border-left: 4px solid #9b59b6;">
                 <%= editedParagraph %>
               </div>
             </div>
