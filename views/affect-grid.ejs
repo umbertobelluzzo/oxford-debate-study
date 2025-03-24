@@ -16,22 +16,16 @@
         </h1>
 
         <form action="/affect-grid" method="POST">
-          <p>Consider this <b>political statement</b>:</p>
-          <div class="content-container content-container-proposition">
-            <div class="content-text content-text-proposition">
-              <%= proposition %>
+          <p>Here is the paragraph you wrote:</p>
+          <div class="content-container content-container-writer">
+            <div class="content-text content-text-writer">
+              <%= writerParagraph %>
             </div>
           </div>
       </div>
 
       <div class="scrollable-content">
-        <p>Here is the paragraph you wrote:</p>
-        <div class="content-container content-container-writer">
-          <div class="content-text content-text-writer">
-            <%= writerParagraph %>
-          </div>
-        </div>
-
+ 
         <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on
           the
           grid below:</p>

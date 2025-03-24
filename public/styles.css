@@ -240,21 +240,18 @@ input[type="radio"] {
 /* Content styling inside containers */
 .content-text {
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .content-text-proposition {
   font-weight: 600;
 }
 
-.content-text-writer {
-  font-style: italic;
-}
 
-/* This replaces the previous preview-box */
 .content-preview {
   min-height: 150px;
-  padding: 15px;
+  padding: 10px;
+  line-height: 1.4;
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: white;
