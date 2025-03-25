@@ -3,7 +3,7 @@
 <html>
 
 <head>
-  <title>LLM Opinion Study - Political Statement</title>
+  <title>LLM Opinion Study - Political Proposition</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -14,20 +14,28 @@
 
       <!-- Sticky header section -->
       <div class="sticky-header">
-        <h1>Political Statement: <%= index %> of <%= total %>
-        </h1>
-
-        <p>Consider this <b>political statement</b>:</p>
-        <div class="content-container content-container-proposition">
-          <div class="content-text content-text-proposition">
-            <%= proposition %>
+        <div class="counter-badges">
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Proposition:</span>
+            <div class="counter-badge"><%= index %> of <%= total %></div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">1 of 2</div>
           </div>
         </div>
+
+        <form id="propositionForm" action="/proposition" method="POST" onsubmit="return validateForm()">
+          <p>Consider this <b>political proposition</b>:</p>
+          <div class="content-container content-container-proposition">
+            <div class="content-text content-text-proposition">
+              <%= proposition %>
+            </div>
+          </div>
       </div>
 
       <!-- Scrollable questions section -->
       <div class="scrollable-content">
-        <form id="propositionForm" action="/proposition" method="POST" onsubmit="return validateForm()">
           <div class="form-group">
             <label for="knowledge">How much do you <b>know about this issue</b>?</label>
             <div class="stance-scale">
@@ -55,7 +63,7 @@
           </div>
 
           <div class="form-group">
-            <label for="stance">What is your <b>level of agreement</b> with this statement?</label>
+            <label for="stance">What is your <b>level of agreement</b> with this proposition?</label>
             <div class="stance-scale">
               <span>0 = Strongly disagree </span>
               <span>50 = Ambivalent </span>
@@ -98,14 +106,6 @@
             </div>
           </div>
           <br>
-          <div class="progress-container">
-            <div class="progress-bar">
-              <div class="progress" style="width: <%= 10 + (index * 10) %>%"></div>
-            </div>
-            <div class="progress-text">
-              <%= 10 + (index * 10) %>% complete
-            </div>
-          </div>
 
           <div class="button-container">
             <button type="submit" class="button">Continue</button>

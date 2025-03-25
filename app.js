@@ -540,7 +540,9 @@ app.get('/completion', async (req, res) => {
 // Helper functions
 function getRandomPropositions(allPropositions, count) {
   const shuffled = [...allPropositions].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
+  const selected = shuffled.slice(0, count);
+  console.log(`Randomly selected ${count} propositions from a pool of ${allPropositions.length}`);
+  return selected;
 }
 
 // Assign a random LLM. Eventually this will be between GPT-4o, Claude-3.7-Sonnet, Llama-3.1-70B, Qwen-2.5-72B, DeepSeek-V3.
@@ -567,41 +569,42 @@ function getRandomSubCondition() {
 
 // This function now returns a Promise
 async function generateModelParagraph(proposition, stance, bullets, paragraph, model_input_condition, model_name) {
-
   // Construct the prompt based on the sub-condition
   let prompt = '';
 
   switch (model_input_condition) {
     case 'stance-based':
-      prompt = `Consider the following political statement: ${proposition}
+      prompt = `Consider the following political proposition: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
 Please write a short paragraph of 100-150 words for me which explains my opinion.
-Do not mention the numeric rating.
+Do not mention the numeric rating or include any preamble like "Based on the rating, …".
 Reply only with the paragraph, nothing else.`;
       break;
 
     case 'bullets-based':
-      prompt = `Consider the following political statement: ${proposition}
+      prompt = `Consider the following political proposition: ${proposition}
 My opinion on this issue is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
-Do not include any preamble, like "Based on the bullet points…".
+Do not include any preamble, like "Based on the bullet points …".
 Reply only with the paragraph, nothing else.`;
       break;
 
     case 'paraphrase':
-      prompt = `Consider the following political statement: ${proposition}
+      prompt = `Consider the following political proposition: ${proposition}
 I wrote the following paragraph to explain my opinion on this issue:
 "${paragraph}"
-Please rewrite this paragraph.
+Please rewrite this paragraph without changing its length.
+Do not include any preamble, like "Based on the original paragraph …".
 Reply only with the paragraph, nothing else.`;
       break;
 
     case 'improve':
-      prompt = `Consider the following political statement: ${proposition}
+      prompt = `Consider the following political proposition: ${proposition}
 I wrote the following paragraph to explain my opinion on this issue:
 "${paragraph}"
-Please improve this paragraph.
+Please improve this paragraph without changing its length.
+Do not include any preamble, like "Based on the original paragraph …".
 Reply only with the improved paragraph, nothing else.`;
       break;
 

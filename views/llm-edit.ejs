@@ -12,11 +12,19 @@
   <div class="container">
     <div class="study-card">
       <div class="sticky-header">
-        <h1>Edit AI-Generated Paragraph: <%= index %> of <%= total %>
-        </h1>
+        <div class="counter-badges">
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Proposition:</span>
+            <div class="counter-badge"><%= index %> of <%= total %></div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">2 of 3</div>
+          </div>
+        </div>
 
         <form action="/llm-edit" method="POST">
-          <p>Consider this <b>political statement</b>:</p>
+          <p>Consider this <b>political proposition</b>:</p>
           <div class="content-container content-container-proposition">
             <div class="content-text content-text-proposition">
               <%= proposition %>
@@ -32,14 +40,6 @@
           <textarea id="editedParagraph" name="editedParagraph" rows="12" required style="border-left: 4px solid #9b59b6;"><%= modelParagraph %></textarea>
         </div>
         <br>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress" style="width: <%= 55 + (index * 15) / 3 + 5 %>%"></div>
-          </div>
-          <div class="progress-text">
-            <%= Math.round(55 + (index * 15) / 3 + 5) %>% complete
-          </div>
-        </div>
 
         <div class="button-container">
           <button type="submit" class="button">Continue</button>

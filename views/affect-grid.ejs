@@ -12,10 +12,25 @@
   <div class="container">
     <div class="study-card">
       <div class="sticky-header">
-        <h1>Your Emotional State: <%= index %> of <%= total %>
-        </h1>
+        <div class="counter-badges">
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Proposition:</span>
+            <div class="counter-badge"><%= index %> of <%= total %></div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">2 of 2</div>
+          </div>
+        </div>
 
-        <form action="/affect-grid" method="POST">
+        <form action="/affect-grid" method="POST" id="affectGridForm">
+          <p>Consider this <b>political proposition</b>:</p>
+          <div class="content-container content-container-proposition">
+            <div class="content-text content-text-proposition">
+              <%= proposition %>
+            </div>
+          </div>
+
           <p>Here is the paragraph you wrote:</p>
           <div class="content-container content-container-writer">
             <div class="content-text content-text-writer">
@@ -27,8 +42,7 @@
       <div class="scrollable-content">
  
         <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on
-          the
-          grid below:</p>
+          the grid below:</p>
         <br>
 
         <div class="affect-grid-wrapper">
@@ -59,14 +73,6 @@
 
         <p id="gridInstruction" class="grid-instruction">Please click anywhere on the grid to indicate how you felt.</p>
         <br>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress" style="width: <%= 10 + (index * 10) + 6 %>%"></div>
-          </div>
-          <div class="progress-text">
-            <%= 10 + (index * 10) + 6 %>% complete
-          </div>
-        </div>
 
         <div class="button-container">
           <button type="submit" id="continueButton" class="button" disabled>Continue</button>
@@ -82,6 +88,7 @@
     const continueButton = document.getElementById('continueButton');
     const gridInstruction = document.getElementById('gridInstruction');
     const gridLines = document.getElementById('gridLines');
+    const form = document.getElementById('affectGridForm');
 
     // Add grid lines for visual reference
     function createGridLines() {
@@ -103,6 +110,9 @@
     }
 
     createGridLines();
+
+    // Track whether grid has been clicked
+    let gridClicked = false;
 
     // Handle grid click
     affectGrid.addEventListener('click', function (e) {
@@ -136,8 +146,17 @@
       // Enable the continue button
       continueButton.disabled = false;
       gridInstruction.style.display = 'none';
+      
+      // Mark grid as clicked
+      gridClicked = true;
     });
-  </script>
-</body>
 
-</html>
+    // Form validation
+    form.addEventListener('submit', function(e) {
+      if (!gridClicked) {
+        e.preventDefault();
+        gridInstruction.style.color = 'red';
+        gridInstruction.style.fontWeight = 'bold';
+        alert('Please click on the grid to indicate how you felt.');
+      }
+    });
