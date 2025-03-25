@@ -135,7 +135,7 @@ app.post('/demographics', (req, res) => {
   };
 
   // Randomly assign propositions to the participant 
-  const assignedPropositions = getRandomPropositions(propositions, 1);
+  const assignedPropositions = getRandomPropositions(propositions, 3);
   req.session.participantData.assignedPropositions = assignedPropositions;
 
   // Initialize the current proposition index to 0 (zero-based)
