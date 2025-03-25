@@ -2,6 +2,7 @@
 
 /* Base styles */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -225,21 +226,26 @@ input[type="radio"] {
   margin-bottom: 20px;
   background-color: #f8f9fa;
   border-radius: 6px;
-  padding: 15px;
-  border-left: 4px solid #3498db; /* Default border color */
+  padding: 10px;
+  border-left: 4px solid #3498db;
+  /* Default border color */
 }
 
 /* Specific container types with different border colors */
 .content-container-proposition {
-  border-left-color: #3498db; /* Blue for propositions */
+  border-left-color: #3498db;
+  /* Blue for propositions */
 }
 
 .content-container-writer {
-  border-left-color: #27ae60; /* Green for user-written content */
+  border-left-color: #27ae60;
+  /* Green for user-written content */
+  margin-bottom: 0px;
 }
 
 .content-container-ai {
-  border-left-color: #9b59b6; /* Purple for AI-generated content */
+  border-left-color: #9b59b6;
+  /* Purple for AI-generated content */
 }
 
 /* Content styling inside containers */
@@ -324,7 +330,8 @@ input[type="radio"] {
 }
 
 .counter-badge.screen-badge {
-  background-color: #27ae60; /* Different color for screen badge */
+  background-color: #27ae60;
+  /* Different color for screen badge */
 }
 
 /* Sticky header */
@@ -338,6 +345,7 @@ input[type="radio"] {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid #eee;
 }
+
 .sticky-header .proposition-container {
   margin-bottom: 0;
 }
@@ -538,20 +546,20 @@ input[type="radio"] {
   .container {
     padding: 10px;
   }
-  
+
   .study-card {
     padding: 20px;
   }
-  
+
   .comparison-columns {
     flex-direction: column;
   }
-  
+
   .preference-selection {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .radio-group {
     margin-bottom: 10px;
   }

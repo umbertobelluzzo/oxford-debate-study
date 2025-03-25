@@ -43,9 +43,10 @@
               <span>50 = Some understanding </span>
               <span>100 = Expert knowledge</span>
             </div>
-            <input type="range" id="knowledge" name="knowledge" min="0" max="100" value="50" class="slider" required>
+            <input type="range" id="knowledge" name="knowledge" min="0" max="100" class="slider slider-unset" required>
             <div class="stance-value">
-              Current value: <span id="knowledgeValue">50</span>
+              <span id="knowledgeValue" class="hidden">0</span>
+              <span id="knowledgeLabel" class="slider-label">Please click on the scale to set your rating</span>
             </div>
           </div>
 
@@ -56,9 +57,10 @@
               <span>50 = Moderately important </span>
               <span>100 = Extremely important</span>
             </div>
-            <input type="range" id="importance" name="importance" min="0" max="100" value="50" class="slider" required>
+            <input type="range" id="importance" name="importance" min="0" max="100" class="slider slider-unset" required>
             <div class="stance-value">
-              Current value: <span id="importanceValue">50</span>
+              <span id="importanceValue" class="hidden">0</span>
+              <span id="importanceLabel" class="slider-label">Please click on the scale to set your rating</span>
             </div>
           </div>
 
@@ -69,9 +71,10 @@
               <span>50 = Ambivalent </span>
               <span>100 = Strongly agree</span>
             </div>
-            <input type="range" id="stance" name="stance" min="0" max="100" value="50" class="slider" required>
+            <input type="range" id="stance" name="stance" min="0" max="100" class="slider slider-unset" required>
             <div class="stance-value">
-              Current value: <span id="stanceValue">50</span>
+              <span id="stanceValue" class="hidden">0</span>
+              <span id="stanceLabel" class="slider-label">Please click on the scale to set your rating</span>
             </div>
           </div>
 
@@ -100,9 +103,10 @@
               <span>50 = Moderately confident </span>
               <span>100 = Extremely confident</span>
             </div>
-            <input type="range" id="confidence" name="confidence" min="0" max="100" value="50" class="slider" required>
+            <input type="range" id="confidence" name="confidence" min="0" max="100" class="slider slider-unset" required>
             <div class="stance-value">
-              Current value: <span id="confidenceValue">50</span>
+              <span id="confidenceValue" class="hidden">0</span>
+              <span id="confidenceLabel" class="slider-label">Please click on the scale to set your rating</span>
             </div>
           </div>
           <br>
@@ -115,37 +119,59 @@
     </div>
   </div>
   <script>
-    // Update knowledge value display
-    const knowledgeSlider = document.getElementById('knowledge');
-    const knowledgeValue = document.getElementById('knowledgeValue');
+    // Initialize slider states
+    const sliderStates = {
+      'knowledge': false,
+      'importance': false,
+      'stance': false,
+      'confidence': false
+    };
+    
+    // Define the sliders and their corresponding value displays and labels
+    const sliderConfig = {
+      'knowledge': {
+        valueEl: document.getElementById('knowledgeValue'),
+        labelEl: document.getElementById('knowledgeLabel'),
+        sliderEl: document.getElementById('knowledge')
+      },
+      'importance': {
+        valueEl: document.getElementById('importanceValue'),
+        labelEl: document.getElementById('importanceLabel'),
+        sliderEl: document.getElementById('importance')
+      },
+      'stance': {
+        valueEl: document.getElementById('stanceValue'),
+        labelEl: document.getElementById('stanceLabel'),
+        sliderEl: document.getElementById('stance')
+      },
+      'confidence': {
+        valueEl: document.getElementById('confidenceValue'),
+        labelEl: document.getElementById('confidenceLabel'),
+        sliderEl: document.getElementById('confidence')
+      }
+    };
 
-    knowledgeSlider.oninput = function () {
-      knowledgeValue.textContent = this.value;
-    }
-
-    // Update importance value display
-    const importanceSlider = document.getElementById('importance');
-    const importanceValue = document.getElementById('importanceValue');
-
-    importanceSlider.oninput = function () {
-      importanceValue.textContent = this.value;
-    }
-
-    // Update stance value display
-    const stanceSlider = document.getElementById('stance');
-    const stanceValue = document.getElementById('stanceValue');
-
-    stanceSlider.oninput = function () {
-      stanceValue.textContent = this.value;
-    }
-
-    // Update confidence value display
-    const confidenceSlider = document.getElementById('confidence');
-    const confidenceValue = document.getElementById('confidenceValue');
-
-    confidenceSlider.oninput = function () {
-      confidenceValue.textContent = this.value;
-    }
+    // Add event listeners to all sliders
+    Object.keys(sliderConfig).forEach(id => {
+      const config = sliderConfig[id];
+      
+      // Track whether the user has interacted with the slider
+      config.sliderEl.addEventListener('input', function() {
+        // Update the value display
+        config.valueEl.textContent = "Current value: " + this.value;
+        
+        // Show the value and hide the prompt
+        config.valueEl.classList.remove('hidden');
+        config.labelEl.classList.add('hidden');
+        
+        // Mark the slider as set
+        this.classList.remove('slider-unset');
+        this.classList.add('slider-set');
+        
+        // Update state
+        sliderStates[id] = true;
+      });
+    });
 
     // Count bullet points
     const bullets = document.getElementById('bullets');
@@ -205,6 +231,25 @@
 
     // Form validation
     function validateForm() {
+      // Check if all sliders have been set
+      const allSlidersSet = Object.values(sliderStates).every(state => state === true);
+      
+      if (!allSlidersSet) {
+        // Prevent form submission
+        alert('Please set a value for all rating scales before continuing.');
+        
+        // Highlight unset sliders
+        Object.keys(sliderStates).forEach(id => {
+          if (!sliderStates[id]) {
+            sliderConfig[id].sliderEl.classList.add('slider-unset');
+            sliderConfig[id].labelEl.style.color = 'red';
+            sliderConfig[id].labelEl.style.fontWeight = 'bold';
+          }
+        });
+        
+        return false;
+      }
+      
       // Count bullet points
       const bulletLines = bullets.value.split('\n').filter(line =>
         line.trim().startsWith('-') ||
