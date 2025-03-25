@@ -142,13 +142,13 @@ app.post('/demographics', (req, res) => {
   req.session.participantData.currentPropositionIndex = 0;
 
   // Continue to the first proposition
-  res.redirect('/proposition');
+  res.redirect('/proposition-intro');
 });
 
 // PHASE 1: PROPOSITION RESPONSES
 
-// PROPOSITION STANCE
-app.get('/proposition', (req, res) => {
+// PROPOSITION INTRO
+app.get('/proposition-intro', (req, res) => {
   // Check if session exists
   if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
     console.log("Missing session data, redirecting to root");
@@ -172,9 +172,40 @@ app.get('/proposition', (req, res) => {
   // Select the current proposition
   const currentProposition = propositions[index];
 
-  // Calculate progress percentage for progress bar
-  // Demographics is 10%, each proposition cycle is 15% (45% total for 3 propositions)
-  const progressPercentage = 10 + (index * 15);
+  res.render('proposition-intro', {
+    proposition: currentProposition,
+    index: index + 1, // Display 1-based index to the user
+    total: propositions.length
+  });
+});
+
+// PROPOSITION INTRO - POST
+app.post('/proposition-intro', (req, res) => {
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Proceed to the proposition opinion screen
+  res.redirect('/proposition');
+});
+
+// PROPOSITION STANCE
+app.get('/proposition', (req, res) => {
+  // Check if session exists
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index (zero-based)
+  const index = req.session.participantData.currentPropositionIndex;
+
+  // Get the propositions assigned to the participant
+  const propositions = req.session.participantData.assignedPropositions;
+
+  // Select the current proposition
+  const currentProposition = propositions[index];
 
   res.render('proposition', {
     proposition: currentProposition,
@@ -223,9 +254,6 @@ app.get('/affect-grid', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
   const total = req.session.participantData.assignedPropositions.length;
 
-  // Calculate progress percentage: 10% for demographics + index*15% + 10% for emotions + affect grid
-  const progressPercentage = 10 + (index * 15) + 10;
-
   res.render('affect-grid', {
     proposition: lastResponse.proposition,
     writerParagraph: lastResponse.writer_paragraph,
@@ -254,7 +282,7 @@ app.post('/affect-grid', (req, res) => {
   req.session.participantData.currentPropositionIndex++;
 
   // Return to the proposition screen to start the next proposition cycle or move to LLM phase
-  return res.redirect('/proposition');
+  return res.redirect('/proposition-intro');
 });
 
 // PHASE 2: LLM RESPONSES
@@ -313,10 +341,6 @@ app.get('/llm-stance', async (req, res) => {
 
       currentResponse.model_paragraph = modelParagraph;
     }
-
-    // Calculate progress for LLM phase (55% - 85%)
-    // 55% baseline (all propositions done) + up to 30% for LLM phase
-    const progressPercentage = 55 + (index * 10);
 
     res.render('llm-stance', {
       proposition: currentResponse.proposition,
@@ -379,10 +403,6 @@ app.get('/llm-edit', (req, res) => {
     return res.redirect('/llm-stance');
   }
 
-  // Calculate progress for LLM phase (55% - 85%)
-  // 55% baseline + (index * 10%) for stance + 3% for edit
-  const progressPercentage = 55 + (index * 10) + 3;
-
   res.render('llm-edit', {
     proposition: response.proposition,
     modelParagraph: response.model_paragraph,
@@ -439,10 +459,6 @@ app.get('/llm-compare', (req, res) => {
     console.log("No edited paragraph found, redirecting to edit step");
     return res.redirect('/llm-edit');
   }
-
-  // Calculate progress for LLM phase (55% - 85%)
-  // 55% baseline + (index * 10%) + 3% for edit + 2% for compare = 10% per proposition
-  const progressPercentage = 55 + (index * 10) + 5;
 
   res.render('llm-compare', {
     proposition: response.proposition,
