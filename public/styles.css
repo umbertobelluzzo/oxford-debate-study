@@ -234,6 +234,7 @@ input[type="radio"] {
 /* Specific container types with different border colors */
 .content-container-proposition {
   border-left-color: #3498db;
+  font-weight: bold;
   /* Blue for propositions */
 }
 
