@@ -588,9 +588,6 @@ app.post('/llm-compare', (req, res) => {
   response.writer_preference_reason = req.body.preferenceReason;
   response.writer_preference_reason_other = req.body.reasonOther;
 
-  // Move to next proposition for LLM phase
-  req.session.participantData.currentLLMPropositionIndex++;
-
   // Redirect back to first step for next proposition
   res.redirect('/proposition-stance-final');
 });
