@@ -156,15 +156,54 @@ app.post('/demographics', (req, res) => {
     politicalIdeology: req.body.politicalIdeology
   };
 
-  // Randomly assign propositions to the participant 
-  const assignedPropositions = getRandomPropositions(propositions, 3);
-  req.session.participantData.assignedPropositions = assignedPropositions;
+  // Redirect to attention check instead of proposition-intro
+  res.redirect('/attention-check');
+});
 
-  // Initialize the current proposition index to 0 (zero-based)
-  req.session.participantData.currentPropositionIndex = 0;
+// ATTENTION CHECK
+app.get('/attention-check', (req, res) => {
+  if (!req.session.participantData) {
+    return res.redirect('/');
+  }
 
-  // Continue to the first proposition
-  res.redirect('/proposition-intro');
+  res.render('attention-check');
+});
+
+// ATTENTION CHECK - POST
+app.post('/attention-check', (req, res) => {
+  if (!req.session.participantData) {
+    return res.redirect('/');
+  }
+
+  const answer = req.body.seasonAnswer.trim().toLowerCase();
+
+  // Check if the answer contains "potato"
+  if (answer.includes('potato')) {
+    // Passed the attention check
+    req.session.participantData.attentionCheckPassed = true;
+
+    // Randomly assign propositions to the participant 
+    const assignedPropositions = getRandomPropositions(propositions, 3);
+    req.session.participantData.assignedPropositions = assignedPropositions;
+
+    // Initialize the current proposition index to 0 (zero-based)
+    req.session.participantData.currentPropositionIndex = 0;
+
+    // Continue to the first proposition
+    return res.redirect('/proposition-intro');
+  } else {
+    // Failed the attention check
+    req.session.participantData.attentionCheckPassed = false;
+
+    // Generate a partial completion code
+    const partialCompletionCode = `PARTIAL-${Date.now().toString(36).substring(4)}`;
+
+    // Render an error page with partial compensation information
+    return res.render('error', {
+      message: 'Thank you for your participation. However, we need participants to carefully read the instructions, and you failed our attention check question. You will receive partial compensation using the code below.',
+      completionCode: partialCompletionCode
+    });
+  }
 });
 
 // PHASE 1: PROPOSITION RESPONSES
