@@ -11,7 +11,7 @@
 
 body {
   font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
+  line-height: 1.4;
   color: #333;
   background-color: #f5f7fa;
   padding: 20px;
@@ -234,8 +234,8 @@ input[type="radio"] {
 /* Specific container types with different border colors */
 .content-container-proposition {
   border-left-color: #3498db;
-  font-weight: bold;
   /* Blue for propositions */
+  font-weight: bold;
 }
 
 .content-container-writer {
