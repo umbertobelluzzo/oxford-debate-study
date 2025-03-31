@@ -1,0 +1,82 @@
+<!-- views/onboarding.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Political Opinion Study - Onboarding</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 800px;">
+    <div class="study-card">
+      <h1>Welcome!</h1>
+      <br>
+
+      <div class="consent-information">
+        <p>You are invited to take part in a study that examines how people express their opinions on different
+          political topics. <strong>We expect this survey to take up to 60 minutes</strong>. Before deciding whether to
+          participate, please read this information carefully.</p>
+
+        <h3>Data Collection and Use</h3>
+        <p>In this survey, we will collect:</p>
+        <p> 1) Your demographic information, specifically age, gender, race/ethnicity, education level, income, and
+          political affiliation. Note that you will always be able to select "Prefer not to say". <br> 2) Your opinion
+          on different political propositions. We will ask you to complete rating questions and express your opinion in
+          writing.<br> 3) We will also ask you to express your preference over different opinion texts.</p>
+        <p><strong>Note:</strong> Please do not use AI to complete the writing tasks in this survey. We really want you
+          to express your opinion in your own words.</p>
+
+        <h3>Anonymity and Confidentiality</h3>
+        <p>All your responses will be fully anonymised. Your unique Prolific ID will be converted to a study-specific ID
+          that cannot be linked back to you by the research team.</p>
+
+        <h3>Data Storage and Protection</h3>
+        <p>All data will be stored securely on password-protected servers, fully anonymised through the use of unique
+          participant IDs, and processed in compliance with GDPR.</p>
+
+        <h3>Data Sharing</h3>
+        <p>We plan to make anonymised data available through a secure online repository as part of our research outputs.
+          No personally identifiable information will be shared.</p>
+
+        <h3>Right to Withdraw</h3>
+        <p>You have the right to withdraw from this study at any time without providing a reason by closing your browser
+          window. If you wish to withdraw your data after completing the study, you may do so within 30 days by
+          contacting us with your Prolific ID at <a
+            href="mailto:paul.rottger@unibocconi.it">paul.rottger@unibocconi.it</a>.</p>
+
+        <h3>Compensation</h3>
+        <p>You will receive a completion code at the end of the survey. Please enter this code on Prolific to receive
+          your payment.</p>
+
+        <h3>Partial Disclosure</h3>
+        <p>While we have explained the general purpose of the study, specific details about how your responses will be
+          used are withheld to avoid influencing your responses. We will provide full information at the end of the
+          study.</p>
+
+        <h3>Consent Declaration</h3>
+        <p>By clicking "I consent" below, you confirm that:</p>
+        <p>1) You are 18 years of age or older<br>2) You have read and understood the information provided<br>3) You
+          consent to the collection and processing of sensitive personal data as described above<br>4) You voluntarily
+          agree to participate in this research</p>
+      </div>
+
+      <div class="button-container" , style="justify-content: left;">
+        <form action="/consent" method="POST">
+          <div class="radio-group" style="margin-bottom: 20px;">
+            <input type="radio" id="consentYes" name="consent" value="yes" required>
+            <label for="consentYes">I consent to participate in this survey.</label>
+          </div>
+          <div class="radio-group" style="margin-bottom: 20px;">
+            <input type="radio" id="consentNo" name="consent" value="no">
+            <label for="consentNo">I do NOT consent (if you select this option, you will exit the survey)</label>
+          </div>
+          <button type="submit" class="button">Continue</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

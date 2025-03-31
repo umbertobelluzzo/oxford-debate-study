@@ -48,15 +48,15 @@ app.use(session(sessionConfig));
 // Sample propositions (to be filled with actual study propositions)
 const propositions = [
   "The UK should impose economic sanctions on Israel in response to the 2023 invasion of Gaza.",
-  "The UK should implement strict regulations on the development and deployment of artificial intelligence technologies",
-  "The UK should implement a legally binding target to achieve net-zero carbon emissions by 2030.",
-  "The UK should increase military and humanitarian support to Ukraine in response to the 2022 Russian invasion.",
+  "The UK should implement strict regulation on the use of artificial intelligence technologies.",
+  "The UK should withdraw from the Paris Climate Agreement.",
+  "The UK should increase military support to Ukraine in response to the 2022 Russian invasion.",
   "The UK should mandate COVID-19 vaccinations for all eligible citizens.",
-  "Abortion should be legal and accessible on demand in the UK.",
+  "The UK should make abortion illegal.",
   "The UK should transition to a socialist economic system, replacing capitalism.",
-  "The UK should legalize marijuana for recreational use.",
-  "The UK should make public education free and accessible for all students up to the university level.",
-  "The UK should adopt a single-payer healthcare system.",
+  "The UK should legalise marijuana for recreational use.",
+  "The UK should abolish private schools and integrate them into the state education system.",
+  "The UK should defund the NHS."
 ];
 
 // Route to handle Prolific integration
@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
     propositionResponses: []
   };
 
-  res.redirect('/onboarding');
+  res.redirect('/consent');
 });
 
 // Development mode route - add this right after the existing '/' route
@@ -95,16 +95,38 @@ app.get('/dev', async (req, res) => {
     propositionResponses: [],
   };
 
-  res.redirect('/onboarding');
+  res.redirect('/consent');
 });
 
-// ONBOARDING
-app.get('/onboarding', (req, res) => {
+// CONSENT
+app.get('/consent', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
 
-  res.render('onboarding');
+  res.render('consent');
+});
+
+// CONSENT - POST
+app.post('/consent', (req, res) => {
+  if (!req.session.participantData) {
+    return res.redirect('/');
+  }
+
+  const consentResponse = req.body.consent;
+
+  // Save consent in session data
+  req.session.participantData.consent = consentResponse;
+
+  // If user does not consent, show a thank you page and exit
+  if (consentResponse === 'no') {
+    return res.render('error', {
+      message: 'Thank you for considering our study. As you did not consent to participate, the survey will now end.'
+    });
+  }
+
+  // Otherwise, continue to demographics
+  res.redirect('/demographics');
 });
 
 // DEMOGRAPHICS
