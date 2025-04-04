@@ -731,7 +731,7 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, m
   switch (model_input_condition) {
     case 'stance-based':
       prompt = `Consider the following political proposition: ${proposition}
-On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this is ${stance}.
+On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this proposition is ${stance}.
 Please write a short paragraph of 100-150 words for me which explains my opinion.
 Do not mention the numeric rating or include any preamble like "Based on the rating, …".
 Reply only with the paragraph, nothing else.`;
@@ -739,7 +739,7 @@ Reply only with the paragraph, nothing else.`;
 
     case 'bullets-based':
       prompt = `Consider the following political proposition: ${proposition}
-My opinion on this issue is described by the following bullet points:
+My opinion on this proposition is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
 Do not include any preamble, like "Based on the bullet points …".
@@ -748,7 +748,7 @@ Reply only with the paragraph, nothing else.`;
 
     case 'paraphrase':
       prompt = `Consider the following political proposition: ${proposition}
-I wrote the following paragraph to explain my opinion on this issue:
+I wrote the following paragraph to explain my opinion on this proposition:
 "${paragraph}"
 Please rewrite this paragraph without changing its length.
 Do not include any preamble, like "Based on the original paragraph …".
@@ -757,7 +757,7 @@ Reply only with the paragraph, nothing else.`;
 
     case 'improve':
       prompt = `Consider the following political proposition: ${proposition}
-I wrote the following paragraph to explain my opinion on this issue:
+I wrote the following paragraph to explain my opinion on this proposition:
 "${paragraph}"
 Please improve this paragraph without changing its length.
 Do not include any preamble, like "Based on the original paragraph …".
