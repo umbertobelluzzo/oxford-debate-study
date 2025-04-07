@@ -484,6 +484,39 @@ app.post('/proposition-paragraph', (req, res) => {
   req.session.currentPropositionResponse.writer_paragraph = req.body.paragraph;
 
   // Proceed to the confidence screen
+  res.redirect('/proposition-stance-confirmation');
+});
+
+// PROPOSITION STANCE CONFIRMATION
+app.get('/proposition-stance-confirmation', (req, res) => {
+  // Check if session exists
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index (zero-based)
+  const index = req.session.participantData.currentPropositionIndex;
+  const propositions = req.session.participantData.assignedPropositions;
+  const currentProposition = propositions[index];
+
+  res.render('proposition-stance-confirmation', {
+    proposition: currentProposition,
+    index: index + 1, // Display 1-based index to the user
+    total: propositions.length
+  });
+});
+
+// PROPOSITION STANCE CONFIRMATION - POST
+app.post('/proposition-stance-confirmation', (req, res) => {
+  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+    return res.redirect('/');
+  }
+
+  // Save stance confirmation data
+  req.session.currentPropositionResponse.writer_stance_post = req.body.stancePost;
+
+  // Proceed to the confidence screen
   res.redirect('/proposition-confidence');
 });
 
@@ -520,39 +553,6 @@ app.post('/proposition-confidence', (req, res) => {
 
   // Save confidence rating
   req.session.currentPropositionResponse.writer_confidence = req.body.confidence;
-
-  // Proceed to the stance confirmation screen
-  res.redirect('/proposition-stance-confirmation');
-});
-
-// PROPOSITION STANCE CONFIRMATION
-app.get('/proposition-stance-confirmation', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
-  const propositions = req.session.participantData.assignedPropositions;
-  const currentProposition = propositions[index];
-
-  res.render('proposition-stance-confirmation', {
-    proposition: currentProposition,
-    index: index + 1, // Display 1-based index to the user
-    total: propositions.length
-  });
-});
-
-// PROPOSITION STANCE CONFIRMATION - POST
-app.post('/proposition-stance-confirmation', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
-    return res.redirect('/');
-  }
-
-  // Save stance confirmation data
-  req.session.currentPropositionResponse.writer_stance_post = req.body.stancePost;
 
   // Proceed to the affect grid screen
   res.redirect('/affect-grid');

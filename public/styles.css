@@ -339,6 +339,11 @@ input[type="radio"] {
   /* Different color for screen badge */
 }
 
+.counter-badge.step-badge {
+  background-color: #9b59b6
+  /* Different color for step badge */
+}
+
 /* Sticky header */
 .sticky-header {
   position: sticky;

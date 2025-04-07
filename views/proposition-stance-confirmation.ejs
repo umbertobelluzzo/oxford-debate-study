@@ -15,7 +15,13 @@
         <div class="counter-badges">
           <div class="counter-badge-container">
             <span class="counter-badge-label">Statement:</span>
-            <div class="counter-badge"><%= index %> of <%= total %></div>
+            <div class="counter-badge">
+              <%= index %> of <%= total %>
+            </div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Step:</span>
+            <div class="counter-badge step-badge">1 of 2</div>
           </div>
           <div class="counter-badge-container">
             <span class="counter-badge-label">Screen:</span>
@@ -35,7 +41,8 @@
       <div class="scrollable-content">
 
         <div class="form-group">
-          <label for="stancePost">Please tell us again: What is <b>your level of agreement</b> with the statement?</label>
+          <label for="stancePost">Please tell us again: What is <b>your level of agreement</b> with the
+            statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
             <span>50 = Ambivalent </span>
@@ -70,25 +77,25 @@
     stanceSlider.oninput = function () {
       // Update the value display
       stanceValue.textContent = "Current value: " + this.value;
-      
+
       // Show the value and hide the prompt
       stanceValue.classList.remove('hidden');
       stanceLabel.classList.add('hidden');
-      
+
       // Mark the slider as set
       this.classList.remove('slider-unset');
       this.classList.add('slider-set');
-      
+
       // Update state
       sliderSet = true;
     }
 
     // Form validation before submission
-    stanceForm.addEventListener('submit', function(e) {
+    stanceForm.addEventListener('submit', function (e) {
       if (!sliderSet) {
         e.preventDefault(); // Prevent form submission
         alert('Please set a value on the rating scale before continuing.');
-        
+
         stanceLabel.style.color = 'red';
         stanceLabel.style.fontWeight = 'bold';
       }

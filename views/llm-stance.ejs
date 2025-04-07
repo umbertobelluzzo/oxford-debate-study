@@ -15,11 +15,17 @@
         <div class="counter-badges">
           <div class="counter-badge-container">
             <span class="counter-badge-label">Statement:</span>
-            <div class="counter-badge"><%= index %> of <%= total %></div>
+            <div class="counter-badge">
+              <%= index %> of <%= total %>
+            </div>
           </div>
           <div class="counter-badge-container">
             <span class="counter-badge-label">Step:</span>
-            <div class="counter-badge screen-badge">2 of 2</div>
+            <div class="counter-badge step-badge">2 of 2</div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">1 of 4</div>
           </div>
         </div>
 
@@ -49,7 +55,8 @@
             <span>50 = Ambivalent </span>
             <span>100 = Strongly agree</span>
           </div>
-          <input type="range" id="modelStance" name="modelStance" min="0" max="100" class="slider slider-unset" required>
+          <input type="range" id="modelStance" name="modelStance" min="0" max="100" class="slider slider-unset"
+            required>
           <div class="stance-value">
             <span id="modelStanceValue" class="hidden">0</span>
             <span id="modelStanceLabel" class="slider-label">Please click on the scale to set your rating</span>
@@ -78,25 +85,25 @@
     modelStanceSlider.oninput = function () {
       // Update the value display
       modelStanceValue.textContent = "Current value: " + this.value;
-      
+
       // Show the value and hide the prompt
       modelStanceValue.classList.remove('hidden');
       modelStanceLabel.classList.add('hidden');
-      
+
       // Mark the slider as set
       this.classList.remove('slider-unset');
       this.classList.add('slider-set');
-      
+
       // Update state
       sliderSet = true;
     }
 
     // Form validation before submission
-    stanceForm.addEventListener('submit', function(e) {
+    stanceForm.addEventListener('submit', function (e) {
       if (!sliderSet) {
         e.preventDefault(); // Prevent form submission
         alert('Please set a value on the rating scale before continuing.');
-        
+
         modelStanceLabel.style.color = 'red';
         modelStanceLabel.style.fontWeight = 'bold';
       }

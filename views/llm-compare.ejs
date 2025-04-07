@@ -15,11 +15,17 @@
         <div class="counter-badges">
           <div class="counter-badge-container">
             <span class="counter-badge-label">Statement:</span>
-            <div class="counter-badge"><%= index %> of <%= total %></div>
+            <div class="counter-badge">
+              <%= index %> of <%= total %>
+            </div>
           </div>
           <div class="counter-badge-container">
             <span class="counter-badge-label">Step:</span>
-            <div class="counter-badge screen-badge">2 of 2</div>
+            <div class="counter-badge step-badge">1 of 2</div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">3 of 4</div>
           </div>
         </div>
 
@@ -33,63 +39,64 @@
       </div>
 
       <div class="scrollable-content">
-        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below</b> would you rather
-            use for this purpose?</p>
-          <div class="comparison-columns">
-            <div class="comparison-column">
-              <p>Your <b>original paragraph</b>:</p>
-              <div id="originalPreview" class="content-container content-container-writer">
-                <%= writerParagraph %>
-              </div>
-            </div>
-            <div class="comparison-column">
-              <p>Your <b>edited AI paragraph</b>:</p>
-              <div id="editedPreview" class="content-container content-container-ai">
-                <%= editedParagraph %>
-              </div>
+        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below</b> would you
+          rather
+          use for this purpose?</p>
+        <div class="comparison-columns">
+          <div class="comparison-column">
+            <p>Your <b>original paragraph</b>:</p>
+            <div id="originalPreview" class="content-container content-container-writer">
+              <%= writerParagraph %>
             </div>
           </div>
-
-          <div class="preference-selection">
-            <div class="radio-group">
-              <input type="radio" id="preferLeft" name="preference" value="original" required>
-              <label for="preferLeft">The paragraph on the left</label>
-            </div>
-
-            <div class="radio-group">
-              <input type="radio" id="preferEqual" name="preference" value="equal">
-              <label for="preferEqual">Equal preference</label>
-            </div>
-
-            <div class="radio-group">
-              <input type="radio" id="preferRight" name="preference" value="edited">
-              <label for="preferRight">The paragraph on the right</label>
+          <div class="comparison-column">
+            <p>Your <b>edited AI paragraph</b>:</p>
+            <div id="editedPreview" class="content-container content-container-ai">
+              <%= editedParagraph %>
             </div>
           </div>
+        </div>
 
-          <div id="reasonSection" class="reason-section" style="display: none;">
-            <label><b>Why do you prefer this paragraph over the other?</b> Please tick all reasons that apply and
-              explain any additional reasons under "other".</label>
-
-            <div class="checkbox-group">
-              <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion" class="reason-checkbox">
-              <label for="reasonOpinion">It better reflects my opinion.</label>
-            </div>
-
-            <div class="checkbox-group">
-              <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style" class="reason-checkbox">
-              <label for="reasonStyle">I prefer the writing style.</label>
-            </div>
-
-            <div class="form-group">
-              <label for="reasonOther">Other (please specify):</label>
-              <input type="text" id="reasonOther" name="reasonOther">
-            </div>
-
-            <div id="reasonError" class="error-message" style="display: none; color: red; margin-top: 5px;">
-              Please provide at least one reason for your preference.
-            </div>
+        <div class="preference-selection">
+          <div class="radio-group">
+            <input type="radio" id="preferLeft" name="preference" value="original" required>
+            <label for="preferLeft">The paragraph on the left</label>
           </div>
+
+          <div class="radio-group">
+            <input type="radio" id="preferEqual" name="preference" value="equal">
+            <label for="preferEqual">Equal preference</label>
+          </div>
+
+          <div class="radio-group">
+            <input type="radio" id="preferRight" name="preference" value="edited">
+            <label for="preferRight">The paragraph on the right</label>
+          </div>
+        </div>
+
+        <div id="reasonSection" class="reason-section" style="display: none;">
+          <label><b>Why do you prefer this paragraph over the other?</b> Please tick all reasons that apply and
+            explain any additional reasons under "other".</label>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="reasonOpinion" name="preferenceReason" value="opinion" class="reason-checkbox">
+            <label for="reasonOpinion">It better reflects my opinion.</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="reasonStyle" name="preferenceReason" value="style" class="reason-checkbox">
+            <label for="reasonStyle">I prefer the writing style.</label>
+          </div>
+
+          <div class="form-group">
+            <label for="reasonOther">Other (please specify):</label>
+            <input type="text" id="reasonOther" name="reasonOther">
+          </div>
+
+          <div id="reasonError" class="error-message" style="display: none; color: red; margin-top: 5px;">
+            Please provide at least one reason for your preference.
+          </div>
+        </div>
         <br>
 
         <div class="button-container">

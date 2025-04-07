@@ -15,7 +15,13 @@
         <div class="counter-badges">
           <div class="counter-badge-container">
             <span class="counter-badge-label">Statement:</span>
-            <div class="counter-badge"><%= index %> of <%= total %></div>
+            <div class="counter-badge">
+              <%= index %> of <%= total %>
+            </div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Step:</span>
+            <div class="counter-badge step-badge">1 of 2</div>
           </div>
           <div class="counter-badge-container">
             <span class="counter-badge-label">Screen:</span>
@@ -40,7 +46,7 @@
       </div>
 
       <div class="scrollable-content">
- 
+
         <p>We would like to understand <b>how you felt while writing your paragraph</b>. Please tell us by clicking on
           the grid below:</p>
         <br>
@@ -90,23 +96,19 @@
     const gridLines = document.getElementById('gridLines');
     const form = document.getElementById('affectGridForm');
 
-    // Add grid lines for visual reference
+    // Create grid lines to divide the grid into 4 quadrants
     function createGridLines() {
-      // Add 8 horizontal lines (creating 9 sections)
-      for (let i = 1; i <= 8; i++) {
-        const hLine = document.createElement('div');
-        hLine.className = 'horizontal-line';
-        hLine.style.top = `${i * (100 / 9)}%`;
-        gridLines.appendChild(hLine);
-      }
+      // Add a single horizontal line in the middle (creating 2 rows)
+      const hLine = document.createElement('div');
+      hLine.className = 'horizontal-line';
+      hLine.style.top = '50%';
+      gridLines.appendChild(hLine);
 
-      // Add 8 vertical lines (creating 9 sections)
-      for (let i = 1; i <= 8; i++) {
-        const vLine = document.createElement('div');
-        vLine.className = 'vertical-line';
-        vLine.style.left = `${i * (100 / 9)}%`;
-        gridLines.appendChild(vLine);
-      }
+      // Add a single vertical line in the middle (creating 2 columns)
+      const vLine = document.createElement('div');
+      vLine.className = 'vertical-line';
+      vLine.style.left = '50%';
+      gridLines.appendChild(vLine);
     }
 
     createGridLines();
@@ -146,13 +148,13 @@
       // Enable the continue button
       continueButton.disabled = false;
       gridInstruction.style.display = 'none';
-      
+
       // Mark grid as clicked
       gridClicked = true;
     });
 
     // Form validation
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
       if (!gridClicked) {
         e.preventDefault();
         gridInstruction.style.color = 'red';
