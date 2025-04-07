@@ -12,7 +12,7 @@
 body {
   font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.4;
-  color: #333;
+  color: #000000;
   background-color: #f5f7fa;
   padding: 20px;
   min-height: 100vh;
@@ -21,10 +21,12 @@ body {
 .container {
   max-width: 1000px;
   margin: 0 auto;
+  color: #000000;
 }
 
 .study-card {
   background-color: #fff;
+  color: #000000;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   padding: 30px;
@@ -32,25 +34,26 @@ body {
 }
 
 h1 {
-  color: #2c3e50;
+  color: #000000;
   margin-bottom: 20px;
   font-size: 24px;
   text-align: center;
 }
 
 h3 {
-  color: #2c3e50;
+  color: #000000;
   margin-bottom: 10px;
   font-size: 18px;
 }
 
 h4 {
-  color: #2c3e50;
+  color: #000000;
   margin-bottom: 8px;
   font-size: 16px;
 }
 
 p {
+  color: #000000;
   margin-bottom: 15px;
 }
 
@@ -317,7 +320,7 @@ input[type="radio"] {
 
 .counter-badge-label {
   margin-right: 5px;
-  color: #555;
+  color: #000000;
 }
 
 .counter-badge {
@@ -422,7 +425,7 @@ input[type="radio"] {
   width: 400px;
   height: 400px;
   position: relative;
-  border: 2px solid #333;
+  border: 2px solid #000000;
   background-color: #f8f9fa;
   margin: 40px auto;
   cursor: pointer;

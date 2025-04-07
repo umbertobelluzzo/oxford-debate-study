@@ -156,32 +156,73 @@ app.post('/demographics', (req, res) => {
     politicalIdeology: req.body.politicalIdeology
   };
 
-  // Redirect to attention check instead of proposition-intro
-  res.redirect('/attention-check');
+  // Continue to writing screener
+  res.redirect('/writing-screener');
 });
 
-// ATTENTION CHECK
-app.get('/attention-check', (req, res) => {
+// WRITING SCREENER
+app.get('/writing-screener', (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
 
-  res.render('attention-check');
+  res.render('writing-screener');
 });
 
-// ATTENTION CHECK - POST
-app.post('/attention-check', (req, res) => {
+// WRITING SCREENER - POST
+app.post('/writing-screener', async (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
 
-  const answer = req.body.seasonAnswer.trim().toLowerCase();
+  const answer = req.body.iceCreamAnswer.trim();
+  
+  // Save the answer regardless of assessment
+  req.session.participantData.writingScreenerAnswer = answer;
 
-  // Check if the answer contains "potato"
-  if (answer.includes('potato')) {
-    // Passed the attention check
-    req.session.participantData.attentionCheckPassed = true;
+  // Assess the response using GPT-4o
+  let screeningPassed = false;
+  
+  try {
+    // Only evaluate if there's sufficient content (more than just a few characters)
+    if (answer.length > 5) {
+      // Call GPT-4o with the openrouter client for assessment
+      const completion = await openrouter_client.chat.completions.create({
+        model: "openai/gpt-4o-mini", // Use a cost-effective model for assessment
+        messages: [
+          { 
+            role: "system", 
+            content: "You are assessing writing screening responses. Your task is to determine if the response is on-topic and shows minimal writing ability. The bar is very low - any genuine attempt at answering the question should pass. Only fail responses that are completely off-topic, nonsensical, or just random characters. Respond with PASS or FAIL."
+          },
+          { 
+            role: "user", 
+            content: `Question: What is your favourite ice cream flavour? Please explain your choice in one or two sentences.\n\nParticipant's answer: "${answer}"\n\nIs this a valid response? Reply with just PASS or FAIL.` 
+          }
+        ],
+        max_tokens: 5,
+        temperature: 0,
+      });
 
+      const assessment = completion.choices[0].message.content.trim();
+      screeningPassed = assessment.includes("PASS");
+      
+      // Log the assessment result
+      console.log(`Writing screener assessment for "${answer}": ${assessment}`);
+    } else {
+      console.log("Writing screener response too short, failing automatically");
+      screeningPassed = false;
+    }
+  } catch (error) {
+    console.error("Error assessing writing screener:", error);
+    // If there's an API error, we'll pass the user to avoid false rejections
+    screeningPassed = true;
+  }
+
+  // Record the screening result
+  req.session.participantData.writingScreenerPassed = screeningPassed;
+
+  if (screeningPassed) {
+    // Passed the writing screener
     // Randomly assign propositions to the participant 
     const assignedPropositions = getRandomPropositions(propositions, 3);
     req.session.participantData.assignedPropositions = assignedPropositions;
@@ -192,15 +233,13 @@ app.post('/attention-check', (req, res) => {
     // Continue to the first proposition
     return res.redirect('/proposition-intro');
   } else {
-    // Failed the attention check
-    req.session.participantData.attentionCheckPassed = false;
-
+    // Failed the writing screener
     // Generate a partial completion code
     const partialCompletionCode = `PARTIAL-${Date.now().toString(36).substring(4)}`;
 
     // Render an error page with partial compensation information
     return res.render('error', {
-      message: 'Thank you for your participation. However, we need participants to carefully read the instructions, and you failed our attention check question. You will receive partial compensation using the code below.',
+      message: 'Thank you for your participation. However, you failed our writing screener, so we are unable to proceed with your submission at this time. You will receive partial compensation using the code below.',
       completionCode: partialCompletionCode
     });
   }

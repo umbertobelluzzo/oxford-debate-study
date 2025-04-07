@@ -1,0 +1,34 @@
+<!-- views/writing-screener.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Political Opinion Study - Writing Task</title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/prevent-paste.js"></script>
+</head>
+
+<body>
+    <div class="container" style="width: 800px;">
+        <div class="study-card">
+            <h1>Warm-Up Writing Task</h1>
+            <br>
+            <form action="/writing-screener" method="POST">
+                <div class="form-group">
+                    <p>To get warmed up, please complete this short writing task:</p>
+                    <br>
+                    <label for="iceCreamAnswer"><b>What is your favourite ice cream flavour?</b> Please explain your choice in one or two sentences.</label>
+                    <textarea id="iceCreamAnswer" name="iceCreamAnswer" rows="3" required></textarea>
+                </div>
+                <br>
+
+                <div class="button-container">
+                    <button type="submit" class="button">Continue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
