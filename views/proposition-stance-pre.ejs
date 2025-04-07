@@ -1,9 +1,9 @@
-<!-- views/proposition-stance-confirmation.ejs -->
+<!-- views/proposition-stance-pre.ejs -->
 <!DOCTYPE html>
 <html>
 
 <head>
-  <title>Political Opinion Study - Stance Confirmation</title>
+  <title>Political Opinion Study - Initial Stance</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -19,11 +19,11 @@
           </div>
           <div class="counter-badge-container">
             <span class="counter-badge-label">Screen:</span>
-            <div class="counter-badge screen-badge">8 of 9</div>
+            <div class="counter-badge screen-badge">4 of 9</div>
           </div>
         </div>
 
-        <form action="/proposition-stance-confirmation" method="POST" id="stanceForm">
+        <form action="/proposition-stance-pre" method="POST" id="stanceForm">
           <p>Consider this statement:</p>
           <div class="content-container content-container-proposition">
             <div class="content-text content-text-proposition">
@@ -33,18 +33,17 @@
       </div>
 
       <div class="scrollable-content">
-
         <div class="form-group">
-          <label for="stancePost">Please tell us again: What is <b>your level of agreement</b> with the statement?</label>
+          <label for="stancePre">What is <b>your level of agreement</b> with the statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
             <span>50 = Ambivalent </span>
             <span>100 = Strongly agree</span>
           </div>
-          <input type="range" id="stancePost" name="stancePost" min="0" max="100" class="slider slider-unset" required>
+          <input type="range" id="stancePre" name="stancePre" min="0" max="100" class="slider slider-unset" required>
           <div class="stance-value">
-            <span id="stancePostValue" class="hidden">0</span>
-            <span id="stancePostLabel" class="slider-label">Please click on the scale to set your rating</span>
+            <span id="stancePreValue" class="hidden">0</span>
+            <span id="stancePreLabel" class="slider-label">Please click on the scale to set your rating</span>
           </div>
         </div>
         <br>
@@ -59,9 +58,9 @@
 
   <script>
     // Update stance value display
-    const stanceSlider = document.getElementById('stancePost');
-    const stanceValue = document.getElementById('stancePostValue');
-    const stanceLabel = document.getElementById('stancePostLabel');
+    const stanceSlider = document.getElementById('stancePre');
+    const stanceValue = document.getElementById('stancePreValue');
+    const stanceLabel = document.getElementById('stancePreLabel');
     const stanceForm = document.getElementById('stanceForm');
 
     // Initialize slider state

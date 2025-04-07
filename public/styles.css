@@ -227,6 +227,7 @@ input[type="radio"] {
 /* Standardized paragraph containers */
 .content-container {
   margin-bottom: 20px;
+  color: #000000;
   background-color: #f8f9fa;
   border-radius: 6px;
   padding: 10px;

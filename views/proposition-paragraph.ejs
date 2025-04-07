@@ -1,0 +1,96 @@
+<!-- views/proposition-paragraph.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Political Opinion Study - Paragraph</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container">
+    <div class="study-card">
+      <div class="sticky-header">
+        <div class="counter-badges">
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Statement:</span>
+            <div class="counter-badge"><%= index %> of <%= total %></div>
+          </div>
+          <div class="counter-badge-container">
+            <span class="counter-badge-label">Screen:</span>
+            <div class="counter-badge screen-badge">6 of 9</div>
+          </div>
+        </div>
+
+        <form action="/proposition-paragraph" method="POST" id="paragraphForm">
+          <p>Consider this statement:</p>
+          <div class="content-container content-container-proposition">
+            <div class="content-text content-text-proposition">
+              <%= proposition %>
+            </div>
+          </div>
+      </div>
+
+      <div class="scrollable-content">
+        <div class="form-group">
+          <label for="paragraph">Please expand your bullet points into a <b>short paragraph</b> (around 100-150
+            words), in which you explain your opinion.</label>
+          <textarea id="paragraph" name="paragraph" rows="9" required></textarea>
+          <div id="wordCount" class="word-count">Currently: 0 words</div>
+          <div id="wordError" class="error-message" style="display: none; color: red; margin-top: 5px;">Please write
+            at least 100 words.</div>
+        </div>
+        <br>
+
+        <div class="button-container">
+          <button type="submit" class="button">Continue</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Word count for paragraph
+    const paragraph = document.getElementById('paragraph');
+    const wordCount = document.getElementById('wordCount');
+    const wordError = document.getElementById('wordError');
+    const paragraphForm = document.getElementById('paragraphForm');
+
+    paragraph.oninput = function () {
+      const words = this.value.match(/\S+/g) || [];
+      const count = words.length;
+      wordCount.textContent = count + ' word' + (count !== 1 ? 's' : '');
+
+      if (count < 100) {
+        wordCount.classList.add('below-range');
+        wordCount.classList.remove('in-range', 'above-range');
+        wordError.style.display = 'block';
+      } else if (count > 150) {
+        wordCount.classList.add('above-range');
+        wordCount.classList.remove('in-range', 'below-range');
+        wordError.style.display = 'none';
+      } else {
+        wordCount.classList.add('in-range');
+        wordCount.classList.remove('below-range', 'above-range');
+        wordError.style.display = 'none';
+      }
+    }
+
+    // Form validation
+    paragraphForm.addEventListener('submit', function(e) {
+      // Count words
+      const words = paragraph.value.match(/\S+/g) || [];
+      const count = words.length;
+
+      if (count < 100) {
+        e.preventDefault(); // Prevent form submission
+        wordError.style.display = 'block';
+        paragraph.focus();
+      }
+    });
+  </script>
+</body>
+
+</html>

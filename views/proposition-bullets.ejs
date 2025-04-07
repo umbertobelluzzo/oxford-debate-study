@@ -1,0 +1,110 @@
+<!-- views/proposition-bullets.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Political Opinion Study - Bullet Points</title>
+    <link rel="stylesheet" href="/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/prevent-paste.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="study-card">
+            <div class="sticky-header">
+                <div class="counter-badges">
+                    <div class="counter-badge-container">
+                        <span class="counter-badge-label">Statement:</span>
+                        <div class="counter-badge">
+                            <%= index %> of <%= total %>
+                        </div>
+                    </div>
+                    <div class="counter-badge-container">
+                        <span class="counter-badge-label">Screen:</span>
+                        <div class="counter-badge screen-badge">5 of 9</div>
+                    </div>
+                </div>
+
+                <form action="/proposition-bullets" method="POST" id="bulletsForm">
+                    <p>Consider this statement:</p>
+                    <div class="content-container content-container-proposition">
+                        <div class="content-text content-text-proposition">
+                            <%= proposition %>
+                        </div>
+                    </div>
+            </div>
+
+            <div class="scrollable-content">
+                <div class="form-group">
+                    <label for="bullets">Please explain the <b>key reasons</b> for your opinion in 2-4 bullet
+                        points.</label>
+                    <textarea id="bullets" name="bullets" rows="6"
+                        placeholder="- First point&#10;- Second point&#10;- ..." required></textarea>
+                    <div id="bulletCount" class="bullet-count">Currently: 0 bullet points</div>
+                    <div id="bulletError" class="error-message" style="display: none; color: red; margin-top: 5px;">
+                        Please
+                        provide at least 2 bullet points each starting with "-".</div>
+                </div>
+                <br>
+
+                <div class="button-container">
+                    <button type="submit" class="button">Continue</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Count bullet points
+        const bullets = document.getElementById('bullets');
+        const bulletCount = document.getElementById('bulletCount');
+        const bulletError = document.getElementById('bulletError');
+        const bulletsForm = document.getElementById('bulletsForm');
+
+        bullets.oninput = function () {
+            // Count bullet points by looking for lines starting with - or • or *
+            const bulletLines = this.value.split('\n').filter(line =>
+                line.trim().startsWith('-') ||
+                line.trim().startsWith('•') ||
+                line.trim().startsWith('*')
+            );
+
+            const count = bulletLines.length;
+            bulletCount.textContent = count + ' bullet point' + (count !== 1 ? 's' : '');
+
+            if (count < 2) {
+                bulletCount.classList.add('below-range');
+                bulletCount.classList.remove('in-range', 'above-range');
+                bulletError.style.display = 'block';
+            } else if (count > 4) {
+                bulletCount.classList.add('above-range');
+                bulletCount.classList.remove('in-range', 'below-range');
+                bulletError.style.display = 'none';
+            } else {
+                bulletCount.classList.add('in-range');
+                bulletCount.classList.remove('below-range', 'above-range');
+                bulletError.style.display = 'none';
+            }
+        }
+
+        // Form validation
+        bulletsForm.addEventListener('submit', function (e) {
+            // Count bullet points
+            const bulletLines = bullets.value.split('\n').filter(line =>
+                line.trim().startsWith('-') ||
+                line.trim().startsWith('•') ||
+                line.trim().startsWith('*')
+            );
+
+            if (bulletLines.length < 2) {
+                e.preventDefault(); // Prevent form submission
+                bulletError.style.display = 'block';
+                bullets.focus();
+            }
+        });
+    </script>
+</body>
+
+</html>
