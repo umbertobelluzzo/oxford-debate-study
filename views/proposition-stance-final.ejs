@@ -14,7 +14,7 @@
       <div class="sticky-header">
         <div class="counter-badges">
           <div class="counter-badge-container">
-            <span class="counter-badge-label">Proposition:</span>
+            <span class="counter-badge-label">Statement:</span>
             <div class="counter-badge"><%= index %> of <%= total %></div>
           </div>
           <div class="counter-badge-container">
@@ -24,7 +24,7 @@
         </div>
 
         <form action="/proposition-stance-final" method="POST" id="stanceForm">
-          <p>Consider this political proposition:</p>
+          <p>Consider this statement:</p>
           <div class="content-container content-container-proposition">
             <div class="content-text content-text-proposition">
               <%= proposition %>
@@ -35,7 +35,7 @@
       <div class="scrollable-content">
 
         <div class="form-group">
-          <label for="stanceFinal">Please tell us one last time: What is <b>your level of agreement</b> with the political proposition?</label>
+          <label for="stanceFinal">Please tell us one last time: What is <b>your level of agreement</b> with the statement?</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
             <span>50 = Ambivalent </span>

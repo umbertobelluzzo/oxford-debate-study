@@ -1,24 +1,27 @@
 <!-- views/demographics.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Political Opinion Study - Demographics</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <div class="container" style="width: 800px;">
     <div class="study-card">
       <h1>Participant Information</h1>
       <br>
-      <p> Before we get started, we would like to know a bit about your background. This information will be kept confidential and will not be used to identify you. </p>
+      <p> Please tell us about your background. This information will be kept confidential and will not be used to
+        identify you. </p>
       <br>
       <form action="/demographics" method="POST">
         <div class="form-group">
           <label for="age">What is your <b>age</b>?</label>
           <input type="number" id="age" name="age" min="18" max="100" required>
         </div>
-        
+
         <div class="form-group">
           <label for="gender">What is your <b>gender</b>?</label>
           <select id="gender" name="gender" required>
@@ -29,7 +32,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="race">What is your <b>race / ethnicity</b>?</label>
           <select id="race" name="race" required>
@@ -42,7 +45,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="english">Is <b>English your first language</b>?</label>
           <select id="english" name="english" required>
@@ -53,7 +56,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="education">What is the <b>highest level of education</b> you have completed?</label>
           <select id="education" name="education" required>
@@ -68,7 +71,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="income">What is your <b>current yearly income</b>?</label>
           <select id="income" name="income" required>
@@ -83,7 +86,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="politicalParty">Which <b>political party</b> did you most recently vote for?</label>
           <select id="politicalParty" name="politicalParty" required>
@@ -99,7 +102,7 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="politicalIdeology">How would you describe your <b>political ideology</b>?</label>
           <select id="politicalIdeology" name="politicalIdeology" required>
@@ -114,7 +117,7 @@
           </select>
         </div>
         <br>
-        
+
         <div class="button-container">
           <button type="submit" class="button">Continue</button>
         </div>
@@ -122,4 +125,5 @@
     </div>
   </div>
 </body>
+
 </html>

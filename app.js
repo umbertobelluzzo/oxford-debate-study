@@ -714,13 +714,17 @@ function getRandomLLM() {
 }
 
 function getRandomSubCondition() {
-  const conditions = [
-    "stance-based",
-    "bullets-based",
-    "paraphrase",
-    "improve"
-  ];
-  return conditions[Math.floor(Math.random() * conditions.length)];
+  const random = Math.random();
+
+  if (random < 1 / 3) {
+    return "stance-based";
+  } else if (random < 2 / 3) {
+    return "bullets-based";
+  } else if (random < 5 / 6) {
+    return "rewrite";
+  } else {
+    return "improve";
+  }
 }
 
 // This function now returns a Promise
@@ -746,7 +750,7 @@ Do not include any preamble, like "Based on the bullet points …".
 Reply only with the paragraph, nothing else.`;
       break;
 
-    case 'paraphrase':
+    case 'rewrite':
       prompt = `Consider the following political proposition: ${proposition}
 I wrote the following paragraph to explain my opinion on this proposition:
 "${paragraph}"

@@ -14,7 +14,7 @@
       <div class="sticky-header">
         <div class="counter-badges">
           <div class="counter-badge-container">
-            <span class="counter-badge-label">Proposition:</span>
+            <span class="counter-badge-label">Statement:</span>
             <div class="counter-badge"><%= index %> of <%= total %></div>
           </div>
           <div class="counter-badge-container">
@@ -24,7 +24,7 @@
         </div>
 
         <form id="compareForm" action="/llm-compare" method="POST" onsubmit="return validateForm()">
-          <p>Consider this political proposition:</p>
+          <p>Consider this statement:</p>
           <div class="content-container content-container-proposition">
             <div class="content-text content-text-proposition">
               <%= proposition %>
@@ -33,8 +33,8 @@
       </div>
 
       <div class="scrollable-content">
-        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below would you rather
-            use for this purpose?</b></p>
+        <p>Imagine you want to explain your opinion to someone. <b>Which of the two paragraphs below</b> would you rather
+            use for this purpose?</p>
           <div class="comparison-columns">
             <div class="comparison-column">
               <p>Your <b>original paragraph</b>:</p>
