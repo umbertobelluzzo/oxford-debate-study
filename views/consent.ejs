@@ -63,21 +63,22 @@
           agree to participate in this research</p>
       </div>
 
-      <div class="button-container" , style="justify-content: left;">
+      <div class="button-container" style="justify-content: left;">
         <form action="/consent" method="POST">
-          <div class="radio-group" style="margin-bottom: 20px;">
-            <input type="radio" id="consentYes" name="consent" value="yes" required>
+          <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
+            <input type="radio" id="consentYes" name="consent" value="yes" required
+              style="margin-top: 5px; margin-right: 10px;">
             <label for="consentYes">I consent to participate in this survey.</label>
           </div>
-          <div class="radio-group" style="margin-bottom: 20px;">
-            <input type="radio" id="consentNo" name="consent" value="no">
-            <label for="consentNo">I do NOT consent (if you select this option, you will exit the survey)</label>
+          <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
+            <input type="radio" id="consentNo" name="consent" value="no" style="margin-top: 5px; margin-right: 10px;">
+            <label for="consentNo">I do NOT consent. (If you select this option, you will exit the
+              survey)</label>
           </div>
           <button type="submit" class="button">Continue</button>
         </form>
       </div>
     </div>
-  </div>
 </body>
 
 </html>
