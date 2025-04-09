@@ -75,7 +75,7 @@ app.get('/', (req, res) => {
     prolificId,
     studyId,
     sessionId,
-    startTimestamp: new Date().toISOString,
+    startTimestamp: new Date().toISOString(),
     demographics: {},
     propositionResponses: []
   };
@@ -229,6 +229,15 @@ app.post('/writing-screener', async (req, res) => {
 
     // Initialize the current proposition index to 0 (zero-based)
     req.session.participantData.currentPropositionIndex = 0;
+    
+    // Initialize propositionResponses array with the assigned propositions
+    // This is the key fix - initializing a proper structure for each proposition
+    req.session.participantData.propositionResponses = assignedPropositions.map(proposition => {
+      return {
+        proposition: proposition,  // Store the proposition text itself
+        // Other fields will be added as the participant progresses
+      };
+    });
 
     // Continue to the first proposition
     return res.redirect('/proposition-intro');
@@ -247,12 +256,10 @@ app.post('/writing-screener', async (req, res) => {
 
 // PHASE 1: PROPOSITION RESPONSES
 
-// Updated routes for the proposition screens in app.js
-
 // PROPOSITION INTRO
 app.get('/proposition-intro', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -261,10 +268,10 @@ app.get('/proposition-intro', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Check if all propositions are completed
-  if (index >= propositions.length) {
+  if (index >= propositionResponses.length) {
     // If all propositions are completed, move to LLM phase
     // Reset the LLM proposition index to 0 for starting LLM phase
     req.session.participantData.currentLLMPropositionIndex = 0;
@@ -272,18 +279,18 @@ app.get('/proposition-intro', (req, res) => {
   }
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-intro', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION INTRO - POST
 app.post('/proposition-intro', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -295,7 +302,7 @@ app.post('/proposition-intro', (req, res) => {
 // PROPOSITION KNOWLEDGE
 app.get('/proposition-knowledge', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -304,32 +311,30 @@ app.get('/proposition-knowledge', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-knowledge', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION KNOWLEDGE - POST
 app.post('/proposition-knowledge', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
-  // Create response object for this proposition if it doesn't exist
-  if (!req.session.currentPropositionResponse) {
-    req.session.currentPropositionResponse = {};
-  }
-
-  // Save knowledge rating
-  req.session.currentPropositionResponse.writer_knowledge = req.body.knowledge;
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+  
+  // Save knowledge rating directly to current proposition's response
+  req.session.participantData.propositionResponses[index].writer_knowledge = req.body.knowledge;
 
   // Proceed to the proposition importance screen
   res.redirect('/proposition-importance');
@@ -338,7 +343,7 @@ app.post('/proposition-knowledge', (req, res) => {
 // PROPOSITION IMPORTANCE
 app.get('/proposition-importance', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -347,27 +352,30 @@ app.get('/proposition-importance', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-importance', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION IMPORTANCE - POST
 app.post('/proposition-importance', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+  
   // Save importance rating
-  req.session.currentPropositionResponse.writer_importance = req.body.importance;
+  req.session.participantData.propositionResponses[index].writer_importance = req.body.importance;
 
   // Proceed to the initial stance screen
   res.redirect('/proposition-stance-pre');
@@ -376,7 +384,7 @@ app.post('/proposition-importance', (req, res) => {
 // PROPOSITION STANCE PRE
 app.get('/proposition-stance-pre', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -385,27 +393,30 @@ app.get('/proposition-stance-pre', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-stance-pre', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION STANCE PRE - POST
 app.post('/proposition-stance-pre', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+  
   // Save pre-writing stance
-  req.session.currentPropositionResponse.writer_stance_pre = req.body.stancePre;
+  req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
 
   // Proceed to the bullet points screen
   res.redirect('/proposition-bullets');
@@ -414,7 +425,7 @@ app.post('/proposition-stance-pre', (req, res) => {
 // PROPOSITION BULLETS
 app.get('/proposition-bullets', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -423,27 +434,30 @@ app.get('/proposition-bullets', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-bullets', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION BULLETS - POST
 app.post('/proposition-bullets', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+  
   // Save bullet points
-  req.session.currentPropositionResponse.writer_bullets = req.body.bullets;
+  req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
 
   // Proceed to the paragraph screen
   res.redirect('/proposition-paragraph');
@@ -452,7 +466,7 @@ app.post('/proposition-bullets', (req, res) => {
 // PROPOSITION PARAGRAPH
 app.get('/proposition-paragraph', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
@@ -461,27 +475,30 @@ app.get('/proposition-paragraph', (req, res) => {
   const index = req.session.participantData.currentPropositionIndex;
 
   // Get the propositions assigned to the participant
-  const propositions = req.session.participantData.assignedPropositions;
+  const propositionResponses = req.session.participantData.propositionResponses;
 
   // Select the current proposition
-  const currentProposition = propositions[index];
+  const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-paragraph', {
     proposition: currentProposition,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION PARAGRAPH - POST
 app.post('/proposition-paragraph', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+  
   // Save paragraph
-  req.session.currentPropositionResponse.writer_paragraph = req.body.paragraph;
+  req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
 
   // Proceed to the affect grid screen directly after paragraph
   res.redirect('/affect-grid');
@@ -489,35 +506,35 @@ app.post('/proposition-paragraph', (req, res) => {
 
 // PROPOSITION AFFECT GRID
 app.get('/affect-grid', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
   }
 
   // Get the current proposition index and response
   const index = req.session.participantData.currentPropositionIndex;
-  const propositions = req.session.participantData.assignedPropositions;
-  const currentProposition = propositions[index];
-  const response = req.session.currentPropositionResponse;
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentProposition = propositionResponses[index].proposition;
+  const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('affect-grid', {
     proposition: currentProposition,
-    writerParagraph: response.writer_paragraph,
+    writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION AFFECT GRID - POST
 app.post('/affect-grid', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
   }
 
-  // Get the current proposition response
-  const response = req.session.currentPropositionResponse;
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
 
   // Add affect grid data 
-  response.writer_affect_grid = {
+  req.session.participantData.propositionResponses[index].writer_affect_grid = {
     x: req.body.gridX,
     y: req.body.gridY
   };
@@ -529,33 +546,36 @@ app.post('/affect-grid', (req, res) => {
 // PROPOSITION STANCE CONFIRMATION
 app.get('/proposition-stance-confirmation', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
   // Get the current proposition index (zero-based)
   const index = req.session.participantData.currentPropositionIndex;
-  const propositions = req.session.participantData.assignedPropositions;
-  const currentProposition = propositions[index];
-  const response = req.session.currentPropositionResponse;
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentProposition = propositionResponses[index].proposition;
+  const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-stance-confirmation', {
     proposition: currentProposition,
-    writerParagraph: response.writer_paragraph,
+    writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION STANCE CONFIRMATION - POST
 app.post('/proposition-stance-confirmation', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+
   // Save stance confirmation data
-  req.session.currentPropositionResponse.writer_stance_post = req.body.stancePost;
+  req.session.participantData.propositionResponses[index].writer_stance_post = req.body.stancePost;
 
   // Proceed to the confidence screen
   res.redirect('/proposition-confidence');
@@ -564,40 +584,37 @@ app.post('/proposition-stance-confirmation', (req, res) => {
 // PROPOSITION CONFIDENCE
 app.get('/proposition-confidence', (req, res) => {
   // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
   // Get the current proposition index (zero-based)
   const index = req.session.participantData.currentPropositionIndex;
-  const propositions = req.session.participantData.assignedPropositions;
-  const currentProposition = propositions[index];
-  const response = req.session.currentPropositionResponse;
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentProposition = propositionResponses[index].proposition;
+  const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-confidence', {
     proposition: currentProposition,
-    writerParagraph: response.writer_paragraph,
+    writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
-    total: propositions.length
+    total: propositionResponses.length
   });
 });
 
 // PROPOSITION CONFIDENCE - POST
 app.post('/proposition-confidence', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.assignedPropositions) {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
 
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+
   // Save confidence rating
-  req.session.currentPropositionResponse.writer_confidence = req.body.confidence;
-
-  // Save the completed proposition response to the main session data
-  req.session.participantData.propositionResponses.push(req.session.currentPropositionResponse);
-
-  // Clear the current proposition response
-  req.session.currentPropositionResponse = null;
+  req.session.participantData.propositionResponses[index].writer_confidence = req.body.confidence;
 
   // Increment the proposition index
   req.session.participantData.currentPropositionIndex++;
@@ -812,10 +829,19 @@ app.post('/llm-compare', (req, res) => {
 
   // Save preference data
   response.writer_preference = req.body.preference;
-  response.writer_preference_reason = req.body.preferenceReason;
+  
+  // Convert the preference reasons from form to array
+  // The form sends a single value if only one checkbox is selected,
+  // or an array if multiple checkboxes are selected
+  let reasons = req.body.preferenceReason;
+  if (reasons && !Array.isArray(reasons)) {
+    reasons = [reasons];
+  }
+  
+  response.writer_preference_reason = reasons || [];
   response.writer_preference_reason_other = req.body.reasonOther;
 
-  // Redirect back to first step for next proposition
+  // Redirect to final stance step
   res.redirect('/proposition-stance-final');
 });
 
@@ -890,7 +916,7 @@ app.post('/ai-usage', async (req, res) => {
   res.redirect('/completion');
 });
 
-// SCREEN 10: COMPLETION
+// COMPLETION
 app.get('/completion', async (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
@@ -983,7 +1009,7 @@ async function generateModelParagraph(proposition, stance, bullets, paragraph, m
       prompt = `Consider the following political proposition: ${proposition}
 On a scale from 0 to 100, where 0 is "strongly disagree", 50 is "ambivalent", and 100 is "strongly agree", my opinion on this proposition is ${stance}.
 Please write a short paragraph of 100-150 words for me which explains my opinion.
-Do not mention the numeric rating or include any preamble like "Based on the rating, …".
+Do not mention the numeric rating or include any preamble like "Based on the rating, ...".
 Reply only with the paragraph, nothing else.`;
       break;
 
@@ -992,7 +1018,7 @@ Reply only with the paragraph, nothing else.`;
 My opinion on this proposition is described by the following bullet points:
 ${bullets}
 Please write a short paragraph of 100-150 words for me which explains my opinion.
-Do not include any preamble, like "Based on the bullet points …".
+Do not include any preamble, like "Based on the bullet points ...".
 Reply only with the paragraph, nothing else.`;
       break;
 
@@ -1001,8 +1027,8 @@ Reply only with the paragraph, nothing else.`;
 I wrote the following paragraph to explain my opinion on this proposition:
 "${paragraph}"
 Please rewrite this paragraph without changing its length.
-Do not include any preamble, like "Based on the original paragraph …".
-Reply only with the paragraph, nothing else.`;
+Do not include any preamble, like "Based on the original paragraph ...".
+Reply only with the rewritten paragraph, nothing else.`;
       break;
 
     case 'improve':
@@ -1010,7 +1036,7 @@ Reply only with the paragraph, nothing else.`;
 I wrote the following paragraph to explain my opinion on this proposition:
 "${paragraph}"
 Please improve this paragraph without changing its length.
-Do not include any preamble, like "Based on the original paragraph …".
+Do not include any preamble, like "Based on the original paragraph ...".
 Reply only with the improved paragraph, nothing else.`;
       break;
 
@@ -1050,6 +1076,7 @@ async function saveParticipantData(data) {
     const s3Result = await saveParticipantDataToS3(data);
     return s3Result;
   } catch (error) {
+    console.error("S3 save failed, falling back to local storage:", error);
     // Fallback to local file storage
     saveParticipantDataToFile(data);
     return { success: false, error: error.message };
@@ -1073,9 +1100,7 @@ async function saveParticipantDataToS3(data) {
     return { success: true, key: `participants/${filename}` };
   } catch (error) {
     console.error('Error saving data to S3:', error);
-    // Fall back to local storage if S3 fails
-    saveParticipantDataToFile(data);
-    return { success: false, error: error.message };
+    throw error; // Rethrow to trigger fallback
   }
 }
 
