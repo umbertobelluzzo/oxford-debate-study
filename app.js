@@ -636,15 +636,23 @@ app.get('/llm-stance', async (req, res) => {
 
   const currentResponse = propositionResponses[index];
 
-  // Randomly assign LLM for this proposition if not already assigned
+  // Create a balanced assignment if not already created
+  if (!req.session.participantData.modelAssignments) {
+    console.log("Creating balanced assignment of models and sub-conditions");
+    req.session.participantData.modelAssignments = createBalancedAssignment();
+  }
+  
+  // Get assignment for current proposition
+  const assignment = req.session.participantData.modelAssignments[index];
+  
+  // Assign model and sub-condition based on balanced assignment
   if (!currentResponse.model_name) {
-    currentResponse.model_name = getRandomLLM();
+    currentResponse.model_name = assignment.model;
     console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
   }
-
-  // Randomly assign sub-condition for this proposition if not already assigned
+  
   if (!currentResponse.model_input_condition) {
-    currentResponse.model_input_condition = getRandomSubCondition();
+    currentResponse.model_input_condition = assignment.subCondition;
     console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
   }
 
@@ -920,31 +928,52 @@ function getRandomPropositions(allPropositions, count) {
   return selected;
 }
 
-// Assign a random LLM. 
-function getRandomLLM() {
-  const llms = [
-    "anthropic/claude-3.7-sonnet",
-    "deepseek/deepseek-chat-v3-0324",
-    "openai/gpt-4o-mini",
+function getModels() {
+  return [
+    "anthropic/claude-3.7-sonnet",    // Claude 3.7 Sonnet by Anthropic
+    "openai/gpt-4o-mini",             // GPT-4o-mini by OpenAI
+    "deepseek/deepseek-chat-v3-0324", // DeepSeek-V3 by DeepSeek
   ];
-  return llms[Math.floor(Math.random() * llms.length)];
 }
 
-function getRandomSubCondition() {
-  const random = Math.random();
+// Function to get input sub-conditions
+function getSubConditions() {
+  return [
+    "stance-based",  // LLM writes based on writer_stance
+    "bullets-based", // LLM writes based on writer_bullets
+    "rewrite-improve", // LLM writes based on writer_paragraph (rewrite or improve)
+  ];
+}
 
-  if (random < 1 / 3) {
-    return "stance-based";
-  } else if (random < 2 / 3) {
-    return "bullets-based";
-  } else if (random < 5 / 6) {
-    return "rewrite";
-  } else {
-    return "improve";
+// Create a balanced assignment of models and sub-conditions
+function createBalancedAssignment() {
+  const models = getModels();
+  const subConditions = getSubConditions();
+  
+  // Shuffle the models and sub-conditions arrays 
+  const shuffledModels = [...models].sort(() => 0.5 - Math.random());
+  const shuffledSubConditions = [...subConditions].sort(() => 0.5 - Math.random());
+  
+  // Create assignments for each proposition (3 total)
+  const assignments = [];
+  
+  for (let i = 0; i < 3; i++) {
+    // Determine if "rewrite-improve" should be "rewrite" or "improve"
+    let finalSubCondition = shuffledSubConditions[i];
+    if (finalSubCondition === "rewrite-improve") {
+      // 50% chance for either "rewrite" or "improve"
+      finalSubCondition = Math.random() < 0.5 ? "rewrite" : "improve";
+    }
+    
+    assignments.push({
+      model: shuffledModels[i],
+      subCondition: finalSubCondition
+    });
   }
+  
+  return assignments;
 }
 
-// This function now returns a Promise
 async function generateModelParagraph(proposition, stance, bullets, paragraph, model_input_condition, model_name) {
   // Construct the prompt based on the sub-condition
   let prompt = '';
