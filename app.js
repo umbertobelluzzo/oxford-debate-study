@@ -196,7 +196,7 @@ app.post('/writing-screener', async (req, res) => {
           },
           { 
             role: "user", 
-            content: `Question: What is your favourite ice cream flavour? Please explain your choice in one or two sentences.\n\nParticipant's answer: "${answer}"\n\nIs this a valid response? Reply with just PASS or FAIL.` 
+            content: `Question: What is your favourite ice cream flavour and why? Please state and explain your choice in one or two sentences.\n\nParticipant's answer: "${answer}"\n\nIs this a valid response? Reply with just PASS or FAIL.` 
           }
         ],
         max_tokens: 5,
