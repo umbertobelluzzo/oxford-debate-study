@@ -920,14 +920,12 @@ function getRandomPropositions(allPropositions, count) {
   return selected;
 }
 
-// Assign a random LLM. Eventually this will be between GPT-4o, Claude-3.7-Sonnet, Llama-3.1-70B, Qwen-2.5-72B, DeepSeek-V3.
-// For now we just return a random cheap model from the list below for testing.
+// Assign a random LLM. 
 function getRandomLLM() {
   const llms = [
+    "anthropic/claude-3.7-sonnet",
+    "deepseek/deepseek-chat-v3-0324",
     "openai/gpt-4o-mini",
-    "anthropic/claude-3.5-sonnet",
-    "qwen/qwen-2.5-7b-instruct",
-    "meta-llama/llama-3.1-8b-instruct:free",
   ];
   return llms[Math.floor(Math.random() * llms.length)];
 }
