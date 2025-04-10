@@ -176,13 +176,13 @@ app.post('/writing-screener', async (req, res) => {
   }
 
   const answer = req.body.iceCreamAnswer.trim();
-  
+
   // Save the answer regardless of assessment
   req.session.participantData.writingScreenerAnswer = answer;
 
   // Assess the response using GPT-4o
   let screeningPassed = false;
-  
+
   try {
     // Only evaluate if there's sufficient content (more than just a few characters)
     if (answer.length > 5) {
@@ -190,13 +190,13 @@ app.post('/writing-screener', async (req, res) => {
       const completion = await openrouter_client.chat.completions.create({
         model: "openai/gpt-4o-mini", // Use a cost-effective model for assessment
         messages: [
-          { 
-            role: "system", 
-            content: "You are assessing writing screening responses. Your task is to determine if the response is on-topic and shows minimal writing ability. The bar is very low - any genuine attempt at answering the question should pass. Only fail responses that are completely off-topic, nonsensical, or just random characters. Respond with PASS or FAIL."
+          {
+            role: "system",
+            content: "You are assessing writing screening responses. Your task is to determine if the response is on-topic and shows minimal writing ability. The response should name an ice cream flavour and explain why the writer chose it. You should fail responses that only name the flavour but do not give a reason. Also fail responses that are completely off-topic, nonsensical, or just random characters. Respond only with PASS or FAIL."
           },
-          { 
-            role: "user", 
-            content: `Question: What is your favourite ice cream flavour and why? Please state and explain your choice in one or two sentences.\n\nParticipant's answer: "${answer}"\n\nIs this a valid response? Reply with just PASS or FAIL.` 
+          {
+            role: "user",
+            content: `Question: What is your favourite ice cream flavour and why? Please state and explain your choice in one or two sentences.\n\nParticipant's answer: "${answer}"\n\nIs this a valid response? Reply with just PASS or FAIL.`
           }
         ],
         max_tokens: 5,
@@ -205,7 +205,7 @@ app.post('/writing-screener', async (req, res) => {
 
       const assessment = completion.choices[0].message.content.trim();
       screeningPassed = assessment.includes("PASS");
-      
+
       // Log the assessment result
       console.log(`Writing screener assessment for "${answer}": ${assessment}`);
     } else {
@@ -229,7 +229,7 @@ app.post('/writing-screener', async (req, res) => {
 
     // Initialize the current proposition index to 0 (zero-based)
     req.session.participantData.currentPropositionIndex = 0;
-    
+
     // Initialize propositionResponses array with the assigned propositions
     // This is the key fix - initializing a proper structure for each proposition
     req.session.participantData.propositionResponses = assignedPropositions.map(proposition => {
@@ -332,7 +332,7 @@ app.post('/proposition-knowledge', (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentPropositionIndex;
-  
+
   // Save knowledge rating directly to current proposition's response
   req.session.participantData.propositionResponses[index].writer_knowledge = req.body.knowledge;
 
@@ -373,7 +373,7 @@ app.post('/proposition-importance', (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentPropositionIndex;
-  
+
   // Save importance rating
   req.session.participantData.propositionResponses[index].writer_importance = req.body.importance;
 
@@ -414,7 +414,7 @@ app.post('/proposition-stance-pre', (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentPropositionIndex;
-  
+
   // Save pre-writing stance
   req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
 
@@ -455,7 +455,7 @@ app.post('/proposition-bullets', (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentPropositionIndex;
-  
+
   // Save bullet points
   req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
 
@@ -496,7 +496,7 @@ app.post('/proposition-paragraph', (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentPropositionIndex;
-  
+
   // Save paragraph
   req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
 
@@ -658,16 +658,16 @@ app.get('/llm-stance', async (req, res) => {
     console.log("Creating balanced assignment of models and sub-conditions");
     req.session.participantData.modelAssignments = createBalancedAssignment();
   }
-  
+
   // Get assignment for current proposition
   const assignment = req.session.participantData.modelAssignments[index];
-  
+
   // Assign model and sub-condition based on balanced assignment
   if (!currentResponse.model_name) {
     currentResponse.model_name = assignment.model;
     console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
   }
-  
+
   if (!currentResponse.model_input_condition) {
     currentResponse.model_input_condition = assignment.subCondition;
     console.log(`Assigned sub-condition for proposition ${index}: ${currentResponse.model_input_condition}`);
@@ -829,7 +829,7 @@ app.post('/llm-compare', (req, res) => {
 
   // Save preference data
   response.writer_preference = req.body.preference;
-  
+
   // Convert the preference reasons from form to array
   // The form sends a single value if only one checkbox is selected,
   // or an array if multiple checkboxes are selected
@@ -837,7 +837,7 @@ app.post('/llm-compare', (req, res) => {
   if (reasons && !Array.isArray(reasons)) {
     reasons = [reasons];
   }
-  
+
   response.writer_preference_reason = reasons || [];
   response.writer_preference_reason_other = req.body.reasonOther;
 
@@ -975,14 +975,14 @@ function getSubConditions() {
 function createBalancedAssignment() {
   const models = getModels();
   const subConditions = getSubConditions();
-  
+
   // Shuffle the models and sub-conditions arrays 
   const shuffledModels = [...models].sort(() => 0.5 - Math.random());
   const shuffledSubConditions = [...subConditions].sort(() => 0.5 - Math.random());
-  
+
   // Create assignments for each proposition (3 total)
   const assignments = [];
-  
+
   for (let i = 0; i < 3; i++) {
     // Determine if "rewrite-improve" should be "rewrite" or "improve"
     let finalSubCondition = shuffledSubConditions[i];
@@ -990,13 +990,13 @@ function createBalancedAssignment() {
       // 50% chance for either "rewrite" or "improve"
       finalSubCondition = Math.random() < 0.5 ? "rewrite" : "improve";
     }
-    
+
     assignments.push({
       model: shuffledModels[i],
       subCondition: finalSubCondition
     });
   }
-  
+
   return assignments;
 }
 
