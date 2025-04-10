@@ -42,6 +42,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
+// Middleware to require session
+function requireSession(req, res, next) {
+  if (!req.session.participantData) {
+    return res.redirect('/');
+  }
+  next();
+}
+
 // Apply session middleware
 app.use(session(sessionConfig));
 
@@ -130,7 +138,7 @@ app.post('/consent', (req, res) => {
 });
 
 // DEMOGRAPHICS
-app.get('/demographics', (req, res) => {
+app.get('/demographics', requireSession, (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
@@ -161,7 +169,7 @@ app.post('/demographics', (req, res) => {
 });
 
 // WRITING SCREENER
-app.get('/writing-screener', (req, res) => {
+app.get('/writing-screener', requireSession, (req, res) => {
   if (!req.session.participantData) {
     return res.redirect('/');
   }
@@ -257,7 +265,7 @@ app.post('/writing-screener', async (req, res) => {
 // PHASE 1: PROPOSITION RESPONSES
 
 // PROPOSITION INTRO
-app.get('/proposition-intro', (req, res) => {
+app.get('/proposition-intro', requireSession, (req, res) => {
 
   // Get the current proposition index (zero-based)
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -295,7 +303,7 @@ app.post('/proposition-intro', (req, res) => {
 });
 
 // PROPOSITION COMBINED OPINION
-app.get('/proposition-combined-opinion', (req, res) => {
+app.get('/proposition-combined-opinion', requireSession, (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -332,7 +340,7 @@ app.post('/proposition-combined-opinion', (req, res) => {
 
 
 // PROPOSITION AFFECT GRID
-app.get('/proposition-affect-grid', (req, res) => {
+app.get('/proposition-affect-grid', requireSession, (req, res) => {
   if (!req.session.participantData || !req.session.participantData.propositionResponses) {
     return res.redirect('/');
   }
@@ -376,7 +384,7 @@ app.post('/proposition-affect-grid', (req, res) => {
 
 
 // PROPOSITION KNOWLEDGE
-app.get('/proposition-knowledge', (req, res) => {
+app.get('/proposition-knowledge', requireSession, (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -414,7 +422,7 @@ app.post('/proposition-knowledge', (req, res) => {
 });
 
 // PROPOSITION IMPORTANCE
-app.get('/proposition-importance', (req, res) => {
+app.get('/proposition-importance', requireSession, (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -452,7 +460,7 @@ app.post('/proposition-importance', (req, res) => {
 });
 
 // PROPOSITION STANCE CONFIRMATION
-app.get('/proposition-stance-confirmation', (req, res) => {
+app.get('/proposition-stance-confirmation', requireSession, (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -489,7 +497,7 @@ app.post('/proposition-stance-confirmation', (req, res) => {
 });
 
 // PROPOSITION CONFIDENCE
-app.get('/proposition-confidence', (req, res) => {
+app.get('/proposition-confidence', requireSession, (req, res) => {
 
   // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
@@ -612,7 +620,7 @@ app.post('/llm-stance', (req, res) => {
 });
 
 // LLM EDIT
-app.get('/llm-edit', (req, res) => {
+app.get('/llm-edit', requireSession, (req, res) => {
 
   // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
@@ -643,7 +651,7 @@ app.post('/llm-edit', (req, res) => {
 });
 
 // LLM COMPARE
-app.get('/llm-compare', (req, res) => {
+app.get('/llm-compare', requireSession, (req, res) => {
 
   // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
@@ -691,7 +699,7 @@ app.post('/llm-compare', (req, res) => {
 
 
 // PROPOSITION STANCE FINAL
-app.get('/proposition-stance-final', (req, res) => {
+app.get('/proposition-stance-final', requireSession, (req, res) => {
 
   // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
@@ -724,7 +732,7 @@ app.post('/proposition-stance-final', (req, res) => {
 });
 
 // AI USAGE
-app.get('/ai-usage', (req, res) => {
+app.get('/ai-usage', requireSession, (req, res) => {
   if (!req.session.participantData) {
     console.log("No participant data in session");
     return res.redirect('/');
