@@ -228,7 +228,7 @@ app.post('/writing-screener', async (req, res) => {
     req.session.participantData.assignedPropositions = assignedPropositions;
 
     // Initialize the current proposition index to 0 (zero-based)
-    req.session.participantData.currentPropositionIndex = 0;
+    req.session.participantData.currentWriterPropositionIndex = 0;
 
     // Initialize propositionResponses array with the assigned propositions
     // This is the key fix - initializing a proper structure for each proposition
@@ -258,14 +258,9 @@ app.post('/writing-screener', async (req, res) => {
 
 // PROPOSITION INTRO
 app.get('/proposition-intro', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
   // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Get the propositions assigned to the participant
   const propositionResponses = req.session.participantData.propositionResponses;
@@ -295,25 +290,18 @@ app.post('/proposition-intro', (req, res) => {
     return res.redirect('/');
   }
 
-  // Proceed to the proposition knowledge screen
+  // Proceed to the combined opinion screen
   res.redirect('/proposition-combined opinion');
 });
 
 // PROPOSITION COMBINED OPINION
 app.get('/proposition-combined-opinion', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
-  // Get the propositions assigned to the participant
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
   const currentProposition = propositionResponses[index].proposition;
 
   res.render('proposition-combined-opinion', {
@@ -331,14 +319,14 @@ app.post('/proposition-combined-opinion', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Save all three data points from the combined form
   req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
   req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
   req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
 
-  // Proceed to the affect grid screen directly after paragraph
+  // Proceed to the proposition affect grid screen
   res.redirect('/proposition-affect-grid');
 });
 
@@ -349,10 +337,14 @@ app.get('/proposition-affect-grid', (req, res) => {
     return res.redirect('/');
   }
 
-  // Get the current proposition index and response
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
+
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
   const currentProposition = propositionResponses[index].proposition;
+
+  // Get the writer paragraph
   const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-affect-grid', {
@@ -370,38 +362,35 @@ app.post('/proposition-affect-grid', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
-  // Add affect grid data 
+  // Save affect grid data 
   req.session.participantData.propositionResponses[index].writer_affect_grid = {
     x: req.body.gridX,
     y: req.body.gridY
   };
 
-  // Proceed to stance confirmation screen
+  // Proceed to the proposition knowledge screen
   res.redirect('/proposition-knowledge');
 });
 
 
 // PROPOSITION KNOWLEDGE
 app.get('/proposition-knowledge', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
-  // Get the propositions assigned to the participant
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
   const currentProposition = propositionResponses[index].proposition;
+
+  // Get the writer paragraph
+  const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-knowledge', {
     proposition: currentProposition,
+    writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
     total: propositionResponses.length
   });
@@ -415,9 +404,9 @@ app.post('/proposition-knowledge', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
-  // Save knowledge rating directly to current proposition's response
+  // Save knowledge rating 
   req.session.participantData.propositionResponses[index].writer_knowledge = req.body.knowledge;
 
   // Proceed to the proposition importance screen
@@ -426,19 +415,20 @@ app.post('/proposition-knowledge', (req, res) => {
 
 // PROPOSITION IMPORTANCE
 app.get('/proposition-importance', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
+
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
   const currentProposition = propositionResponses[index].proposition;
 
+  // Get the writer paragraph
+  const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-importance', {
     proposition: currentProposition,
+    writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
     total: propositionResponses.length
   });
@@ -452,27 +442,26 @@ app.post('/proposition-importance', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Save importance rating
   req.session.participantData.propositionResponses[index].writer_importance = req.body.importance;
 
-  // Proceed to the initial stance screen
+  // Proceed to the proposition stance confirmation screen
   res.redirect('/proposition-stance-confirmation');
 });
 
 // PROPOSITION STANCE CONFIRMATION
 app.get('/proposition-stance-confirmation', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
+
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
   const currentProposition = propositionResponses[index].proposition;
+
+  // Get the writer paragraph
   const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-stance-confirmation', {
@@ -490,7 +479,7 @@ app.post('/proposition-stance-confirmation', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Save stance confirmation data
   req.session.participantData.propositionResponses[index].writer_stance_post = req.body.stancePost;
@@ -501,16 +490,15 @@ app.post('/proposition-stance-confirmation', (req, res) => {
 
 // PROPOSITION CONFIDENCE
 app.get('/proposition-confidence', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
+
+  // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
   const currentProposition = propositionResponses[index].proposition;
+
+  // Get the writer paragraph
   const writerParagraph = propositionResponses[index].writer_paragraph;
 
   res.render('proposition-confidence', {
@@ -529,13 +517,13 @@ app.post('/proposition-confidence', (req, res) => {
   }
 
   // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
+  const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Save confidence rating
   req.session.participantData.propositionResponses[index].writer_confidence = req.body.confidence;
 
-  // Increment the proposition index
-  req.session.participantData.currentPropositionIndex++;
+  // Increment the proposition index to move to the next proposition (since this is the final screen for the current proposition)
+  req.session.participantData.currentWriterPropositionIndex++;
 
   // Return to the proposition intro screen to start the next proposition
   return res.redirect('/proposition-intro');
@@ -545,20 +533,11 @@ app.post('/proposition-confidence', (req, res) => {
 
 // LLM STANCE
 app.get('/llm-stance', async (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
+
+  // Get the propositions assigned to the participant
   const propositionResponses = req.session.participantData.propositionResponses;
 
   console.log(`LLM proposition index: ${index}, Total responses: ${propositionResponses.length}`);
@@ -569,18 +548,19 @@ app.get('/llm-stance', async (req, res) => {
     return res.redirect('/ai-usage');
   }
 
+  // Select the current proposition response
   const currentResponse = propositionResponses[index];
 
-  // Create a balanced assignment if not already created
+  // Create a balanced assignment of conditions if not already created
   if (!req.session.participantData.modelAssignments) {
     console.log("Creating balanced assignment of models and sub-conditions");
     req.session.participantData.modelAssignments = createBalancedAssignment();
   }
 
-  // Get assignment for current proposition
+  // Get assignment of conditions for current proposition
   const assignment = req.session.participantData.modelAssignments[index];
 
-  // Assign model and sub-condition based on balanced assignment
+  // Assign model and input sub-condition based on balanced assignment
   if (!currentResponse.model_name) {
     currentResponse.model_name = assignment.model;
     console.log(`Assigned LLM for proposition ${index}: ${currentResponse.model_name}`);
@@ -620,24 +600,12 @@ app.get('/llm-stance', async (req, res) => {
 
 // LLM STANCE - POST
 app.post('/llm-stance', (req, res) => {
-  // Validate session data
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
 
-  // Save stance data
-  response.model_paragraph_stance = req.body.modelStance;
+  // Save model stance data
+  req.session.participantData.propositionResponses[index].model_paragraph_stance = req.body.modelStance;
 
   // Move to edit page
   res.redirect('/llm-edit');
@@ -645,56 +613,30 @@ app.post('/llm-stance', (req, res) => {
 
 // LLM EDIT
 app.get('/llm-edit', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
 
-  // Make sure we have a model paragraph before proceeding
-  if (!response.model_paragraph) {
-    console.log("No model paragraph found, redirecting to stance step");
-    return res.redirect('/llm-stance');
-  }
+  // Get the propositions assigned to the participant and select the current one
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentResponse = propositionResponses[index];
 
   res.render('llm-edit', {
-    proposition: response.proposition,
-    modelParagraph: response.model_paragraph,
+    proposition: currentResponse.proposition,
+    modelParagraph: currentResponse.model_paragraph,
     index: index + 1, // Display 1-based index to the user
-    total: req.session.participantData.propositionResponses.length
+    total: propositionResponses.length
   });
 });
 
 // LLM EDIT - POST
 app.post('/llm-edit', (req, res) => {
-  // Validate session data
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
 
-  // Save edited paragraph
-  response.edited_paragraph = req.body.editedParagraph;
+  // Save the edited paragraph
+  req.session.participantData.propositionResponses[index].edited_paragraph = req.body.editedParagraph;
 
   // Move to compare page
   res.redirect('/llm-compare');
@@ -702,51 +644,35 @@ app.post('/llm-edit', (req, res) => {
 
 // LLM COMPARE
 app.get('/llm-compare', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
+
+  // Get the propositions assigned to the participant and select the current one
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentResponse = req.session.participantData.propositionResponses[index];
 
   res.render('llm-compare', {
-    proposition: response.proposition,
-    writerParagraph: response.writer_paragraph,
-    editedParagraph: response.edited_paragraph,
+    proposition: currentResponse.proposition,
+    writerParagraph: currentResponse.writer_paragraph,
+    editedParagraph: currentResponse.edited_paragraph,
     index: index + 1, // Display 1-based index to the user
-    total: req.session.participantData.propositionResponses.length
+    total: propositionResponses.length
   });
 });
 
 // SCREEN: LLM COMPARE - POST
 app.post('/llm-compare', (req, res) => {
-  // Validate session data
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
 
-  // Save preference data
-  response.writer_preference = req.body.preference;
+  // Get the propositions assigned to the participant and select the current one
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentResponse = req.session.participantData.propositionResponses[index];
+
+  // Save comparison data
+  currentResponse.writer_preference = req.body.preference;
 
   // Convert the preference reasons from form to array
   // The form sends a single value if only one checkbox is selected,
@@ -756,8 +682,8 @@ app.post('/llm-compare', (req, res) => {
     reasons = [reasons];
   }
 
-  response.writer_preference_reason = reasons || [];
-  response.writer_preference_reason_other = req.body.reasonOther;
+  currentResponse.writer_preference_reason = reasons || [];
+  currentResponse.writer_preference_reason_other = req.body.reasonOther;
 
   // Redirect to final stance step
   res.redirect('/proposition-stance-final');
@@ -766,42 +692,29 @@ app.post('/llm-compare', (req, res) => {
 
 // PROPOSITION STANCE FINAL
 app.get('/proposition-stance-final', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
 
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
+
+  // Get the propositions assigned to the participant and select the current one
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentResponse = req.session.participantData.propositionResponses[index];
 
   res.render('proposition-stance-final', {
-    proposition: response.proposition,
+    proposition: currentResponse.proposition,
     index: index + 1, // Display 1-based index to the user
-    total: req.session.participantData.propositionResponses.length
+    total: propositionResponses.length,
   });
 });
 
 // PROPOSITION STANCE FINAL - POST
 app.post('/proposition-stance-final', (req, res) => {
-  // Validate session data
-  if (!req.session.participantData) {
-    console.log("No participant data in session");
-    return res.redirect('/');
-  }
 
-  // Check if propositionResponses exists and has entries
-  if (!req.session.participantData.propositionResponses ||
-    req.session.participantData.propositionResponses.length === 0) {
-    console.log("No proposition responses found");
-    return res.redirect('/');
-  }
-
+  // Get the current LLM proposition index
   const index = req.session.participantData.currentLLMPropositionIndex;
-  const response = req.session.participantData.propositionResponses[index];
 
   // Save final stance data
-  response.writer_stance_final = req.body.stanceFinal;
+  req.session.participantData.propositionResponses[index].writer_stance_final = req.body.stanceFinal;
 
   // Move to next proposition for LLM phase
   req.session.participantData.currentLLMPropositionIndex++;
