@@ -267,7 +267,7 @@ app.post('/writing-screener', async (req, res) => {
 // PROPOSITION INTRO
 app.get('/proposition-intro', requireSession, (req, res) => {
 
-  // Get the current proposition index (zero-based)
+  // Get the current proposition index
   const index = req.session.participantData.currentWriterPropositionIndex;
 
   // Get the propositions assigned to the participant
@@ -297,6 +297,12 @@ app.post('/proposition-intro', (req, res) => {
     console.log("Missing session data, redirecting to root");
     return res.redirect('/');
   }
+
+  // Get the current proposition index
+  const index = req.session.participantData.currentWriterPropositionIndex;
+
+  // Save a timestamp for when the participant finished the introduction
+  req.session.participantData.propositionResponses[index].finishedIntroTimestamp = new Date().toISOString();
 
   // Proceed to the combined opinion screen
   res.redirect('/proposition-combined-opinion');
@@ -333,6 +339,9 @@ app.post('/proposition-combined-opinion', (req, res) => {
   req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
   req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
   req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
+
+  // Save the timestamp for when the participant finished the combined opinion
+  req.session.participantData.propositionResponses[index].finishedCombinedOpinionTimestamp = new Date().toISOString();
 
   // Proceed to the proposition affect grid screen
   res.redirect('/proposition-affect-grid');
@@ -530,6 +539,9 @@ app.post('/proposition-confidence', (req, res) => {
   // Save confidence rating
   req.session.participantData.propositionResponses[index].writer_confidence = req.body.confidence;
 
+  // Save the timestamp for when the participant finished the confidence screen
+  req.session.participantData.propositionResponses[index].finishedPropositionRatingsTimestamp = new Date().toISOString();
+
   // Increment the proposition index to move to the next proposition (since this is the final screen for the current proposition)
   req.session.participantData.currentWriterPropositionIndex++;
 
@@ -615,6 +627,9 @@ app.post('/llm-stance', (req, res) => {
   // Save model stance data
   req.session.participantData.propositionResponses[index].model_paragraph_stance = req.body.modelStance;
 
+  // Save the timestamp for when the participant finished the LLM stance
+  req.session.participantData.propositionResponses[index].finishedLLMStanceTimestamp = new Date().toISOString();
+
   // Move to edit page
   res.redirect('/llm-edit');
 });
@@ -645,6 +660,9 @@ app.post('/llm-edit', (req, res) => {
 
   // Save the edited paragraph
   req.session.participantData.propositionResponses[index].edited_paragraph = req.body.editedParagraph;
+
+  // Save the timestamp for when the participant finished the editing
+  req.session.participantData.propositionResponses[index].finishedLLMEditTimestamp = new Date().toISOString();
 
   // Move to compare page
   res.redirect('/llm-compare');
@@ -693,6 +711,9 @@ app.post('/llm-compare', (req, res) => {
   currentResponse.writer_preference_reason = reasons || [];
   currentResponse.writer_preference_reason_other = req.body.reasonOther;
 
+  // Save the timestamp for when the participant finished the comparison
+  req.session.participantData.propositionResponses[index].finishedLLMCompareTimestamp = new Date().toISOString();
+
   // Redirect to final stance step
   res.redirect('/proposition-stance-final');
 });
@@ -723,6 +744,9 @@ app.post('/proposition-stance-final', (req, res) => {
 
   // Save final stance data
   req.session.participantData.propositionResponses[index].writer_stance_final = req.body.stanceFinal;
+
+  // Save the timestamp for when the participant finished the final stance
+  req.session.participantData.propositionResponses[index].finishedFinalStanceTimestamp = new Date().toISOString();
 
   // Move to next proposition for LLM phase
   req.session.participantData.currentLLMPropositionIndex++;
