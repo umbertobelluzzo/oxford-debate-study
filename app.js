@@ -296,8 +296,92 @@ app.post('/proposition-intro', (req, res) => {
   }
 
   // Proceed to the proposition knowledge screen
+  res.redirect('/proposition-combined opinion');
+});
+
+// PROPOSITION COMBINED OPINION
+app.get('/proposition-combined-opinion', (req, res) => {
+  // Check if session exists
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index (zero-based)
+  const index = req.session.participantData.currentPropositionIndex;
+
+  // Get the propositions assigned to the participant
+  const propositionResponses = req.session.participantData.propositionResponses;
+
+  // Select the current proposition
+  const currentProposition = propositionResponses[index].proposition;
+
+  res.render('proposition-combined-opinion', {
+    proposition: currentProposition,
+    index: index + 1, // Display 1-based index to the user
+    total: propositionResponses.length
+  });
+});
+
+// PROPOSITION COMBINED OPINION - POST
+app.post('/proposition-combined-opinion', (req, res) => {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
+    console.log("Missing session data, redirecting to root");
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+
+  // Save all three data points from the combined form
+  req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
+  req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
+  req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
+
+  // Proceed to the affect grid screen directly after paragraph
+  res.redirect('/proposition-affect-grid');
+});
+
+
+// PROPOSITION AFFECT GRID
+app.get('/proposition-affect-grid', (req, res) => {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index and response
+  const index = req.session.participantData.currentPropositionIndex;
+  const propositionResponses = req.session.participantData.propositionResponses;
+  const currentProposition = propositionResponses[index].proposition;
+  const writerParagraph = propositionResponses[index].writer_paragraph;
+
+  res.render('proposition-affect-grid', {
+    proposition: currentProposition,
+    writerParagraph: writerParagraph,
+    index: index + 1, // Display 1-based index to the user
+    total: propositionResponses.length
+  });
+});
+
+// PROPOSITION AFFECT GRID - POST
+app.post('/proposition-affect-grid', (req, res) => {
+  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
+    return res.redirect('/');
+  }
+
+  // Get the current proposition index
+  const index = req.session.participantData.currentPropositionIndex;
+
+  // Add affect grid data 
+  req.session.participantData.propositionResponses[index].writer_affect_grid = {
+    x: req.body.gridX,
+    y: req.body.gridY
+  };
+
+  // Proceed to stance confirmation screen
   res.redirect('/proposition-knowledge');
 });
+
 
 // PROPOSITION KNOWLEDGE
 app.get('/proposition-knowledge', (req, res) => {
@@ -348,14 +432,10 @@ app.get('/proposition-importance', (req, res) => {
     return res.redirect('/');
   }
 
-  // Get the current proposition index (zero-based)
   const index = req.session.participantData.currentPropositionIndex;
-
-  // Get the propositions assigned to the participant
   const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
   const currentProposition = propositionResponses[index].proposition;
+
 
   res.render('proposition-importance', {
     proposition: currentProposition,
@@ -378,168 +458,6 @@ app.post('/proposition-importance', (req, res) => {
   req.session.participantData.propositionResponses[index].writer_importance = req.body.importance;
 
   // Proceed to the initial stance screen
-  res.redirect('/proposition-stance-pre');
-});
-
-// PROPOSITION STANCE PRE
-app.get('/proposition-stance-pre', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Get the propositions assigned to the participant
-  const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
-  const currentProposition = propositionResponses[index].proposition;
-
-  res.render('proposition-stance-pre', {
-    proposition: currentProposition,
-    index: index + 1, // Display 1-based index to the user
-    total: propositionResponses.length
-  });
-});
-
-// PROPOSITION STANCE PRE - POST
-app.post('/proposition-stance-pre', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Save pre-writing stance
-  req.session.participantData.propositionResponses[index].writer_stance_pre = req.body.stancePre;
-
-  // Proceed to the bullet points screen
-  res.redirect('/proposition-bullets');
-});
-
-// PROPOSITION BULLETS
-app.get('/proposition-bullets', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Get the propositions assigned to the participant
-  const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
-  const currentProposition = propositionResponses[index].proposition;
-
-  res.render('proposition-bullets', {
-    proposition: currentProposition,
-    index: index + 1, // Display 1-based index to the user
-    total: propositionResponses.length
-  });
-});
-
-// PROPOSITION BULLETS - POST
-app.post('/proposition-bullets', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Save bullet points
-  req.session.participantData.propositionResponses[index].writer_bullets = req.body.bullets;
-
-  // Proceed to the paragraph screen
-  res.redirect('/proposition-paragraph');
-});
-
-// PROPOSITION PARAGRAPH
-app.get('/proposition-paragraph', (req, res) => {
-  // Check if session exists
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index (zero-based)
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Get the propositions assigned to the participant
-  const propositionResponses = req.session.participantData.propositionResponses;
-
-  // Select the current proposition
-  const currentProposition = propositionResponses[index].proposition;
-
-  res.render('proposition-paragraph', {
-    proposition: currentProposition,
-    index: index + 1, // Display 1-based index to the user
-    total: propositionResponses.length
-  });
-});
-
-// PROPOSITION PARAGRAPH - POST
-app.post('/proposition-paragraph', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    console.log("Missing session data, redirecting to root");
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Save paragraph
-  req.session.participantData.propositionResponses[index].writer_paragraph = req.body.paragraph;
-
-  // Proceed to the affect grid screen directly after paragraph
-  res.redirect('/affect-grid');
-});
-
-// PROPOSITION AFFECT GRID
-app.get('/affect-grid', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index and response
-  const index = req.session.participantData.currentPropositionIndex;
-  const propositionResponses = req.session.participantData.propositionResponses;
-  const currentProposition = propositionResponses[index].proposition;
-  const writerParagraph = propositionResponses[index].writer_paragraph;
-
-  res.render('affect-grid', {
-    proposition: currentProposition,
-    writerParagraph: writerParagraph,
-    index: index + 1, // Display 1-based index to the user
-    total: propositionResponses.length
-  });
-});
-
-// PROPOSITION AFFECT GRID - POST
-app.post('/affect-grid', (req, res) => {
-  if (!req.session.participantData || !req.session.participantData.propositionResponses) {
-    return res.redirect('/');
-  }
-
-  // Get the current proposition index
-  const index = req.session.participantData.currentPropositionIndex;
-
-  // Add affect grid data 
-  req.session.participantData.propositionResponses[index].writer_affect_grid = {
-    x: req.body.gridX,
-    y: req.body.gridY
-  };
-
-  // Proceed to stance confirmation screen
   res.redirect('/proposition-stance-confirmation');
 });
 
