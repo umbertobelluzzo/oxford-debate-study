@@ -299,7 +299,7 @@ app.post('/proposition-intro', (req, res) => {
   }
 
   // Proceed to the combined opinion screen
-  res.redirect('/proposition-combined opinion');
+  res.redirect('/proposition-combined-opinion');
 });
 
 // PROPOSITION COMBINED OPINION
