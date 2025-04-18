@@ -909,9 +909,9 @@ function getRandomPropositions(allPropositions, count) {
 
 function getModels() {
   return [
-    "anthropic/claude-3.7-sonnet",    // Claude 3.7 Sonnet by Anthropic
-    "openai/gpt-4o-mini",             // GPT-4o-mini by OpenAI
-    "deepseek/deepseek-chat-v3-0324", // DeepSeek-V3 by DeepSeek
+    //"anthropic/claude-3.7-sonnet",    // Claude 3.7 Sonnet by Anthropic
+    "openai/gpt-4o",             // GPT-4o by OpenAI
+    //"deepseek/deepseek-chat-v3-0324", // DeepSeek-V3 by DeepSeek
   ];
 }
 
@@ -1043,14 +1043,14 @@ async function saveParticipantDataToS3(data) {
 
     const params = {
       Bucket: bucketName,
-      Key: `participants/${filename}`,
+      Key: `phase1/${filename}`,
       Body: JSON.stringify(data, null, 2),
       ContentType: 'application/json'
     };
 
     const result = await s3Client.send(new PutObjectCommand(params));
-    console.log(`Data saved to S3: participants/${filename}`);
-    return { success: true, key: `participants/${filename}` };
+    console.log(`Data saved to S3: phase1/${filename}`);
+    return { success: true, key: `phase1/${filename}` };
   } catch (error) {
     console.error('Error saving data to S3:', error);
     throw error; // Rethrow to trigger fallback
