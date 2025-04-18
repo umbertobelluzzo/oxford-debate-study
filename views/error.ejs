@@ -1,34 +1,47 @@
 <!-- views/error.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Political Opinion Study - Error</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <div class="container">
     <div class="study-card">
-      <h1>Error</h1>
-      
-      <div class="error-content">
-        <p><%= message %></p>
-        
-        <% if (locals.completionCode) { %>
-          <div class="completion-code">
-            <h3>Your Partial Compensation Code:</h3>
-            <div class="code-box"><%= completionCode %></div>
-            <p>Please copy this code and enter it in Prolific to receive your partial payment.</p>
-          </div>
+      <% if (locals.header) { %>
+        <h1>
+          <%= header %>
+        </h1>
         <% } else { %>
-          <p>If you believe this is a mistake, please contact the study administrator (paul.rottger@unibocconi.it) with the details of this error.</p>
-        <% } %>
-      </div>
-      
-      <div class="button-container">
-        <a href="https://app.prolific.co" class="button">Return to Prolific</a>
-      </div>
+          <h1>Error</h1>
+          <% } %>
+
+            <div class="error-content">
+              <p>
+                <%= message %>
+              </p>
+
+              <% if (locals.completionCode) { %>
+                <div class="completion-code">
+                  <h3>Your Prolific Code:</h3>
+                  <div class="code-box">
+                    <%= completionCode %>
+                  </div>
+                </div>
+                <% } else { %>
+                  <% } %>
+                    <p>If you believe this is a mistake, please contact the study administrator on Prolific or via email
+                      (paul.rottger@unibocconi.it) describing what you did just before you reached this screen.</p>
+            </div>
+
+            <div class="button-container">
+              <a href="https://app.prolific.co" class="button">Return to Prolific</a>
+            </div>
     </div>
   </div>
 </body>
+
 </html>

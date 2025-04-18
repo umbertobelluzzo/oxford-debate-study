@@ -1,28 +1,35 @@
 <!-- views/completion.ejs -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Political Opinion Study - Completion</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <div class="container">
     <div class="study-card">
       <h1>Thank You!</h1>
-      
+
       <div class="completion-content">
         <p>Thank you for completing this survey!</p>
-        
-        <p>We can now explain more about our study. The content you created will help us understand whether the use of AI for writing assistance impacts how this content is perceived. Our findings, made possible by you, will contribute to a better understanding of AI's role in political discourse and opinion formation.</p>
-        
+
+        <p>We can now explain more about our study. The content you created will help us understand whether the use of
+          AI for writing assistance impacts how this content is perceived. Our findings, made possible by you, will
+          contribute to a better understanding of AI's role in political discourse and opinion formation.</p>
+
         <div class="completion-code">
           <h3>Your Prolific Completion Code:</h3>
-          <div class="code-box"><%= completionCode %></div>
-          <p>Please copy this code and enter it in Prolific to receive your payment.</p>
+          <div class="code-box">
+            <%= completionCode %>
+          </div>
+          <p>Please copy this code and enter it on Prolific to receive your payment.</p>
         </div>
       </div>
     </div>
   </div>
 </body>
+
 </html>

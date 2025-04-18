@@ -218,8 +218,15 @@ app.post('/consent', (req, res) => {
 
   // If user does not consent, show a thank you page and exit
   if (consentResponse === 'no') {
+
+    // Show No Consent code (set by Prolific)
+    const noConsentCompletionCode = `CBI05CLJ`;
+
+    // Render an error page 
     return res.render('error', {
-      message: 'Thank you for considering our study. As you did not consent to participate, the survey will now end.'
+      header: 'Consent Not Given',
+      message: 'Thank you for considering our study. As you did not consent to participate, the survey will now end. Please enter the code below on Prolific to return your submission.',
+      completionCode: noConsentCompletionCode
     });
   }
 
@@ -341,12 +348,13 @@ app.post('/writing-screener', async (req, res) => {
     return res.redirect('/proposition-intro');
   } else {
     // Failed the writing screener
-    // Generate a partial completion code
-    const partialCompletionCode = `PARTIAL-${Date.now().toString(36).substring(4)}`;
+    // Show partial completion code (set by Prolific)
+    const partialCompletionCode = `CESVCPM6`;
 
     // Render an error page with partial compensation information
     return res.render('error', {
-      message: 'Thank you for your participation. However, you failed our writing screener, so we are unable to proceed with your submission at this time. You will receive partial compensation using the code below.',
+      header: 'Writing Screener Failed',
+      message: 'Thank you for your participation. However, you failed our writing screener, so we are unable to proceed with your submission at this time. Please enter the code below on Prolific to receive partial compensation. Please allow for up to 3 working days for processing.',
       completionCode: partialCompletionCode
     });
   }
@@ -888,8 +896,8 @@ app.get('/completion', async (req, res) => {
     // Still show completion page even if save fails
   }
 
-  // Generate a completion code - can be more sophisticated if needed
-  const completionCode = `STUDY-${Date.now().toString(36).substring(4)}`;
+  // Show completion code (set by Prolific)
+  const completionCode = `CFJQVQVZ`;
 
   res.render('completion', {
     completionCode: completionCode
