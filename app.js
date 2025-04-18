@@ -919,6 +919,8 @@ function getModels() {
   return [
     //"anthropic/claude-3.7-sonnet",    // Claude 3.7 Sonnet by Anthropic
     "openai/gpt-4o",             // GPT-4o by OpenAI
+    "openai/gpt-4o",             // GPT-4o by OpenAI
+    "openai/gpt-4o",             // GPT-4o by OpenAI
     //"deepseek/deepseek-chat-v3-0324", // DeepSeek-V3 by DeepSeek
   ];
 }
