@@ -180,11 +180,17 @@
             }
 
             // Check bullet points
-            const bulletLines = bullets.value.split('\n').filter(line =>
-                line.trim().startsWith('-') ||
-                line.trim().startsWith('•') ||
-                line.trim().startsWith('*')
-            );
+            const bulletLines = bullets.value.split('\n').filter(line => {
+                const trimmedLine = line.trim();
+                return trimmedLine.startsWith('-') ||
+                    trimmedLine.startsWith('–') ||  // en dash
+                    trimmedLine.startsWith('—') ||  // em dash
+                    trimmedLine.startsWith('•') ||
+                    trimmedLine.startsWith('*') ||
+                    trimmedLine.startsWith('⁃') ||  // hyphen bullet
+                    trimmedLine.startsWith('⁌') ||  // fallback bullet
+                    trimmedLine.startsWith('⁍');    // reverse bullet
+            });
 
             if (bulletLines.length < 2) {
                 bulletError.style.display = 'block';

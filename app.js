@@ -3,6 +3,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const MemoryStore = require('memorystore')(session);
 const fs = require('fs');
 const path = require('path');
 const app = express();
@@ -15,6 +16,9 @@ require('dotenv').config();
 // Session configuration
 sessionConfig = {
   secret: process.env.SESSION_SECRET || 'fallback-development-secret',
+  store: new MemoryStore({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
@@ -297,7 +301,7 @@ app.post('/writing-screener', async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are assessing writing screening responses. Your task is to determine if the response is on-topic and shows minimal writing ability. The response should name an ice cream flavour and explain why the writer chose it. You should fail responses that only name the flavour but do not give a reason. Also fail responses that are completely off-topic, nonsensical, or just random characters. Respond only with PASS or FAIL."
+            content: "You are assessing writing screening responses. Your task is to determine if the response is on-topic and shows minimal writing ability. The response should name an ice cream flavour and explain why the writer chose it, but it's also okay if the writer says that they do not like ice cream or that they prefer other foods. Fail responses that are completely off-topic, nonsensical, or just random characters. Respond only with PASS or FAIL."
           },
           {
             role: "user",
@@ -350,6 +354,15 @@ app.post('/writing-screener', async (req, res) => {
     // Failed the writing screener
     // Show partial completion code (set by Prolific)
     const partialCompletionCode = `CESVCPM6`;
+
+    // Save the participant data even though they failed the screener
+    try {
+      await saveParticipantData(req.session.participantData);
+      console.log(`Saved data for participant ${req.session.participantData.prolificId} who failed the writing screener`);
+    } catch (error) {
+      console.error("Error saving data for failed screening:", error);
+      // Continue even if save fails - we still want to show the error page
+    }
 
     // Render an error page with partial compensation information
     return res.render('error', {
