@@ -6,7 +6,6 @@
     <title>Political Opinion Study - Your Opinion</title>
     <link rel="stylesheet" href="/styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="/prevent-paste.js"></script>
 </head>
 
 <body>
@@ -121,8 +120,13 @@
             // Count bullet points by looking for lines starting with - or • or *
             const bulletLines = this.value.split('\n').filter(line =>
                 line.trim().startsWith('-') ||
+                line.trim().startsWith('–') ||  // en dash
+                line.trim().startsWith('—') ||  // em dash
+                line.trim().startsWith('⁃') ||  // hyphen bullet
+                line.trim().startsWith('⁌') ||  // fallback bullet
+                line.trim().startsWith('⁍') ||  // reverse bullet
                 line.trim().startsWith('•') ||
-                line.trim().startsWith('*')
+                line.trim().startsWith('*')  
             );
 
             const count = bulletLines.length;
