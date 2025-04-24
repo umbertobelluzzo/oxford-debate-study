@@ -588,6 +588,7 @@ app.get('/proposition-stance-confirmation', requireSession, (req, res) => {
   // Get the propositions assigned to the participant and select the current one
   const propositionResponses = req.session.participantData.propositionResponses;
   const currentProposition = propositionResponses[index].proposition;
+  const currentResponse = propositionResponses[index];
 
   // Get the writer paragraph
   const writerParagraph = propositionResponses[index].writer_paragraph;
@@ -596,7 +597,8 @@ app.get('/proposition-stance-confirmation', requireSession, (req, res) => {
     proposition: currentProposition,
     writerParagraph: writerParagraph,
     index: index + 1, // Display 1-based index to the user
-    total: propositionResponses.length
+    total: propositionResponses.length,
+    stancePre: currentResponse.writer_stance_pre,
   });
 });
 
@@ -652,6 +654,15 @@ app.post('/proposition-confidence', (req, res) => {
 
   // Save the timestamp for when the participant finished the confidence screen
   req.session.participantData.propositionResponses[index].finishedPropositionRatingsTimestamp = new Date().toISOString();
+
+  // Save the participant data
+  try {
+    saveParticipantData(req.session.participantData);
+    console.log(`Saved data for participant ${req.session.participantData.prolificId} after rating proposition ${index}`);
+  } catch (error) {
+    console.error("Error saving data after proposition ratings:", error);
+    // Continue even if save fails
+  }
 
   // Increment the proposition index to move to the next proposition (since this is the final screen for the current proposition)
   req.session.participantData.currentWriterPropositionIndex++;
@@ -844,6 +855,7 @@ app.get('/proposition-stance-final', requireSession, (req, res) => {
     proposition: currentResponse.proposition,
     index: index + 1, // Display 1-based index to the user
     total: propositionResponses.length,
+    stancePost: currentResponse.writer_stance_post,
   });
 });
 
@@ -858,6 +870,15 @@ app.post('/proposition-stance-final', (req, res) => {
 
   // Save the timestamp for when the participant finished the final stance
   req.session.participantData.propositionResponses[index].finishedFinalStanceTimestamp = new Date().toISOString();
+
+  // Save participant data
+  try {
+    saveParticipantData(req.session.participantData);
+    console.log(`Saved data for participant ${req.session.participantData.prolificId} after final stance`);
+  } catch (error) {
+    console.error("Error saving data after final stance:", error);
+    // Continue even if save fails
+  }
 
   // Move to next proposition for LLM phase
   req.session.participantData.currentLLMPropositionIndex++;
@@ -1062,7 +1083,7 @@ async function saveParticipantData(data) {
 // Function to save participant data to S3
 async function saveParticipantDataToS3(data) {
   try {
-    const filename = `participant_${data.prolificId}_${Date.now()}.json`;
+    const filename = `participant_${data.prolificId}_${data.sessionId}.json`;
 
     const params = {
       Bucket: bucketName,

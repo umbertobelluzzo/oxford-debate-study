@@ -1,5 +1,3 @@
-// Improved button-disable.js to prevent multiple form submissions
-
 document.addEventListener('DOMContentLoaded', function () {
     // Find all forms in the document
     const forms = document.querySelectorAll('form');

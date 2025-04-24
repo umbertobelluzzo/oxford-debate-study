@@ -42,7 +42,8 @@
 
         <div class="form-group">
           <label for="stanceFinal">Please tell us one last time: What is <b>your level of agreement</b> with the
-            <span style="color: #3498db;"><b>statement</b></span>?</label>
+            <span style="color: #3498db;"><b>statement</b></span>? By default, the slider is set to the answer you gave
+            before. If your opinion has changed, please move the slider accordingly.</label>
           <div class="stance-scale">
             <span>0 = Strongly disagree </span>
             <span>50 = Ambivalent </span>
@@ -72,8 +73,14 @@
     const stanceLabel = document.getElementById('stanceFinalLabel');
     const stanceForm = document.getElementById('stanceForm');
 
-    // Initialize slider state
-    let sliderSet = false;
+    // Initialize slider state with the previous stance value
+    let sliderSet = true; // Set to true since we're pre-setting the value
+    stanceSlider.value = '<%= stancePost %>'; // Set the slider value to the previous stance
+    stanceSlider.classList.remove('slider-unset');
+    stanceSlider.classList.add('slider-set');
+    stanceValue.textContent = "Current value: " + stanceSlider.value;
+    stanceValue.classList.remove('hidden');
+    stanceLabel.classList.add('hidden');
 
     stanceSlider.oninput = function () {
       // Update the value display
