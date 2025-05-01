@@ -380,13 +380,28 @@ app.post('/debate-turn', requireSession, async (req, res) => {
   const humanArgument = req.body.argument;
   const turnType = req.body.turnType;
   
+  // Word count validation
+  const wordCount = humanArgument.trim().split(/\s+/).length;
+  if (wordCount < 100 || wordCount > 150) {
+    return res.render('debate-human-turn', {
+      debate: debate,
+      turnType: turnType,
+      turnIndex: currentTurnIndex,
+      humanSide: debate.side,
+      aiSide: debate.side === 'proposition' ? 'opposition' : 'proposition',
+      previousTurns: debate.turns,
+      error: `Your argument must be between 100-150 words. Current count: ${wordCount} words.`
+    });
+  }
+  
   // Save human's turn
   debate.turns.push({
     side: debate.side,
     type: turnType,
     content: humanArgument,
     timestamp: new Date().toISOString(),
-    isAI: false
+    isAI: false,
+    wordCount: wordCount // Also store the word count for reference
   });
   
   // Increment turn counter
@@ -569,7 +584,8 @@ Follow these guidelines:
 2. Address counterarguments raised by the other side
 3. Use formal debate language and structure
 4. Be persuasive but fair in your representation of facts
-5. For Oxford-style debates, focus on clarity, reasoning, and persuasion`;
+5. For Oxford-style debates, focus on clarity, reasoning, and persuasion
+6. IMPORTANT: Your response MUST be between 100-150 words ONLY`;
 
   let userPrompt = `You are now making a ${turnType} statement for the ${side === 'proposition' ? 'PROPOSITION' : 'OPPOSITION'} side.`;
   
@@ -611,6 +627,7 @@ For a closing statement:
   
   userPrompt += `\nNow, provide your ${turnType} statement for the ${side.toUpperCase()} side.
 Make a compelling case with clear reasoning and evidence.
+Your response MUST be between 100-150 words only. This is a strict requirement for the Oxford-style debate format.
 Do not mention that you are an AI, just focus on making your argument.`;
 
   try {
@@ -626,12 +643,25 @@ Do not mention that you are an AI, just focus on making your argument.`;
     });
 
     // Extract the response from the completion
-    return completion.choices[0].message.content.trim();
+    let response = completion.choices[0].message.content.trim();
+    
+    // Check word count and truncate if necessary
+    const wordCount = response.split(/\s+/).length;
+    
+    if (wordCount > 150) {
+      console.log(`AI response too long (${wordCount} words), truncating to 150 words...`);
+      // Simple truncation approach - could be improved
+      response = response.split(/\s+/).slice(0, 150).join(' ');
+    } else if (wordCount < 100) {
+      console.log(`AI response too short (${wordCount} words), but proceeding anyway.`);
+      // You could implement additional handling for too-short responses
+    }
+    
+    return response;
   } catch (error) {
     console.error("Error calling OpenRouter API:", error);
     throw error; // Re-throw to be handled by the caller
   }
-}
 
 // Save debate data to storage
 async function saveDebateData(data) {
