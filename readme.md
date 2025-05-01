@@ -1,62 +1,78 @@
-# LLM Opinion Distortion Study - Phase 1 Interface
+# Oxford-Style Debate LLM Research Platform
 
-This repository contains the web interface for Phase 1 (Writing) of the "Quantifying the Distortive Impacts of LLM Writing Assistance for Opinion Expression" study. The application facilitates collecting opinions on political topics and interactions with LLM-generated content, with integration for Prolific participant recruitment.
+This repository contains the web interface for a research study examining LLM participation in Oxford-style debates. The application facilitates structured debates between humans and AI language models, providing a framework for evaluating LLM capabilities in formal argumentation settings.
 
 ## Study Overview
 
-This study examines whether the use of LLMs for writing assistance systematically distorts how others perceive:
-1. LLM users themselves
-2. The opinions they express
+This research investigates how large language models perform in structured Oxford-style debates by:
+   1. Evaluating LLM adherence to formal debate structures
+   2. Measuring persuasiveness of LLM arguments compared to human arguments
+   3. Assessing how different LLM models perform in debate scenarios
+   4. Examining how debate formats affect LLM-generated arguments
 
-The complete study is conducted in two phases:
-
-1. **Phase 1 (Writing)**: Participants (writers) express opinions on political topics and then interact with LLM-generated content based on their inputs.
-2. **Phase 2 (Rating)**: A separate group of participants (raters) evaluate the content produced in Phase 1.
-
-This repository implements only the interface for Phase 1.
-
+The study follows a multi-stage process:
+   1. Debate Setup: Configuration of debate topics, format, and participating models
+   2. Debate Execution: Structured exchange of arguments following Oxford debate rules
+   3. Argument Analysis: Evaluation of debate performance and argument quality
 ## Project Structure
 
-```
-llm-opinion-study/
+oxford-debate-platform/
 ├── app.js                       # Main application file
 ├── package.json                 # Dependencies and scripts
 ├── .env                         # Environment variables (create this file, not included in repo)
 ├── .gitignore                   # Git ignore configuration
 ├── public/                      # Static assets
 │   ├── styles.css               # CSS styling
-│   └── prevent-paste.js         # JS to prevent pasting in text fields
+│   └── debate-utils.js          # JS utilities for debate interaction
 ├── views/                       # EJS templates
-│   ├── onboarding.ejs           # Introduction screen
-│   ├── demographics.ejs         # Demographics collection
-│   ├── proposition.ejs          # Political statement response
-│   ├── proposition-emotions.ejs # Emotion response for writer's paragraph
-│   ├── affect-grid.ejs          # Affect grid for emotional state
-│   ├── llm-stance.ejs           # Rate LLM-generated content stance
-│   ├── llm-edit.ejs             # Edit LLM-generated content
-│   ├── llm-compare.ejs          # Compare original and edited paragraphs
-│   ├── ai-usage.ejs             # Final question about AI usage
-│   ├── completion.ejs           # Study completion
+│   ├── index.ejs                # Landing page
+│   ├── setup.ejs                # Debate configuration screen
+│   ├── debate.ejs               # Main debate interface
+│   ├── participant-view.ejs     # Interface for human participants
+│   ├── moderator-view.ejs       # Interface for debate moderators
+│   ├── audience-view.ejs        # Interface for audience/observers
+│   ├── results.ejs              # Debate results and analysis
+│   ├── admin.ejs                # Administrative controls
 │   └── error.ejs                # Error handling
-└── data/                        # Stored responses (automatically created)
+└── data/                        # Stored debate data (automatically created)
 ```
 
-## Study Flow
+## Debate Flow
 
-The application guides writers through the following steps:
+The application implements a standard Oxford-style debate format:
 
-1. **Onboarding**: Introduction to the study
-2. **Demographics**: Collection of participant information
-3. **For each assigned proposition (political statement)**:
-   - **Opinion expression**: Rating stance, writing bullet points and paragraph
-   - **Emotion assessment**: Rating emotions felt while writing
-   - **Affect grid**: Placing their emotional state on a 2D grid
-4. **For each proposition again**:
-   - **LLM-generated content**: Viewing and rating the stance of AI-written paragraph
-   - **Content editing**: Editing the AI paragraph to better reflect their opinion
-   - **Paragraph comparison**: Choosing between original and edited paragraphs
-5. **AI usage question**: Whether they used AI assistance during the study
-6. **Completion**: Thank you page with completion code for Prolific
+1. **Preparation Phase**:
+- Selection of debate topic
+- Assignment of teams (human, LLM, or mixed)
+- Configuration of debate parameters (time limits, turn structure)
+
+2. **Opening Statements**:
+- Proposition team opening argument (6 minutes)
+- Opposition team opening argument (6 minutes)
+
+3. **Floor Speeches**:
+- 2-4 additional speeches from each team (4 minutes each)
+
+4. **Closing Statements**:
+- Opposition team summary (4 minutes)
+- Proposition team summary (4 minutes)
+
+5. **Voting & Analysis**:
+- Audience voting on debate winner
+- Performance metrics and analysis
+
+## LLM Integration
+The platform integrates with multiple LLM providers through OpenRouter's API. Available models include:
+- OpenAI (GPT-4o)
+- Anthropic (Claude 3.5 Sonnet)
+- Meta (Llama 3)
+- Mistral (Mixtral)
+
+Each model can be configured with different system prompts and debate preparation contexts:
+- Standard Debater: Basic debate instructions
+- Expert Debater: Enhanced with expert debating techniques
+- Specialized Knowledge: Supplemented with domain-specific information
+- Audience-Focused: Optimized for persuasive impact
 
 ## Setup
 
@@ -91,33 +107,26 @@ For development testing without Prolific integration, access the application via
 http://localhost:3000/dev
 ```
 
-## LLM Integration
-
-The study uses OpenRouter's API to access various LLMs. Each participant is randomly assigned one of these models:
-
-- OpenAI (GPT-4o-mini)
-- Anthropic (Claude 3.5 Sonnet)
-- Meta (Llama 3.1 8B Instruct)
-- Qwen (Qwen 2.5 7B Instruct)
-
-Along with one of four sub-conditions that determine how the LLM uses their inputs:
-
-1. **Stance-based**: LLM generates content based on the numerical stance rating
-2. **Bullets-based**: LLM generates content based on bullet points
-3. **Paraphrase**: LLM rewrites the participant's paragraph
-4. **Improve**: LLM enhances the participant's paragraph
-
 ## Data Storage
 
-The application stores participant data in two possible ways:
+The platform stores debate data in structured JSON format:
 
 1. **Primary**: AWS S3 bucket storage
 2. **Fallback**: Local JSON files in the `data/` directory
 
 Data is stored with the naming format:
 ```
-participant_{PROLIFIC_ID}_{TIMESTAMP}.json
+debate_{TOPIC_ID}_{TIMESTAMP}.json
 ```
+
+The structured data captures:
+
+- Full debate transcripts
+- Turn-by-turn arguments
+- Timing metrics
+- Audience voting results
+- Performance analytics
+
 
 ## Heroku Deployment
 
@@ -135,7 +144,7 @@ participant_{PROLIFIC_ID}_{TIMESTAMP}.json
 
 2. Create a new Heroku app:
    ```
-   heroku create llm-opinion-study
+   heroku create oxford-debate-platform
    ```
 
 3. Set environment variables on Heroku:
@@ -154,38 +163,32 @@ participant_{PROLIFIC_ID}_{TIMESTAMP}.json
    git push heroku main
    ```
 
-## Prolific Integration
+## Customizing Debates
 
-To integrate with Prolific:
+### Configuring Debate Topics
 
-1. Create a new study on Prolific
-2. Set the study URL to your Heroku app URL with URL parameters:
-   ```
-   https://your-heroku-app.herokuapp.com/?PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}
-   ```
-3. The application will automatically generate and display a completion code upon study completion
-
-## Customizing the Study
-
-### Modifying Propositions
-
-Edit the `propositions` array in `app.js` to change the political statements presented to participants:
+Edit the debateTopics array in app.js to modify available debate topics:
 
 ```javascript
-const propositions = [
-  "The UK should implement a Universal Basic Income for all citizens.",
-  "The UK should significantly increase its investment in renewable energy.",
-  // Add more propositions as needed
+const debateTopics = [
+  {
+    id: "ai-regulation",
+    title: "AI Development Should Be Heavily Regulated by Governments",
+    description: "This debate examines whether AI development should be subject to extensive government oversight and regulation to ensure safety and ethical use.",
+    resources: ["URL to background information", "URL to key statistics"]
+  },
+  // Add more debate topics as needed
 ];
 ```
 
-### Adjusting the Flow
-
-- Change the number of propositions assigned to each participant by modifying the count parameter in the `getRandomPropositions` function call
-- Adjust progression percentages in the EJS templates to reflect changes in the number of steps
+### Adjusting Debate Parameters
+- Modify time limits, turn structures, and other debate parameters in the debateConfig object
+- Customize LLM prompting strategies in the llmPromptTemplates section
+- Adjust evaluation metrics through the evaluationCriteria configuration
 
 ## Security Features
 
-- **Prevent Paste**: The application includes JavaScript to prevent participants from pasting text into form fields, encouraging original writing
-- **Session Management**: Express session middleware maintains participant state throughout the study
-- **Error Handling**: Dedicated error pages for various situations
+- **Authentication**: Optional user authentication for debate participants and moderators
+- **Session Management**: Express session middleware maintains state throughout debates
+- **Error Handling**: Dedicated error management for various failure scenarios
+- **Data Protection**: Secure storage of debate transcripts and analytics
