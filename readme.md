@@ -15,7 +15,7 @@ The study follows a multi-stage process:
    2. Debate Execution: Structured exchange of arguments following Oxford debate rules
    3. Argument Analysis: Evaluation of debate performance and argument quality
 ## Project Structure
-
+```
 oxford-debate-platform/
 ├── app.js                       # Main application file
 ├── package.json                 # Dependencies and scripts
