@@ -1,7 +1,7 @@
 {
-  "name": "llm-opinion-distortion-study",
+  "name": "oxford-debate-llm-platform",
   "version": "1.0.0",
-  "description": "Study interface for analyzing LLM opinion distortion",
+  "description": "Research platform for evaluating LLM performance in Oxford-style debates",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -23,5 +23,19 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "author": "Umberto Belluzzo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/umbertobelluzzo/oxford-debate-llm-platform.git"
+  },
+  "keywords": [
+    "debate",
+    "oxford-style",
+    "llm",
+    "ai",
+    "argumentation",
+    "research"
+  ]
 }
