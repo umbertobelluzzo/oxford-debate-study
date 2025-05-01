@@ -662,9 +662,49 @@ Do not mention that you are an AI, just focus on making your argument.`;
     console.error("Error calling OpenRouter API:", error);
     throw error; // Re-throw to be handled by the caller
   }
+}
 
 // Save debate data to storage
 async function saveDebateData(data) {
+  // Add metadata to help with Phase 2
+  if (!data.metadata) {
+    data.metadata = {
+      debatePhase: 'Phase 1',
+      topicCategory: getCategoryForTopic(data.debate.topic.id),
+      modelVersion: getModelVersion(data.debate.opponentModel),
+      argumentCount: data.debate.turns.length,
+      totalWordCountHuman: data.debate.turns
+        .filter(turn => !turn.isAI)
+        .reduce((total, turn) => {
+          const count = turn.wordCount || (turn.content ? turn.content.split(/\s+/).length : 0);
+          return total + count;
+        }, 0),
+      totalWordCountAI: data.debate.turns
+        .filter(turn => turn.isAI)
+        .reduce((total, turn) => {
+          const count = turn.wordCount || (turn.content ? turn.content.split(/\s+/).length : 0);
+          return total + count;
+        }, 0),
+      timestamp: new Date().toISOString()
+    };
+  } else {
+    // Update existing metadata
+    data.metadata.argumentCount = data.debate.turns.length;
+    data.metadata.totalWordCountHuman = data.debate.turns
+      .filter(turn => !turn.isAI)
+      .reduce((total, turn) => {
+        const count = turn.wordCount || (turn.content ? turn.content.split(/\s+/).length : 0);
+        return total + count;
+      }, 0);
+    data.metadata.totalWordCountAI = data.debate.turns
+      .filter(turn => turn.isAI)
+      .reduce((total, turn) => {
+        const count = turn.wordCount || (turn.content ? turn.content.split(/\s+/).length : 0);
+        return total + count;
+      }, 0);
+    data.metadata.timestamp = new Date().toISOString();
+  }
+  
   try {
     // First try to save to S3
     const s3Result = await saveDebateDataToS3(data);
@@ -675,6 +715,29 @@ async function saveDebateData(data) {
     saveDebateDataToFile(data);
     return { success: false, error: error.message };
   }
+}
+
+// Helper functions for metadata
+function getCategoryForTopic(topicId) {
+  // Map topics to broader categories for later analysis
+  const categoryMap = {
+    'ai-regulation': 'technology',
+    'universal-basic-income': 'economics',
+    'social-media-harm': 'social',
+    'climate-action-economy': 'environment',
+    'genetic-engineering': 'ethics'
+  };
+  return categoryMap[topicId] || 'general';
+}
+
+function getModelVersion(modelId) {
+  // This could be useful for tracking model versions over time
+  const versionMap = {
+    'gpt4o': 'OpenAI/GPT-4o/May2024',
+    'claude': 'Anthropic/Claude-3-5-Sonnet/April2024',
+    'llama': 'Meta/Llama-3-70b/March2024'
+  };
+  return versionMap[modelId] || modelId;
 }
 
 // Function to save debate data to S3
