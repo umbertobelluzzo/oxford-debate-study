@@ -124,7 +124,14 @@ const debateFormats = [
   {
     id: "standard",
     name: "Standard Oxford Style",
-    description: "Traditional Oxford-style debate with opening statements, rebuttals, and closing statements."
+    description: "Traditional Oxford-style debate with opening statements, rebuttals, and closing statements.",
+    turnSequence: ["opening", "opening", "rebuttal", "rebuttal", "closing", "closing"],
+    turnCounts: 6,
+    wordLimits: {
+      opening: { min: 100, max: 150 },
+      rebuttal: { min: 100, max: 150 },
+      closing: { min: 100, max: 150 }
+    }
   },
   {
     id: "modified",
@@ -318,7 +325,7 @@ async function generateAIOpening(req, res) {
 app.get('/debate-turn', requireSession, (req, res) => {
   const debate = req.session.debateData.debate;
   const currentTurnIndex = debate.currentTurn;
-  const isProposition = debate.side === 'proposition';
+  const format = debateFormats.find(f => f.id === debate.format);
   
   // Determine turn type based on current turn index
   let turnType;
