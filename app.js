@@ -774,6 +774,58 @@ function saveDebateDataToFile(data) {
   console.log(`Debate data saved locally to ${filename} (S3 backup)`);
 }
 
+// Anonymize debate data for storage
+function anonymizeDebateData(data) {
+  // Create a deep copy to avoid modifying the original
+  const anonymizedData = JSON.parse(JSON.stringify(data));
+  
+  // Generate a hashed version of participant ID
+  const crypto = require('crypto');
+  const salt = process.env.HASH_SALT || 'oxford-debate-salt';
+  
+  if (anonymizedData.participantId) {
+    anonymizedData.participantIdHash = crypto
+      .createHash('sha256')
+      .update(anonymizedData.participantId + salt)
+      .digest('hex');
+    // Remove original ID
+    delete anonymizedData.participantId;
+  }
+  
+  // Anonymize demographics data
+  if (anonymizedData.demographics) {
+    // Convert exact age to age range
+    if (anonymizedData.demographics.age) {
+      const age = parseInt(anonymizedData.demographics.age);
+      anonymizedData.demographics.ageRange = getAgeRange(age);
+      delete anonymizedData.demographics.age;
+    }
+    
+    // We can keep gender, education, debateExperience, aiKnowledge, and politicalOrientation
+    // as they are less directly identifying
+  }
+  
+  // Add anonymization metadata
+  anonymizedData.anonymizationInfo = {
+    anonymizedAt: new Date().toISOString(),
+    version: '1.0',
+    method: 'basic-pii-removal'
+  };
+  
+  return anonymizedData;
+}
+
+// Helper function to convert exact age to age range
+function getAgeRange(age) {
+  if (age < 18) return 'under 18';
+  else if (age < 25) return '18-24';
+  else if (age < 35) return '25-34';
+  else if (age < 45) return '35-44';
+  else if (age < 55) return '45-54';
+  else if (age < 65) return '55-64';
+  else return '65+';
+}
+
 // Start server
 app.listen(port, () => {
   console.log(`Oxford Debate Platform running on http://localhost:${port}`);
