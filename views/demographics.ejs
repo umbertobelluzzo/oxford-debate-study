@@ -3,7 +3,7 @@
 <html>
 
 <head>
-  <title>Political Opinion Study - Demographics</title>
+  <title>Oxford-Style Debate Research - Participant Information</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -14,7 +14,7 @@
       <h1>Participant Information</h1>
       <br>
       <p>This information will be kept confidential and will not be used to
-        identify you. </p>
+        identify you. Your responses will be pseudonymized (e.g., "Debater D-03") in all research outputs.</p>
       <br>
       <form action="/demographics" method="POST">
         <div class="form-group">
@@ -28,19 +28,6 @@
             <option value="">Please select</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
-            <option value="Other">Other</option>
-            <option value="Prefer not to say">Prefer not to say</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="race">What is your <b>race / ethnicity</b>?</label>
-          <select id="race" name="race" required>
-            <option value="">Please select</option>
-            <option value="White">White</option>
-            <option value="Black">Black</option>
-            <option value="Asian">Asian</option>
-            <option value="Mixed">Mixed</option>
             <option value="Other">Other</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
@@ -73,46 +60,56 @@
         </div>
 
         <div class="form-group">
-          <label for="income">What is your <b>current yearly income</b>?</label>
-          <select id="income" name="income" required>
+          <label for="debateExperience">What is your <b>level of experience with formal debate</b>?</label>
+          <select id="debateExperience" name="debateExperience" required>
             <option value="">Please select</option>
-            <option value="Under £15,000">Under £15,000</option>
-            <option value="£15,000-£24,999">£15,000-£24,999</option>
-            <option value="£25,000-£34,999">£25,000-£34,999</option>
-            <option value="£35,000-£49,999">£35,000-£49,999</option>
-            <option value="£50,000-£74,999">£50,000-£74,999</option>
-            <option value="£75,000-£99,999">£75,000-£99,999</option>
-            <option value="£100,000+">£100,000+</option>
+            <option value="No experience">No experience</option>
+            <option value="Beginner (some classroom experience)">Beginner (some classroom experience)</option>
+            <option value="Intermediate (school/university debate club)">Intermediate (school/university debate club)</option>
+            <option value="Advanced (regional competitions)">Advanced (regional competitions)</option>
+            <option value="Expert (national/international competitions)">Expert (national/international competitions)</option>
+            <option value="Professional (coaching/judging experience)">Professional (coaching/judging experience)</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="politicalParty">Which <b>political party</b> did you most recently vote for?</label>
-          <select id="politicalParty" name="politicalParty" required>
+          <label for="oxfordDebate">How familiar are you with the <b>Oxford-style debate format</b> specifically?</label>
+          <select id="oxfordDebate" name="oxfordDebate" required>
             <option value="">Please select</option>
-            <option value="Conservative">Conservative</option>
-            <option value="Labour">Labour</option>
-            <option value="Liberal Democrats">Liberal Democrats</option>
-            <option value="Scottish National Party">Scottish National Party</option>
-            <option value="Greens">Greens</option>
-            <option value="Other">Other</option>
-            <option value="Did not vote">Did not vote</option>
-            <option value="Not eligible to vote">Not eligible to vote</option>
+            <option value="Not at all familiar">Not at all familiar</option>
+            <option value="Slightly familiar">Slightly familiar</option>
+            <option value="Moderately familiar">Moderately familiar</option>
+            <option value="Very familiar">Very familiar</option>
+            <option value="Expert in this format">Expert in this format</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="politicalIdeology">How would you describe your <b>political ideology</b>?</label>
-          <select id="politicalIdeology" name="politicalIdeology" required>
+          <label for="aiKnowledge">How would you rate your <b>knowledge of AI and large language models</b>?</label>
+          <select id="aiKnowledge" name="aiKnowledge" required>
             <option value="">Please select</option>
-            <option value="Very Left-Wing">Very Left-Wing</option>
-            <option value="Moderately Left-Wing">Moderately Left-Wing</option>
-            <option value="Centrist">Centrist</option>
-            <option value="Moderately Right-Wing">Moderately Right-Wing</option>
-            <option value="Very Right-Wing">Very Right-Wing</option>
-            <option value="Other">Other</option>
+            <option value="No knowledge">No knowledge</option>
+            <option value="Basic awareness">Basic awareness (heard of them, little technical knowledge)</option>
+            <option value="Some understanding">Some understanding (familiar with capabilities)</option>
+            <option value="Good knowledge">Good knowledge (understand how they work)</option>
+            <option value="Expert knowledge">Expert knowledge (technical expertise)</option>
+            <option value="Professional in the field">Professional in the field</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="aiUsage">How often do you <b>use AI tools</b> like ChatGPT, Claude, or other large language models?</label>
+          <select id="aiUsage" name="aiUsage" required>
+            <option value="">Please select</option>
+            <option value="Never used">Never used</option>
+            <option value="Rarely (few times a year)">Rarely (few times a year)</option>
+            <option value="Occasionally (monthly)">Occasionally (monthly)</option>
+            <option value="Regularly (weekly)">Regularly (weekly)</option>
+            <option value="Frequently (daily)">Frequently (daily)</option>
+            <option value="Very frequently (multiple times daily)">Very frequently (multiple times daily)</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>

@@ -1,9 +1,9 @@
-<!-- views/onboarding.ejs -->
+<!-- views/consent.ejs -->
 <!DOCTYPE html>
 <html>
 
 <head>
-  <title>Political Opinion Study - Onboarding</title>
+  <title>Oxford-Style Debate Research - Consent</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -12,58 +12,56 @@
   <div class="container" style="width: 800px;">
     <div class="study-card">
       <h1>Informed Consent Form</h1>
+      <h2>Evaluating the Persuasiveness of Large Language Models vs. Skilled Human Debaters in Structured Oxford-Style Debates</h2>
+      <p><strong>Researcher:</strong> Umberto Belluzzo, Oxford Internet Institute <br>
+         <strong>Supervisor:</strong> Dr Paul Rottger<br>
+         <strong>Version 1.0 — 28 April 2025</strong></p>
       <br>
 
       <div class="consent-information">
-        <p>You are invited to take part in a study that examines how people express their opinions on different
-          political topics. <strong>We expect this survey to take around 30 minutes</strong>. Before deciding whether to
-          participate, please read this information carefully.</p>
+        <p>Before deciding whether to participate, please read this information carefully.</p>
         <br>
 
+        <h3>Study Overview</h3>
+        <p>This project examines how large language models (LLMs) perform in structured, interactive Oxford-style debate settings compared to skilled human debaters. You will engage in text-based debates against one or more LLMs.</p>
+        <br>
+
+        <h3>Participation Process</h3>
+        <p>You will participate in several short Oxford-style debates (between 5-10 debates), each consisting of three turns on each side: an opening statement, a rebuttal, and a closing statement. Each turn will be limited to approximately 100–150 words. The entire process is expected to take approximately 30-60 minutes.</p>
+
         <h3>Data Collection and Use</h3>
-        <p>In this survey, we will collect:</p>
-        <p> 1) Your demographic information, specifically age, gender, race/ethnicity, education level, income, and
-          political affiliation. Note that you will always be able to select "Prefer not to say". <br> 2) Your opinion
-          on different political statements. We will ask you to complete rating questions and express your opinion in
-          writing.<br> 3) We will also ask you to express your preference over different opinion texts.</p>
-        <p><strong>Note:</strong> Please do not use AI to complete the writing tasks in this survey. We really want you
-          to express your opinion in your own words.</p>
+        <p>We will collect:</p>
+        <p>1) Basic demographic information, including age, gender, education level, and experience with debate<br>
+           2) Your debate contributions (opening statements, rebuttals, and closing statements)<br>
+           3) Your notes and preparation for each debate</p>
 
         <h3>Anonymity and Confidentiality</h3>
-        <p>All your responses will be fully anonymised. Your unique Prolific ID will be converted to a study-specific ID
-          that cannot be linked back to you by the research team.</p>
+        <p>All your responses will be pseudonymised (e.g., "Debater D-03"). Your debate transcripts will be anonymized before being shown to independent evaluators in Phase 2 of the research.</p>
 
         <h3>Data Storage and Protection</h3>
-        <p>All data will be stored securely on password-protected servers, fully anonymised through the use of unique
-          participant IDs, and processed in compliance with GDPR.</p>
+        <p>All data will be stored securely on password-protected university servers, pseudonymised through the use of unique participant IDs, and processed in compliance with data protection regulations. Your data may be retained for up to five years, after which it will be deleted.</p>
 
         <h3>Data Sharing</h3>
-        <p>We plan to make anonymised data available through a secure online repository as part of our research outputs.
-          No personally identifiable information will be shared.</p>
+        <p>Anonymous quotations from your debate transcripts may be used in academic publications, presentations, or open datasets. You will not be identifiable.</p>
 
         <h3>Right to Withdraw</h3>
-        <p>You have the right to withdraw from this study at any time without providing a reason by closing your browser
-          window. If you wish to withdraw your data after completing the study, you may do so within 30 days by
-          contacting us with your Prolific ID at <a
-            href="mailto:paul.rottger@unibocconi.it">paul.rottger@unibocconi.it</a>.</p>
+        <p>Your participation is voluntary and you are free to withdraw at any time up to two weeks after your final debate, without giving any reason and without any adverse consequences.</p>
 
         <h3>Compensation</h3>
-        <p>You will receive a completion code at the end of the survey. Please enter this code on Prolific to receive
-          your payment.</p>
-
-        <h3>Partial Disclosure</h3>
-        <p>While we have explained the general purpose of the study, specific details about how your responses will be
-          used are withheld to avoid influencing your responses. We will provide full information at the end of the
-          study.</p>
-
-        <h3>Ethics Approval</h3>
-        <p>This study was approved by Bocconi University's Ethics Committee (reference RA000863.01).</p>
+        <p>There is no monetary payment for participation, but you will receive a certificate of participation and an executive summary of results.</p>
 
         <h3>Consent Declaration</h3>
         <p>By clicking "I consent" below, you confirm that:</p>
-        <p>1) You are 18 years of age or older<br>2) You have read and understood the information provided<br>3) You
-          consent to the collection and processing of sensitive personal data as described above<br>4) You voluntarily
-          agree to participate in this research</p>
+        <ol>
+          <li>You have read and understood the Participant Information Sheet (Phase 1, Version 1.0, 28 Apr 2025) for this study. You have had the opportunity to consider the information and ask questions.</li>
+          <li>You understand that your participation is voluntary and that you are free to withdraw at any time up to two weeks after your final debate, without giving any reason and without any adverse consequences.</li>
+          <li>You understand that the debates will be text-based and that all your contributions will be stored securely and pseudonymised (e.g., "Debater D-03").</li>
+          <li>You give permission for anonymous quotations from your debate transcripts to be used in academic publications, presentations, or open datasets. You will not be identifiable.</li>
+          <li>You understand that the anonymised transcripts will be shown to independent evaluators in Phase 2.</li>
+          <li>You agree that your data may be retained for up to five years on secure University servers, after which they will be deleted.</li>
+          <li>You understand there is no monetary payment but that you will receive a certificate of participation and an executive summary of results.</li>
+          <li>You consent to take part in this study.</li>
+        </ol>
       </div>
 
       <div class="button-container" style="justify-content: left;">
@@ -71,17 +69,18 @@
           <div style="display: flex; align-items: flex-start; margin-bottom: 10px;">
             <input type="radio" id="consentYes" name="consent" value="yes" required
               style="margin-top: 5px; margin-right: 10px;">
-            <label for="consentYes">I consent to participate in this survey.</label>
+            <label for="consentYes">I consent to participate in this research study.</label>
           </div>
           <div style="display: flex; align-items: flex-start; margin-bottom: 30px;">
             <input type="radio" id="consentNo" name="consent" value="no" style="margin-top: 5px; margin-right: 10px;">
-            <label for="consentNo">I do NOT consent. (If you select this option, you will exit the
-              survey)</label>
+            <label for="consentNo">I do NOT consent. (If you select this option, you will exit the study)</label>
           </div>
           <button type="submit" class="button">Continue</button>
         </form>
       </div>
     </div>
+  </div>
+  <script src="/button-disable.js"></script>
 </body>
 
 </html>

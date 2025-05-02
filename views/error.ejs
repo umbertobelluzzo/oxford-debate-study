@@ -3,45 +3,115 @@
 <html>
 
 <head>
-  <title>Political Opinion Study - Error</title>
+  <title>Oxford-Style Debate Research - Error</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
-  <div class="container">
+  <div class="container" style="width: 600px;">
     <div class="study-card">
       <% if (locals.header) { %>
-        <h1>
-          <%= header %>
-        </h1>
-        <% } else { %>
-          <h1>Error</h1>
-          <% } %>
+        <h1><%= header %></h1>
+      <% } else { %>
+        <h1>An Error Occurred</h1>
+      <% } %>
 
-            <div class="error-content">
-              <p>
-                <%= message %>
-              </p>
+      <div class="error-content">
+        <div class="error-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#dc3545" stroke-width="2"/>
+            <path d="M12 7V13" stroke="#dc3545" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="#dc3545"/>
+          </svg>
+        </div>
+        
+        <p class="error-message"><%= message %></p>
+        
+        <div class="error-details">
+          <p>If you believe this is a mistake, please contact the research team with the information below:</p>
+          <ul>
+            <li>What were you trying to do?</li>
+            <li>What page were you on?</li>
+            <li>Any error messages you saw</li>
+          </ul>
+        </div>
 
-              <% if (locals.completionCode) { %>
-                <div class="completion-code">
-                  <h3>Your Prolific Code:</h3>
-                  <div class="code-box">
-                    <%= completionCode %>
-                  </div>
-                </div>
-                <% } else { %>
-                  <% } %>
-                    <p>If you believe this is a mistake, please contact the study administrator on Prolific or via email
-                      (paul.rottger@unibocconi.it) describing what you did just before you reached this screen.</p>
-            </div>
+        <div class="contact-info">
+          <p><strong>Researcher:</strong> Umberto Belluzzo (<a href="mailto:umberto.belluzzo@oii.ox.ac.uk">umberto.belluzzo@oii.ox.ac.uk</a>)</p>
+          <p><strong>Supervisor:</strong> Dr Paul Rottger (<a href="mailto:paul.rottger@unibocconi.it">paul.rottger@unibocconi.it</a>)</p>
+        </div>
+      </div>
 
-            <div class="button-container">
-              <a href="https://app.prolific.co" class="button">Return to Prolific</a>
-            </div>
+      <div class="error-actions">
+        <div class="button-container">
+          <a href="/" class="button">Return to Homepage</a>
+          <a href="javascript:history.back()" class="button button-secondary">Go Back</a>
+        </div>
+      </div>
     </div>
   </div>
+
+  <style>
+    /* Custom styles for the error page */
+    .error-content {
+      text-align: center;
+      padding: 20px 0;
+    }
+    
+    .error-icon {
+      margin: 0 auto 20px;
+      width: 48px;
+      height: 48px;
+    }
+    
+    .error-message {
+      font-size: 1.2em;
+      margin-bottom: 20px;
+      color: #721c24;
+      background-color: #f8d7da;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    
+    .error-details {
+      text-align: left;
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .error-details ul {
+      margin-bottom: 0;
+      padding-left: 20px;
+    }
+    
+    .contact-info {
+      margin-bottom: 20px;
+      font-size: 0.9em;
+    }
+    
+    .contact-info p {
+      margin: 5px 0;
+    }
+    
+    .error-actions {
+      margin-top: 20px;
+      border-top: 1px solid #dee2e6;
+      padding-top: 20px;
+    }
+    
+    .button-container {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .button-secondary {
+      background-color: #6c757d;
+    }
+  </style>
 </body>
 
 </html>

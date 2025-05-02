@@ -1,0 +1,175 @@
+<!-- views/setup.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate Research - Debate Setup</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 800px;">
+    <div class="study-card">
+      <h1>Debate Setup</h1>
+      <br>
+      <p>Please configure your debate parameters below. You'll be engaging in an Oxford-style debate with an AI language model.</p>
+      <br>
+      <form action="/setup" method="POST">
+        <!-- Debate Topic Selection -->
+        <div class="form-group">
+          <label for="topicId"><b>Select a Debate Topic</b></label>
+          <div class="topics-container">
+            <% debateTopics.forEach(topic => { %>
+              <div class="topic-option">
+                <input type="radio" id="topic-<%= topic.id %>" name="topicId" value="<%= topic.id %>" required>
+                <label for="topic-<%= topic.id %>">
+                  <div class="topic-title"><%= topic.title %></div>
+                  <div class="topic-description"><%= topic.description %></div>
+                </label>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Your Position (Proposition or Opposition) -->
+        <div class="form-group">
+          <label><b>Choose Your Position</b></label>
+          <div class="position-options">
+            <div class="position-option">
+              <input type="radio" id="prop" name="side" value="proposition" required>
+              <label for="prop">
+                <div class="position-title">Proposition</div>
+                <div class="position-description">You will argue <strong>in favor</strong> of the motion and speak first.</div>
+              </label>
+            </div>
+            <div class="position-option">
+              <input type="radio" id="opp" name="side" value="opposition" required>
+              <label for="opp">
+                <div class="position-title">Opposition</div>
+                <div class="position-description">You will argue <strong>against</strong> the motion and respond to the proposition's opening.</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Opponent Selection -->
+        <div class="form-group">
+          <label for="opponentModel"><b>Select Your AI Opponent</b></label>
+          <div class="models-container">
+            <% debateModels.forEach(model => { %>
+              <div class="model-option">
+                <input type="radio" id="model-<%= model.id %>" name="opponentModel" value="<%= model.id %>" required>
+                <label for="model-<%= model.id %>">
+                  <div class="model-title"><%= model.name %></div>
+                  <div class="model-provider">Provider: <%= model.provider %></div>
+                </label>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Debate Format Selection -->
+        <div class="form-group">
+          <label for="formatId"><b>Select Debate Format</b></label>
+          <div class="formats-container">
+            <% debateFormats.forEach(format => { %>
+              <div class="format-option">
+                <input type="radio" id="format-<%= format.id %>" name="formatId" value="<%= format.id %>" required
+                       <%= format.id === 'standard' ? 'checked' : '' %>>
+                <label for="format-<%= format.id %>">
+                  <div class="format-title"><%= format.name %></div>
+                  <div class="format-description"><%= format.description %></div>
+                </label>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <!-- Word Limit Reminder -->
+        <div class="info-box">
+          <p><strong>Remember:</strong> Each debate turn should be between 100-150 words. The system will help you track your word count.</p>
+          <p>The Oxford-style debate will consist of:</p>
+          <ul>
+            <li><strong>Opening Statement:</strong> Introduce your position and key arguments</li>
+            <li><strong>Rebuttal:</strong> Respond to your opponent's arguments</li>
+            <li><strong>Closing Statement:</strong> Summarize your position and refute counterarguments</li>
+          </ul>
+        </div>
+
+        <div class="button-container">
+          <button type="submit" class="button">Continue to Preparation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    /* Additional styles for the setup page */
+    .topics-container, .models-container, .formats-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .topic-option, .model-option, .format-option, .position-option {
+      display: flex;
+      align-items: flex-start;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .topic-option:hover, .model-option:hover, .format-option:hover, .position-option:hover {
+      background-color: #f9f9f9;
+      border-color: #ccc;
+    }
+
+    .topic-option input, .model-option input, .format-option input, .position-option input {
+      margin-top: 3px;
+      margin-right: 15px;
+    }
+
+    .topic-title, .model-title, .format-title, .position-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .topic-description, .model-provider, .format-description, .position-description {
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .position-options {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .position-option {
+      flex: 1;
+    }
+
+    .info-box {
+      background-color: #f8f9fa;
+      border-left: 4px solid #4285f4;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .info-box ul {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+
+    .info-box li {
+      margin-bottom: 5px;
+    }
+  </style>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>

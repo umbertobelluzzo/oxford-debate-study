@@ -1,0 +1,318 @@
+<!-- views/debate-ai-turn.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate - AI's Turn</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 900px;">
+    <div class="study-card">
+      <div class="debate-header">
+        <div class="debate-info-compact">
+          <div class="debate-topic">
+            <h3>Motion: <span class="motion-text"><%= debate.topic.title %></span></h3>
+          </div>
+          <div class="debate-position">
+            <span class="position-badge <%= aiSide %>">
+              <%= aiSide === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %>
+            </span>
+            <span class="ai-indicator">AI Response</span>
+          </div>
+        </div>
+        <div class="turn-indicator">
+          <div class="turn-badge <%= turnType %>"><%= turnType.toUpperCase() %></div>
+        </div>
+      </div>
+
+      <div class="debate-flow">
+        <div class="ai-response-container">
+          <h3>AI's <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</h3>
+          
+          <div class="ai-response-card">
+            <div class="ai-response-content">
+              <%= aiArgument %>
+            </div>
+            <div class="ai-response-footer">
+              <span class="word-count-badge">
+                <%= aiArgument.split(/\s+/).filter(word => word.length > 0).length %> words
+              </span>
+              <span class="ai-model-badge"><%= debate.opponentModel %> AI</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="debate-history">
+          <h3>Debate Progress</h3>
+          <div class="debate-progress">
+            <div class="progress-step <%= debate.currentTurn > 0 ? 'completed' : 'active' %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'YOU' : 'AI' %></div>
+              <div class="step-label">Opening</div>
+            </div>
+            <div class="progress-step <%= debate.currentTurn > 1 ? 'completed' : (debate.currentTurn === 1 ? 'active' : '') %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'AI' : 'YOU' %></div>
+              <div class="step-label">Opening</div>
+            </div>
+            <div class="progress-step <%= debate.currentTurn > 2 ? 'completed' : (debate.currentTurn === 2 ? 'active' : '') %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'YOU' : 'AI' %></div>
+              <div class="step-label">Rebuttal</div>
+            </div>
+            <div class="progress-step <%= debate.currentTurn > 3 ? 'completed' : (debate.currentTurn === 3 ? 'active' : '') %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'AI' : 'YOU' %></div>
+              <div class="step-label">Rebuttal</div>
+            </div>
+            <div class="progress-step <%= debate.currentTurn > 4 ? 'completed' : (debate.currentTurn === 4 ? 'active' : '') %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'YOU' : 'AI' %></div>
+              <div class="step-label">Closing</div>
+            </div>
+            <div class="progress-step <%= debate.currentTurn > 5 ? 'completed' : (debate.currentTurn === 5 ? 'active' : '') %>">
+              <div class="step-side"><%= debate.side === 'proposition' ? 'AI' : 'YOU' %></div>
+              <div class="step-label">Closing</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="next-action">
+          <form action="/debate-ai-turn" method="POST">
+            <div class="context-prompt">
+              <% if (debate.currentTurn < 5) { %>
+                <p>Please review the AI's response above. When you're ready, click the button below to proceed to your turn.</p>
+              <% } else { %>
+                <p>This debate has concluded. Click the button below to see the results.</p>
+              <% } %>
+            </div>
+            
+            <div class="button-container">
+              <% if (debate.currentTurn < 5) { %>
+                <button type="submit" class="button">Continue to Your <%= 
+                  debate.currentTurn === 1 || debate.currentTurn === 3 ? 
+                  (debate.currentTurn === 1 ? 'Opening' : 'Rebuttal') : 
+                  'Closing' 
+                %> Statement</button>
+              <% } else { %>
+                <button type="submit" class="button">View Debate Results</button>
+              <% } %>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Custom styles for the AI turn interface */
+    .debate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .debate-info-compact {
+      flex: 1;
+    }
+
+    .turn-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .turn-badge {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .turn-badge.opening {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .turn-badge.rebuttal {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .turn-badge.closing {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .debate-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .ai-response-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ai-response-card {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 4px solid #6c757d;
+    }
+
+    .ai-response-content {
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+
+    .ai-response-footer {
+      display: flex;
+      justify-content: space-between;
+      color: #6c757d;
+      font-size: 0.85em;
+    }
+
+    .ai-model-badge {
+      background-color: #e9ecef;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .position-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .position-badge.proposition {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .position-badge.opposition {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .ai-indicator {
+      font-size: 0.85em;
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .debate-history {
+      margin-top: 10px;
+    }
+
+    .debate-progress {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      position: relative;
+    }
+
+    .debate-progress::before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #e9ecef;
+      z-index: 1;
+    }
+
+    .progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+      width: 60px;
+    }
+
+    .step-side {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8em;
+      background-color: #f8f9fa;
+      border: 2px solid #e9ecef;
+      margin-bottom: 8px;
+    }
+
+    .progress-step.completed .step-side {
+      background-color: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+
+    .progress-step.active .step-side {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 123, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+    }
+
+    .step-label {
+      font-size: 0.75em;
+      color: #6c757d;
+      text-align: center;
+    }
+
+    .progress-step.completed .step-label,
+    .progress-step.active .step-label {
+      font-weight: bold;
+      color: #343a40;
+    }
+
+    .next-action {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .context-prompt {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #6c757d;
+    }
+
+    .context-prompt p {
+      margin: 0;
+      font-size: 0.95em;
+    }
+  </style>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>

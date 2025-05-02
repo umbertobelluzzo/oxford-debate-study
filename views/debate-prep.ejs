@@ -1,0 +1,316 @@
+<!-- views/debate-prep.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate Research - Preparation</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 800px;">
+    <div class="study-card">
+      <div class="debate-header">
+        <h1>Debate Preparation</h1>
+        <div class="debate-timer">
+          <div class="timer-label">Debate starts in:</div>
+          <div id="countdown">5:00</div>
+        </div>
+      </div>
+
+      <div class="debate-info">
+        <div class="debate-topic">
+          <h3>Motion:</h3>
+          <p class="motion-text"><%= topic.title %></p>
+          <p class="motion-description"><%= topic.description %></p>
+        </div>
+
+        <div class="debate-position">
+          <h3>Your Position:</h3>
+          <p class="position-badge <%= side %>"><%= side === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %></p>
+          <p>You will be arguing <strong><%= side === 'proposition' ? 'in favor of' : 'against' %></strong> this motion.</p>
+          <% if (side === 'proposition') { %>
+            <p>As Proposition, you will speak first with your opening statement.</p>
+          <% } else { %>
+            <p>As Opposition, you will respond to the AI's opening statement.</p>
+          <% } %>
+        </div>
+
+        <div class="debate-opponent">
+          <h3>Your Opponent:</h3>
+          <p><%= opponentModel.name %> AI from <%= opponentModel.provider %></p>
+        </div>
+      </div>
+
+      <div class="debate-structure">
+        <h3>Oxford-Style Format:</h3>
+        <div class="structure-steps">
+          <div class="structure-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h4>Opening Statement (max 150 words)</h4>
+              <p>Introduce your position and key arguments. You'll have up to 4 minutes to write this.</p>
+            </div>
+          </div>
+          <div class="structure-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h4>Rebuttal (max 150 words)</h4>
+              <p>Respond to your opponent's arguments and reinforce your position. You'll have up to 4 minutes.</p>
+            </div>
+          </div>
+          <div class="structure-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h4>Closing Statement (max 150 words)</h4>
+              <p>Summarize your case and refute counterarguments. You'll have up to 3 minutes.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prep-container">
+        <form action="/debate-prep" method="POST">
+          <h3>Preparation Notes</h3>
+          <p class="form-hint">Use this space to organize your thoughts and arguments. These notes will only be visible to you during the debate.</p>
+          
+          <div class="form-group">
+            <label for="prepNotes">Your Main Arguments:</label>
+            <textarea id="prepNotes" name="prepNotes" rows="5" placeholder="Outline your key points here..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="researchPoints">Potential Counterarguments & Responses:</label>
+            <textarea id="researchPoints" name="researchPoints" rows="5" placeholder="Anticipate what your opponent might say and how you'll respond..."></textarea>
+          </div>
+
+          <div class="debate-tips">
+            <h3>Tips for Effective Oxford-Style Debating</h3>
+            <div class="tips-content">
+              <div class="tip-item">
+                <h4>Structure</h4>
+                <p>Begin with a clear thesis, present 2-3 main arguments, and end with a strong conclusion.</p>
+              </div>
+              <div class="tip-item">
+                <h4>Evidence</h4>
+                <p>Support your claims with specific examples, statistics, or expert opinions when possible.</p>
+              </div>
+              <div class="tip-item">
+                <h4>Rebuttal</h4>
+                <p>Address your opponent's strongest points directly rather than ignoring them.</p>
+              </div>
+              <div class="tip-item">
+                <h4>Rhetoric</h4>
+                <p>Use rhetorical techniques like repetition, contrast, and rhetorical questions for emphasis.</p>
+              </div>
+              <div class="tip-item">
+                <h4>Word Count</h4>
+                <p>Be concise and focused—each turn must be between 100-150 words.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box study-info">
+            <h3>About This Study</h3>
+            <p>This research examines how well large language models (LLMs) perform in structured Oxford-style debates when judged against experienced human debaters. Your participation will help establish a high-quality human benchmark for evaluating AI-generated argumentation.</p>
+            
+            <p>You'll participate in approximately 5-10 debates against one or more LLMs. Each debate contains three short turns per side, with a 100-150 word limit per turn. A single debate typically lasts 5-10 minutes.</p>
+            
+            <p>Your texts will be saved automatically in an encrypted database and later shown—without any identifying details—to independent raters in Phase 2 of the study.</p>
+            
+            <p>If at any point you need to stop, you can return later to continue. Remember that you may skip any motion you find uncomfortable.</p>
+          </div>
+
+          <div class="button-container">
+            <button type="submit" class="button">I'm Ready to Begin</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Additional styles for the preparation page */
+    .debate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .debate-timer {
+      background-color: #f9f9f9;
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .timer-label {
+      font-size: 0.85em;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    #countdown {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .debate-info {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .motion-text {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .position-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .position-badge.proposition {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .position-badge.opposition {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .debate-structure {
+      margin-bottom: 25px;
+    }
+
+    .structure-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .structure-step {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      background-color: #4285f4;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      margin: 0 0 5px 0;
+    }
+
+    .step-content p {
+      margin: 0;
+      color: #555;
+    }
+
+    .form-hint {
+      color: #666;
+      font-style: italic;
+      margin-bottom: 15px;
+    }
+
+    .debate-tips {
+      margin: 25px 0;
+      background-color: #e8f4f8;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #4285f4;
+    }
+
+    .tips-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .tip-item h4 {
+      margin: 0 0 5px 0;
+      color: #2c3e50;
+    }
+
+    .tip-item p {
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    .study-info {
+      background-color: #fcf8e3;
+      border-left: 4px solid #f0ad4e;
+    }
+
+    .info-box {
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+    }
+
+    .info-box p {
+      margin-bottom: 10px;
+    }
+
+    .info-box p:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+
+  <script>
+    // Countdown timer
+    function startCountdown() {
+      let timeLeft = 5 * 60; // 5 minutes in seconds
+      const countdownElement = document.getElementById('countdown');
+      
+      const timer = setInterval(function() {
+        const minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        
+        countdownElement.innerHTML = `${minutes}:${seconds}`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          countdownElement.innerHTML = "Time's up!";
+          // You can add auto-submit functionality here if desired
+        }
+        
+        timeLeft -= 1;
+      }, 1000);
+    }
+    
+    // Start the countdown when the page loads
+    window.onload = startCountdown;
+  </script>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>

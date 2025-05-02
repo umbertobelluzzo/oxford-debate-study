@@ -1,0 +1,444 @@
+<!-- views/debate-human-turn.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate - Your Turn</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 900px;">
+    <div class="study-card">
+      <div class="debate-header">
+        <div class="debate-info-compact">
+          <div class="debate-topic">
+            <h3>Motion: <span class="motion-text"><%= debate.topic.title %></span></h3>
+          </div>
+          <div class="debate-position">
+            <span class="position-badge <%= humanSide %>">
+              <%= humanSide === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %>
+            </span>
+          </div>
+        </div>
+        <div class="turn-indicator">
+          <div class="turn-badge <%= turnType %>"><%= turnType.toUpperCase() %></div>
+          <div class="timer" id="turnTimer">Time remaining: 04:00</div>
+        </div>
+      </div>
+
+      <div class="debate-flow">
+        <% if (previousTurns && previousTurns.length > 0) { %>
+          <div class="previous-turns">
+            <h3>Previous Arguments</h3>
+            <div class="turns-container">
+              <% previousTurns.forEach(turn => { %>
+                <div class="turn-card <%= turn.isAI ? aiSide : humanSide %>">
+                  <div class="turn-header">
+                    <span class="turn-side"><%= turn.side.toUpperCase() %></span>
+                    <span class="turn-type"><%= turn.type.toUpperCase() %></span>
+                  </div>
+                  <div class="turn-content">
+                    <%= turn.content %>
+                  </div>
+                  <div class="turn-footer">
+                    <% if (turn.wordCount) { %>
+                      <span class="word-count-badge"><%= turn.wordCount %> words</span>
+                    <% } else { %>
+                      <span class="word-count-badge">
+                        <%= turn.content.split(/\s+/).filter(word => word.length > 0).length %> words
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="current-turn">
+          <h3>Your <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</h3>
+          
+          <% if (locals.error) { %>
+            <div class="error-message">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <form action="/debate-turn" method="POST" id="debateForm">
+            <input type="hidden" name="turnType" value="<%= turnType %>">
+            
+            <div class="form-group">
+              <div class="argument-guidelines">
+                <% if (turnType === 'opening') { %>
+                  <p>Present your main arguments supporting your position. Clearly state your stance and provide 2-3 key points.</p>
+                <% } else if (turnType === 'rebuttal') { %>
+                  <p>Address your opponent's arguments and strengthen your own position with additional evidence or reasoning.</p>
+                <% } else { %>
+                  <p>Summarize your key points and address any remaining counterarguments. End with a strong conclusion.</p>
+                <% } %>
+              </div>
+              
+              <label for="argument">Write your argument (100-150 words):</label>
+              <textarea id="argument" name="argument" rows="10" placeholder="Write your <%= turnType %> statement here..." autofocus required><%= locals.previousArgument || '' %></textarea>
+              
+              <div class="word-counter">
+                <span id="wordCount">0</span> words
+                <div class="word-count-bar-container">
+                  <div class="word-count-bar" id="wordCountBar"></div>
+                  <div class="word-count-marker" style="left: 100px;">100</div>
+                  <div class="word-count-marker" style="left: 150px;">150</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="notes-preview">
+              <h4>Your Preparation Notes</h4>
+              <div class="notes-container">
+                <% if (debate.prepNotes) { %>
+                  <div class="note-section">
+                    <h5>Main Arguments:</h5>
+                    <p><%= debate.prepNotes %></p>
+                  </div>
+                <% } %>
+                
+                <% if (debate.researchPoints) { %>
+                  <div class="note-section">
+                    <h5>Counterarguments & Responses:</h5>
+                    <p><%= debate.researchPoints %></p>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="button-container">
+              <button type="submit" id="submitButton" class="button" disabled>Submit <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Custom styles for the debate turn interface */
+    .debate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .debate-info-compact {
+      flex: 1;
+    }
+
+    .turn-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .turn-badge {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .turn-badge.opening {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .turn-badge.rebuttal {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
+    .turn-badge.closing {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .timer {
+      font-size: 0.9em;
+      font-weight: bold;
+      color: #dc3545;
+    }
+
+    .debate-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .previous-turns {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+
+    .turns-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .turn-card {
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .turn-card.proposition {
+      background-color: #f8f9fa;
+      border-left: 4px solid #28a745;
+    }
+
+    .turn-card.opposition {
+      background-color: #f8f9fa;
+      border-left: 4px solid #dc3545;
+    }
+
+    .turn-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.85em;
+      color: #6c757d;
+    }
+
+    .turn-side {
+      font-weight: bold;
+    }
+
+    .turn-content {
+      font-size: 0.95em;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .turn-footer {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .word-count-badge {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+
+    .position-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+
+    .position-badge.proposition {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .position-badge.opposition {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .argument-guidelines {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 0.9em;
+      border-left: 4px solid #6c757d;
+    }
+
+    .word-counter {
+      margin-top: 10px;
+      font-size: 0.9em;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .word-count-bar-container {
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      position: relative;
+      width: 200px;
+    }
+
+    .word-count-bar {
+      height: 100%;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 0.3s, background-color 0.3s;
+    }
+
+    .word-count-marker {
+      position: absolute;
+      bottom: -20px;
+      transform: translateX(-50%);
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+
+    .notes-preview {
+      background-color: #fff3cd;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .notes-preview h4 {
+      margin-top: 0;
+      color: #856404;
+    }
+
+    .notes-container {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .note-section {
+      margin-bottom: 15px;
+    }
+
+    .note-section h5 {
+      margin-top: 0;
+      margin-bottom: 5px;
+      color: #856404;
+    }
+
+    .note-section p {
+      margin: 0;
+      font-size: 0.9em;
+      white-space: pre-line;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    /* Word count color states */
+    .word-count-too-low {
+      color: #dc3545;
+    }
+
+    .word-count-good {
+      color: #28a745;
+    }
+
+    .word-count-too-high {
+      color: #dc3545;
+    }
+
+    .bar-too-low {
+      background-color: #dc3545;
+    }
+
+    .bar-good {
+      background-color: #28a745;
+    }
+
+    .bar-too-high {
+      background-color: #dc3545;
+    }
+  </style>
+
+  <script>
+    // Word counter functionality
+    const textarea = document.getElementById('argument');
+    const wordCountDisplay = document.getElementById('wordCount');
+    const wordCountBar = document.getElementById('wordCountBar');
+    const submitButton = document.getElementById('submitButton');
+
+    function countWords(text) {
+      return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    }
+
+    function updateWordCount() {
+      const wordCount = countWords(textarea.value);
+      wordCountDisplay.textContent = wordCount;
+      
+      // Update word count bar
+      const percentage = Math.min(wordCount / 150 * 100, 100);
+      wordCountBar.style.width = percentage + '%';
+      
+      // Update colors based on word count
+      if (wordCount < 100) {
+        wordCountDisplay.className = 'word-count-too-low';
+        wordCountBar.className = 'word-count-bar bar-too-low';
+        submitButton.disabled = true;
+      } else if (wordCount > 150) {
+        wordCountDisplay.className = 'word-count-too-high';
+        wordCountBar.className = 'word-count-bar bar-too-high';
+        submitButton.disabled = true;
+      } else {
+        wordCountDisplay.className = 'word-count-good';
+        wordCountBar.className = 'word-count-bar bar-good';
+        submitButton.disabled = false;
+      }
+    }
+
+    textarea.addEventListener('input', updateWordCount);
+    updateWordCount(); // Initial count
+
+    // Timer functionality
+    function startTimer() {
+      let timeLeft;
+      const timerElement = document.getElementById('turnTimer');
+      
+      // Set time based on turn type
+      if ('<%= turnType %>' === 'closing') {
+        timeLeft = 3 * 60; // 3 minutes for closing
+      } else {
+        timeLeft = 4 * 60; // 4 minutes for opening and rebuttal
+      }
+      
+      const timer = setInterval(function() {
+        const minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+        seconds = seconds < 10 ? '0' + seconds : seconds;
+        
+        timerElement.innerHTML = `Time remaining: ${minutes}:${seconds}`;
+        
+        if (timeLeft <= 30) {
+          timerElement.style.color = '#dc3545'; // Red when less than 30 seconds
+          timerElement.style.fontWeight = 'bold';
+        }
+        
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          timerElement.innerHTML = "Time's up!";
+          
+          // You could auto-submit here, or just leave it as a warning
+          // document.getElementById('debateForm').submit();
+        }
+        
+        timeLeft -= 1;
+      }, 1000);
+    }
+    
+    // Start the timer when the page loads
+    window.onload = startTimer;
+  </script>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>

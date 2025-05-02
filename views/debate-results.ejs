@@ -1,0 +1,410 @@
+<!-- views/debate-results.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate - Results</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 900px;">
+    <div class="study-card">
+      <div class="results-header">
+        <h1>Debate Complete</h1>
+        <div class="results-badge">
+          <span>Motion: <%= debate.topic.title %></span>
+        </div>
+      </div>
+
+      <div class="thank-you-message">
+        <h3>Thank you for your participation!</h3>
+        <p>Your contribution is valuable to our research on comparing LLM and human debate performance. The debate transcript below will be anonymized and shown to independent evaluators in Phase 2 of the study.</p>
+      </div>
+
+      <div class="debate-transcript">
+        <h2>Complete Debate Transcript</h2>
+        <div class="transcript-container">
+          <% debate.turns.forEach((turn, index) => { %>
+            <div class="transcript-turn <%= turn.isAI ? 
+                (turn.side === 'proposition' ? 'ai-proposition' : 'ai-opposition') : 
+                (turn.side === 'proposition' ? 'human-proposition' : 'human-opposition') 
+              %>">
+              <div class="turn-header">
+                <div class="turn-meta">
+                  <span class="turn-number"><%= index + 1 %></span>
+                  <span class="turn-role"><%= turn.isAI ? 'AI' : 'You' %> (<%= turn.side.toUpperCase() %>)</span>
+                  <span class="turn-type"><%= turn.type.toUpperCase() %></span>
+                </div>
+                <div class="turn-stats">
+                  <span class="word-count">
+                    <%= turn.wordCount || turn.content.split(/\s+/).filter(word => word.length > 0).length %> words
+                  </span>
+                </div>
+              </div>
+              <div class="turn-content">
+                <p><%= turn.content %></p>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="self-assessment">
+        <h2>Self-Assessment and Feedback</h2>
+        <p>Please take a moment to reflect on your debate experience and provide some feedback.</p>
+
+        <form action="/debate-results" method="POST">
+          <div class="assessment-section">
+            <h3>Debate Outcome</h3>
+            <div class="form-group">
+              <label>In your assessment, who made the stronger arguments?</label>
+              <div class="radio-options">
+                <div class="radio-option">
+                  <input type="radio" id="winnerSideYou" name="winnerSide" value="human" required>
+                  <label for="winnerSideYou">You</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="winnerSideAI" name="winnerSide" value="ai">
+                  <label for="winnerSideAI">The AI</label>
+                </div>
+                <div class="radio-option">
+                  <input type="radio" id="winnerSideTie" name="winnerSide" value="tie">
+                  <label for="winnerSideTie">It was a tie</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="assessment-section">
+            <h3>Performance Rating</h3>
+            <div class="form-group">
+              <label for="humanPerformance">How would you rate your own performance in this debate?</label>
+              <div class="rating-scale">
+                <span class="rating-label">Poor</span>
+                <div class="rating-options">
+                  <% for(let i = 1; i <= 7; i++) { %>
+                    <div class="rating-option">
+                      <input type="radio" id="humanPerformance<%= i %>" name="humanPerformance" value="<%= i %>" required>
+                      <label for="humanPerformance<%= i %>"><%= i %></label>
+                    </div>
+                  <% } %>
+                </div>
+                <span class="rating-label">Excellent</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="aiPerformance">How would you rate the AI's performance in this debate?</label>
+              <div class="rating-scale">
+                <span class="rating-label">Poor</span>
+                <div class="rating-options">
+                  <% for(let i = 1; i <= 7; i++) { %>
+                    <div class="rating-option">
+                      <input type="radio" id="aiPerformance<%= i %>" name="aiPerformance" value="<%= i %>" required>
+                      <label for="aiPerformance<%= i %>"><%= i %></label>
+                    </div>
+                  <% } %>
+                </div>
+                <span class="rating-label">Excellent</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="assessment-section">
+            <h3>AI Capabilities</h3>
+            <div class="form-group">
+              <label for="aiPersuasiveness">How persuasive was the AI's argumentation?</label>
+              <div class="rating-scale">
+                <span class="rating-label">Not at all</span>
+                <div class="rating-options">
+                  <% for(let i = 1; i <= 7; i++) { %>
+                    <div class="rating-option">
+                      <input type="radio" id="aiPersuasiveness<%= i %>" name="aiPersuasiveness" value="<%= i %>" required>
+                      <label for="aiPersuasiveness<%= i %>"><%= i %></label>
+                    </div>
+                  <% } %>
+                </div>
+                <span class="rating-label">Extremely</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="aiReasoningQuality">How would you rate the quality of the AI's reasoning?</label>
+              <div class="rating-scale">
+                <span class="rating-label">Poor</span>
+                <div class="rating-options">
+                  <% for(let i = 1; i <= 7; i++) { %>
+                    <div class="rating-option">
+                      <input type="radio" id="aiReasoningQuality<%= i %>" name="aiReasoningQuality" value="<%= i %>" required>
+                      <label for="aiReasoningQuality<%= i %>"><%= i %></label>
+                    </div>
+                  <% } %>
+                </div>
+                <span class="rating-label">Excellent</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="aiFactualAccuracy">How factually accurate were the AI's statements?</label>
+              <div class="rating-scale">
+                <span class="rating-label">Inaccurate</span>
+                <div class="rating-options">
+                  <% for(let i = 1; i <= 7; i++) { %>
+                    <div class="rating-option">
+                      <input type="radio" id="aiFactualAccuracy<%= i %>" name="aiFactualAccuracy" value="<%= i %>" required>
+                      <label for="aiFactualAccuracy<%= i %>"><%= i %></label>
+                    </div>
+                  <% } %>
+                </div>
+                <span class="rating-label">Accurate</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="comments">Additional Comments (Optional)</label>
+            <textarea id="comments" name="comments" rows="4" placeholder="Please share any additional thoughts about your debate experience, the AI's performance, or suggestions for improvement..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-option">
+              <input type="checkbox" id="participateAgain" name="participateAgain" value="yes">
+              <label for="participateAgain">I would be interested in participating in additional debates.</label>
+            </div>
+          </div>
+
+          <div class="continue-options">
+            <div class="option-choice">
+              <div class="option-header">
+                <h3>Continue to another debate?</h3>
+                <p>You have completed <%= debate.currentIndex || 1 %> of your target debates.</p>
+              </div>
+              <div class="option-buttons">
+                <button type="submit" name="nextAction" value="continue" class="button">Continue to Next Debate</button>
+                <button type="submit" name="nextAction" value="finish" class="button button-secondary">Finish Session</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Custom styles for the results page */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .results-badge {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #495057;
+      font-size: 0.9em;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .thank-you-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .thank-you-message h3 {
+      margin-top: 0;
+    }
+
+    .thank-you-message p {
+      margin-bottom: 0;
+    }
+
+    .debate-transcript {
+      margin-bottom: 40px;
+    }
+
+    .transcript-container {
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #f8f9fa;
+    }
+
+    .transcript-turn {
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      background-color: white;
+    }
+
+    .transcript-turn:last-child {
+      margin-bottom: 0;
+    }
+
+    .transcript-turn.human-proposition {
+      border-left: 4px solid #28a745;
+    }
+
+    .transcript-turn.human-opposition {
+      border-left: 4px solid #dc3545;
+    }
+
+    .transcript-turn.ai-proposition {
+      border-left: 4px solid #20c997;
+    }
+
+    .transcript-turn.ai-opposition {
+      border-left: 4px solid #e83e8c;
+    }
+
+    .turn-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .turn-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .turn-number {
+      background-color: #e9ecef;
+      color: #495057;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+
+    .turn-role {
+      font-weight: bold;
+    }
+
+    .turn-type {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+
+    .turn-stats {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+
+    .turn-content {
+      line-height: 1.6;
+    }
+
+    .self-assessment {
+      padding-top: 20px;
+    }
+
+    .assessment-section {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .assessment-section h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #495057;
+    }
+
+    .radio-options, .rating-options {
+      display: flex;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .rating-scale {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rating-label {
+      font-size: 0.9em;
+      color: #6c757d;
+      width: 80px;
+    }
+
+    .rating-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .rating-option label {
+      font-size: 0.9em;
+      color: #495057;
+    }
+
+    .continue-options {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .option-choice {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .option-header h3 {
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    .option-header p {
+      margin: 0;
+      color: #6c757d;
+    }
+
+    .option-buttons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .button-secondary {
+      background-color: #6c757d;
+    }
+
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</body>
+
+</html>
