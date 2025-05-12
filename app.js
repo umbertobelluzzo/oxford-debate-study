@@ -332,6 +332,8 @@ app.get('/debate-turn', requireSession, (req, res) => {
   let humanSide;
   let aiSide;
   
+  const isProposition = debate.side === 'proposition';
+  
   if (isProposition) {
     // Human is proposition
     humanSide = 'proposition';
@@ -567,15 +569,23 @@ app.post('/debate-results', requireSession, async (req, res) => {
 
 // COMPLETION
 app.get('/completion', requireSession, (req, res) => {
+  // Generate a completion code for the participant
+  const completionCode = generateCompletionCode();
+  
   // Final completion page
   res.render('completion', {
-    debate: req.session.debateData.debate
+    debate: req.session.debateData.debate,
+    completionCode: completionCode
   });
   
   // Clear session after completion
   req.session.destroy();
 });
 
+// Function to generate a Prolific completion code
+function generateCompletionCode() {
+  return 'OXFORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 // ===========================
 // HELPER FUNCTIONS
 // ===========================
