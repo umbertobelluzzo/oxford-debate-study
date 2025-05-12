@@ -241,10 +241,10 @@ app.post('/setup', requireSession, (req, res) => {
     return res.render('error', { message: 'Invalid debate topic selected.' });
   }
   
-  // Save debate configuration
+  // Save debate configuration - always use 'standard' format
   req.session.debateData.debate = {
     topic: selectedTopic,
-    format: req.body.formatId,
+    format: 'standard', // Hard-coded to always use standard format
     side: req.body.side, // 'proposition' or 'opposition'
     opponentModel: req.body.opponentModel,
     startTime: new Date().toISOString(),
@@ -416,13 +416,11 @@ app.post('/debate-turn', requireSession, async (req, res) => {
   // Increment turn counter
   debate.currentTurn++;
   
-  // Check if debate is over
-  if ((debate.format === 'standard' && debate.currentTurn >= 6) || 
-      (debate.format === 'modified' && debate.currentTurn >= 4) ||
-      (debate.format === 'competitive' && debate.currentTurn >= 8)) {
-    debate.status = 'completed';
-    return res.redirect('/debate-results');
-  }
+  // Check if debate is over - always using standard format (6 turns)
+if (debate.currentTurn >= 6) {
+  debate.status = 'completed';
+  return res.redirect('/debate-results');
+}
   
   // Save progress
   try {
@@ -500,9 +498,7 @@ app.get('/debate-ai-turn', requireSession, async (req, res) => {
     }
     
     // Check if debate is over
-    if ((debate.format === 'standard' && debate.currentTurn >= 6) || 
-        (debate.format === 'modified' && debate.currentTurn >= 4) ||
-        (debate.format === 'competitive' && debate.currentTurn >= 8)) {
+    if (debate.currentTurn >= 6) {
       debate.status = 'completed';
       return res.redirect('/debate-results');
     }

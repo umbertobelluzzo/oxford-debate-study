@@ -69,32 +69,19 @@
           </div>
         </div>
 
-        <!-- Debate Format Selection -->
-        <div class="form-group">
-          <label for="formatId"><b>Select Debate Format</b></label>
-          <div class="formats-container">
-            <% debateFormats.forEach(format => { %>
-              <div class="format-option">
-                <input type="radio" id="format-<%= format.id %>" name="formatId" value="<%= format.id %>" required
-                       <%= format.id === 'standard' ? 'checked' : '' %>>
-                <label for="format-<%= format.id %>">
-                  <div class="format-title"><%= format.name %></div>
-                  <div class="format-description"><%= format.description %></div>
-                </label>
-              </div>
-            <% }); %>
-          </div>
-        </div>
+        <!-- Hidden input for Standard Oxford Style format -->
+        <input type="hidden" name="formatId" value="standard">
 
         <!-- Word Limit Reminder -->
         <div class="info-box">
-          <p><strong>Remember:</strong> Each debate turn should be between 100-150 words. The system will help you track your word count.</p>
-          <p>The Oxford-style debate will consist of:</p>
-          <ul>
+            <p><strong>Debate Format:</strong> This research uses the Standard Oxford Style debate format.</p>
+            <p><strong>Remember:</strong> Each debate turn should be between 100-150 words. The system will help you track your word count.</p>
+            <p>The debate will consist of:</p>
+            <ul>
             <li><strong>Opening Statement:</strong> Introduce your position and key arguments</li>
             <li><strong>Rebuttal:</strong> Respond to your opponent's arguments</li>
             <li><strong>Closing Statement:</strong> Summarize your position and refute counterarguments</li>
-          </ul>
+            </ul>
         </div>
 
         <div class="button-container">
