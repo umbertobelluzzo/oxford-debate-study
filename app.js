@@ -548,7 +548,8 @@ app.post('/debate-results', requireSession, async (req, res) => {
     aiPersuasiveness: req.body.aiPersuasiveness,
     aiReasoningQuality: req.body.aiReasoningQuality,
     aiFactualAccuracy: req.body.aiFactualAccuracy,
-    comments: req.body.comments
+    comments: req.body.comments,
+    participateAgain: req.body.participateAgain === 'yes'
   };
   
   // Mark debate as complete
@@ -563,8 +564,40 @@ app.post('/debate-results', requireSession, async (req, res) => {
     console.error("Error saving final debate data:", error);
   }
   
-  // Proceed to completion
-  res.redirect('/completion');
+  // Check nextAction to determine where to redirect
+  const nextAction = req.body.nextAction;
+  
+  if (nextAction === 'continue') {
+    // Continue to a new debate - keep the session but reset debate data
+    // Save demographics and other user info
+    const userInfo = {
+      participantId: req.session.debateData.participantId,
+      demographics: req.session.debateData.demographics,
+      completedDebates: req.session.debateData.completedDebates || []
+    };
+    
+    // Add current debate to completed list
+    userInfo.completedDebates.push({
+      id: req.session.debateData.id,
+      topic: debate.topic.id,
+      completedAt: new Date().toISOString()
+    });
+    
+    // Reset session but keep user info
+    req.session.debateData = {
+      id: 'debate-' + Date.now(),
+      participantId: userInfo.participantId,
+      demographics: userInfo.demographics,
+      completedDebates: userInfo.completedDebates,
+      startTimestamp: new Date().toISOString()
+    };
+    
+    // Redirect to setup for new debate
+    return res.redirect('/setup');
+  } else {
+    // Finish the session - go to completion page
+    return res.redirect('/completion');
+  }
 });
 
 // COMPLETION
