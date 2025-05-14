@@ -594,21 +594,49 @@ app.get('/debate-results', requireSession, (req, res) => {
 app.post('/debate-results', requireSession, async (req, res) => {
   const debate = req.session.debateData.debate;
   
-  // Save ratings and comments
+  // Parse slider values as numbers
+  const winnerSideValue = parseInt(req.body.winnerSide);
+  const humanPerformanceValue = parseInt(req.body.humanPerformance);
+  const aiPerformanceValue = parseInt(req.body.aiPerformance);
+  const aiFactualAccuracyValue = parseInt(req.body.aiFactualAccuracy);
+  
+  // Interpret winner based on slider value
+  let winnerSideInterpretation = "draw";
+  if (winnerSideValue < 45) {
+    winnerSideInterpretation = "human";
+  } else if (winnerSideValue > 55) {
+    winnerSideInterpretation = "ai";
+  }
+  
+  // Save ratings and comments with continuous values
   debate.ratings = {
-    winnerSide: req.body.winnerSide,
-    humanPerformance: req.body.humanPerformance,
-    aiPerformance: req.body.aiPerformance,
-    aiPersuasiveness: req.body.aiPersuasiveness,
-    aiReasoningQuality: req.body.aiReasoningQuality,
-    aiFactualAccuracy: req.body.aiFactualAccuracy,
+    // Continuous values (0-100)
+    winnerSideValue: winnerSideValue,
+    winnerSide: winnerSideInterpretation, // Interpreted categorical value for backward compatibility
+    humanPerformance: humanPerformanceValue,
+    aiPerformance: aiPerformanceValue,
+    aiFactualAccuracy: aiFactualAccuracyValue,
+    
+    // Other feedback
     comments: req.body.comments,
-    participateAgain: req.body.participateAgain === 'yes'
+    participateAgain: req.body.participateAgain === 'yes',
+    
+    // Timestamp for the ratings
+    ratedAt: new Date().toISOString()
   };
   
   // Mark debate as complete
   debate.status = 'rated';
   debate.endTime = new Date().toISOString();
+  
+  // Add some analysis for easier data processing later
+  debate.analysis = {
+    performanceGap: humanPerformanceValue - aiPerformanceValue, // Positive means human performed better
+    winnerMargin: Math.abs(50 - winnerSideValue), // How decisive was the win
+    isHumanWin: winnerSideValue < 45,
+    isAIWin: winnerSideValue > 55,
+    isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
+  };
   
   // Save final debate data
   try {
@@ -630,10 +658,12 @@ app.post('/debate-results', requireSession, async (req, res) => {
       completedDebates: req.session.debateData.completedDebates || []
     };
     
-    // Add current debate to completed list
+    // Add current debate to completed list with some key metadata
     userInfo.completedDebates.push({
       id: req.session.debateData.id,
       topic: debate.topic.id,
+      side: debate.side,
+      winnerSideValue: winnerSideValue,
       completedAt: new Date().toISOString()
     });
     

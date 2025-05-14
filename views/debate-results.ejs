@@ -54,127 +54,102 @@
       <div class="self-assessment">
         <h2>Self-Assessment and Feedback</h2>
         <p>Please take a moment to reflect on your debate experience and provide some feedback.</p>
-
+      
         <form action="/debate-results" method="POST">
           <div class="assessment-section">
             <h3>Debate Outcome</h3>
             <div class="form-group">
-              <label>In your assessment, who made the stronger arguments?</label>
-              <div class="radio-options">
-                <div class="radio-option">
-                  <input type="radio" id="winnerSideYou" name="winnerSide" value="human" required>
-                  <label for="winnerSideYou">You</label>
+              <label for="winnerSide">Who made the stronger arguments?</label>
+              <div class="slider-container">
+                <span class="slider-label-left">You completely</span>
+                <div class="slider-with-markers">
+                  <div class="slider-markers">
+                    <span class="marker" style="left: 0%;">0</span>
+                    <span class="marker" style="left: 50%;">50</span>
+                    <span class="marker" style="left: 100%;">100</span>
+                  </div>
+                  <input type="range" id="winnerSide" name="winnerSide" min="0" max="100" value="50" class="continuous-slider" required>
                 </div>
-                <div class="radio-option">
-                  <input type="radio" id="winnerSideAI" name="winnerSide" value="ai">
-                  <label for="winnerSideAI">The AI</label>
-                </div>
-                <div class="radio-option">
-                  <input type="radio" id="winnerSideTie" name="winnerSide" value="tie">
-                  <label for="winnerSideTie">It was a tie</label>
-                </div>
+                <span class="slider-label-right">AI completely</span>
+                <div class="slider-value-display" id="winnerSideValue">50 (Draw)</div>
+              </div>
+              <div class="slider-explanation">
+                <p><strong>0</strong> = You made much stronger arguments</p>
+                <p><strong>50</strong> = Equal strength or a draw</p>
+                <p><strong>100</strong> = The AI made much stronger arguments</p>
               </div>
             </div>
           </div>
-
+      
           <div class="assessment-section">
             <h3>Performance Rating</h3>
             <div class="form-group">
               <label for="humanPerformance">How would you rate your own performance in this debate?</label>
-              <div class="rating-scale">
-                <span class="rating-label">Poor</span>
-                <div class="rating-options">
-                  <% for(let i = 1; i <= 7; i++) { %>
-                    <div class="rating-option">
-                      <input type="radio" id="humanPerformance<%= i %>" name="humanPerformance" value="<%= i %>" required>
-                      <label for="humanPerformance<%= i %>"><%= i %></label>
-                    </div>
-                  <% } %>
+              <div class="slider-container">
+                <span class="slider-label-left">Poor</span>
+                <div class="slider-with-markers">
+                  <div class="slider-markers">
+                    <span class="marker" style="left: 0%;">0</span>
+                    <span class="marker" style="left: 50%;">50</span>
+                    <span class="marker" style="left: 100%;">100</span>
+                  </div>
+                  <input type="range" id="humanPerformance" name="humanPerformance" min="0" max="100" value="50" class="continuous-slider" required>
                 </div>
-                <span class="rating-label">Excellent</span>
+                <span class="slider-label-right">Excellent</span>
+                <div class="slider-value-display" id="humanPerformanceValue">50</div>
               </div>
             </div>
-
+      
             <div class="form-group">
               <label for="aiPerformance">How would you rate the AI's performance in this debate?</label>
-              <div class="rating-scale">
-                <span class="rating-label">Poor</span>
-                <div class="rating-options">
-                  <% for(let i = 1; i <= 7; i++) { %>
-                    <div class="rating-option">
-                      <input type="radio" id="aiPerformance<%= i %>" name="aiPerformance" value="<%= i %>" required>
-                      <label for="aiPerformance<%= i %>"><%= i %></label>
-                    </div>
-                  <% } %>
+              <div class="slider-container">
+                <span class="slider-label-left">Poor</span>
+                <div class="slider-with-markers">
+                  <div class="slider-markers">
+                    <span class="marker" style="left: 0%;">0</span>
+                    <span class="marker" style="left: 50%;">50</span>
+                    <span class="marker" style="left: 100%;">100</span>
+                  </div>
+                  <input type="range" id="aiPerformance" name="aiPerformance" min="0" max="100" value="50" class="continuous-slider" required>
                 </div>
-                <span class="rating-label">Excellent</span>
+                <span class="slider-label-right">Excellent</span>
+                <div class="slider-value-display" id="aiPerformanceValue">50</div>
               </div>
             </div>
           </div>
-
+      
           <div class="assessment-section">
-            <h3>AI Capabilities</h3>
-            <div class="form-group">
-              <label for="aiPersuasiveness">How persuasive was the AI's argumentation?</label>
-              <div class="rating-scale">
-                <span class="rating-label">Not at all</span>
-                <div class="rating-options">
-                  <% for(let i = 1; i <= 7; i++) { %>
-                    <div class="rating-option">
-                      <input type="radio" id="aiPersuasiveness<%= i %>" name="aiPersuasiveness" value="<%= i %>" required>
-                      <label for="aiPersuasiveness<%= i %>"><%= i %></label>
-                    </div>
-                  <% } %>
-                </div>
-                <span class="rating-label">Extremely</span>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="aiReasoningQuality">How would you rate the quality of the AI's reasoning?</label>
-              <div class="rating-scale">
-                <span class="rating-label">Poor</span>
-                <div class="rating-options">
-                  <% for(let i = 1; i <= 7; i++) { %>
-                    <div class="rating-option">
-                      <input type="radio" id="aiReasoningQuality<%= i %>" name="aiReasoningQuality" value="<%= i %>" required>
-                      <label for="aiReasoningQuality<%= i %>"><%= i %></label>
-                    </div>
-                  <% } %>
-                </div>
-                <span class="rating-label">Excellent</span>
-              </div>
-            </div>
-
+            <h3>AI Factual Accuracy</h3>
             <div class="form-group">
               <label for="aiFactualAccuracy">How factually accurate were the AI's statements?</label>
-              <div class="rating-scale">
-                <span class="rating-label">Inaccurate</span>
-                <div class="rating-options">
-                  <% for(let i = 1; i <= 7; i++) { %>
-                    <div class="rating-option">
-                      <input type="radio" id="aiFactualAccuracy<%= i %>" name="aiFactualAccuracy" value="<%= i %>" required>
-                      <label for="aiFactualAccuracy<%= i %>"><%= i %></label>
-                    </div>
-                  <% } %>
+              <div class="slider-container">
+                <span class="slider-label-left">Completely inaccurate</span>
+                <div class="slider-with-markers">
+                  <div class="slider-markers">
+                    <span class="marker" style="left: 0%;">0</span>
+                    <span class="marker" style="left: 50%;">50</span>
+                    <span class="marker" style="left: 100%;">100</span>
+                  </div>
+                  <input type="range" id="aiFactualAccuracy" name="aiFactualAccuracy" min="0" max="100" value="50" class="continuous-slider" required>
                 </div>
-                <span class="rating-label">Accurate</span>
+                <span class="slider-label-right">Completely accurate</span>
+                <div class="slider-value-display" id="aiFactualAccuracyValue">50</div>
               </div>
             </div>
           </div>
-
+      
           <div class="form-group">
             <label for="comments">Additional Comments (Optional)</label>
             <textarea id="comments" name="comments" rows="4" placeholder="Please share any additional thoughts about your debate experience, the AI's performance, or suggestions for improvement..."></textarea>
           </div>
-
+      
           <div class="form-group">
             <div class="checkbox-option">
               <input type="checkbox" id="participateAgain" name="participateAgain" value="yes">
               <label for="participateAgain">I would be interested in participating in additional debates.</label>
             </div>
           </div>
-
+      
           <div class="continue-options">
             <div class="option-choice">
               <div class="option-header">
@@ -189,8 +164,7 @@
           </div>
         </form>
       </div>
-    </div>
-  </div>
+
 
   <style>
     /* Custom styles for the results page */
@@ -404,7 +378,134 @@
       gap: 10px;
       margin-top: 10px;
     }
+
+    .slider-container {
+    margin: 15px 0 25px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .slider-with-markers {
+    position: relative;
+    width: 100%;
+    padding-top: 15px;
+    margin: 10px 0;
+  }
+
+  .slider-markers {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7em;
+    color: #666;
+  }
+
+  .marker {
+    position: absolute;
+    transform: translateX(-50%);
+  }
+
+  .continuous-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+    outline: none;
+    margin: 10px 0;
+  }
+
+  .continuous-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4285f4;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .continuous-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #4285f4;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .slider-label-left, .slider-label-right {
+    font-size: 0.85em;
+    color: #666;
+    margin: 0 5px;
+  }
+
+  .slider-value-display {
+    text-align: center;
+    font-weight: bold;
+    color: #4285f4;
+    margin-top: 10px;
+    font-size: 1.1em;
+  }
+
+  .slider-explanation {
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #666;
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .slider-explanation p {
+    margin: 5px 0;
+  }
   </style>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Setup all sliders
+      setupSlider('winnerSide', function(value) {
+        let displayText = value;
+        if (value < 45) {
+          displayText += " (You)";
+        } else if (value > 55) {
+          displayText += " (AI)";
+        } else {
+          displayText += " (Draw)";
+        }
+        return displayText;
+      });
+      
+      setupSlider('humanPerformance');
+      setupSlider('aiPerformance');
+      setupSlider('aiFactualAccuracy');
+      
+      function setupSlider(id, customFormatter) {
+        const slider = document.getElementById(id);
+        const valueDisplay = document.getElementById(id + 'Value');
+        
+        function updateValue() {
+          const value = slider.value;
+          if (customFormatter) {
+            valueDisplay.textContent = customFormatter(value);
+          } else {
+            valueDisplay.textContent = value;
+          }
+        }
+        
+        slider.addEventListener('input', updateValue);
+        updateValue(); // Initialize
+      }
+    });
+  </script>
 </body>
 
 </html>
