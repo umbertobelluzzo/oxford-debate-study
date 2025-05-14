@@ -94,26 +94,10 @@ const debateTopics = [
 // Define LLM models for debate
 const debateModels = [
   {
-    id: "gpt4o",
-    name: "GPT-4o",
-    provider: "OpenAI",
-    model: "openai/gpt-4o",
-    maxTokens: 4000,
-    temperature: 0.7
-  },
-  {
-    id: "claude",
-    name: "Claude 3.5 Sonnet",
-    provider: "Anthropic",
-    model: "anthropic/claude-3-5-sonnet",
-    maxTokens: 4000,
-    temperature: 0.7
-  },
-  {
-    id: "llama",
-    name: "Llama 3",
+    id: "llama3-1-405b",
+    name: "Llama 3.1 405B Instruct",
     provider: "Meta",
-    model: "meta/llama-3-70b-instruct",
+    model: "meta/llama-3-1-405b-instruct",
     maxTokens: 4000,
     temperature: 0.7
   }
@@ -237,7 +221,24 @@ app.get('/setup', requireSession, (req, res) => {
 });
 
 // SETUP - POST
-app.post('/setup', requireSession, (req, res) => {
+let globalPositionCounter = 0;
+
+// Function to get position counts from the database or storage
+async function getPositionCounts() {
+  try {
+    // In a production system, this would query your database
+    // For now, use the global counter as a simple implementation
+    return {
+      proposition: Math.floor(globalPositionCounter / 2),
+      opposition: Math.ceil(globalPositionCounter / 2)
+    };
+  } catch (error) {
+    console.error("Error getting position counts:", error);
+    return { proposition: 0, opposition: 0 };
+  }
+}
+
+app.post('/setup', requireSession, async (req, res) => {
   const topicId = req.body.topicId;
   const selectedTopic = debateTopics.find(topic => topic.id === topicId);
   
@@ -245,17 +246,53 @@ app.post('/setup', requireSession, (req, res) => {
     return res.render('error', { message: 'Invalid debate topic selected.' });
   }
   
+  // If the participant already has a side assigned, use that
+  // Otherwise, assign based on balancing
+  let assignedSide;
+  
+  if (req.session.debateData.debate && req.session.debateData.debate.side) {
+    // User is resuming - use their previously assigned side
+    assignedSide = req.session.debateData.debate.side;
+    console.log(`Continuing with previously assigned side: ${assignedSide}`);
+  } else {
+    // User needs a new assignment - balance positions
+    const counts = await getPositionCounts();
+    
+    // Assign to the position with fewer assignments
+    if (counts.proposition <= counts.opposition) {
+      assignedSide = 'proposition';
+    } else {
+      assignedSide = 'opposition';
+    }
+    
+    // Increment the counter to balance future assignments
+    globalPositionCounter++;
+    console.log(`Assigned new side: ${assignedSide} (Counts - Prop: ${counts.proposition}, Opp: ${counts.opposition})`);
+  }
+  
+  // Always use the Llama 3.1 405B model
+  const modelId = "llama3-1-405b";
+  const selectedModel = debateModels.find(model => model.id === modelId);
+  
   // Save debate configuration - always use 'standard' format
   req.session.debateData.debate = {
     topic: selectedTopic,
     format: 'standard', // Hard-coded to always use standard format
-    side: req.body.side, // 'proposition' or 'opposition'
-    opponentModel: req.body.opponentModel,
+    side: assignedSide, // Programmatically assigned
+    opponentModel: modelId,
+    opponentModelDetails: selectedModel,
     startTime: new Date().toISOString(),
     turns: [],
     currentTurn: 0,
     status: 'setup'
   };
+  
+  // Save the data immediately to persist the assignments
+  try {
+    await saveDebateData(req.session.debateData);
+  } catch (error) {
+    console.error("Error saving initial debate configuration:", error);
+  }
   
   // Continue to debate preparation
   res.redirect('/debate-prep');
@@ -720,7 +757,8 @@ async function saveDebateData(data) {
     data.metadata = {
       debatePhase: 'Phase 1',
       topicCategory: getCategoryForTopic(data.debate.topic.id),
-      modelVersion: getModelVersion(data.debate.opponentModel),
+      modelVersion: "Meta/Llama-3-1-405B/May2025", // Fixed model version
+      participantPosition: data.debate.side, // Store assigned position
       argumentCount: data.debate.turns.length,
       totalWordCountHuman: data.debate.turns
         .filter(turn => !turn.isAI)
@@ -734,6 +772,7 @@ async function saveDebateData(data) {
           const count = turn.wordCount || (turn.content ? turn.content.split(/\s+/).length : 0);
           return total + count;
         }, 0),
+      assignmentTimestamp: new Date().toISOString(),
       timestamp: new Date().toISOString()
     };
   } else {
@@ -752,6 +791,11 @@ async function saveDebateData(data) {
         return total + count;
       }, 0);
     data.metadata.timestamp = new Date().toISOString();
+    
+    // Ensure position is always stored (in case it's an older record)
+    if (!data.metadata.participantPosition && data.debate.side) {
+      data.metadata.participantPosition = data.debate.side;
+    }
   }
   
   try {
@@ -764,6 +808,13 @@ async function saveDebateData(data) {
     saveDebateDataToFile(data);
     return { success: false, error: error.message };
   }
+}
+
+// Update the getModelVersion function since we're no longer using it
+// (keep for backward compatibility)
+function getModelVersion(modelId) {
+  // Now always return the Llama 3.1 version
+  return "Meta/Llama-3-1-405B/May2025";
 }
 
 // Helper functions for metadata

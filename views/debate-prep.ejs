@@ -27,21 +27,23 @@
         </div>
 
         <div class="debate-position">
-          <h3>Your Position:</h3>
-          <p class="position-badge <%= side %>"><%= side === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %></p>
-          <p>You will be arguing <strong><%= side === 'proposition' ? 'in favor of' : 'against' %></strong> this motion.</p>
-          <% if (side === 'proposition') { %>
-            <p>As Proposition, you will speak first with your opening statement.</p>
-          <% } else { %>
-            <p>As Opposition, you will respond to the AI's opening statement.</p>
-          <% } %>
-        </div>
+            <h3>Your Assigned Position:</h3>
+            <p class="position-badge <%= side %>"><%= side === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %></p>
+            <p>You have been assigned to argue <strong><%= side === 'proposition' ? 'in favor of' : 'against' %></strong> this motion.</p>
+            <% if (side === 'proposition') { %>
+              <p>As Proposition, you will speak first with your opening statement.</p>
+            <% } else { %>
+              <p>As Opposition, you will respond to the AI's opening statement.</p>
+            <% } %>
+            <div class="position-info">
+              <p><em>Note: Positions are automatically assigned to ensure balanced participation across the study.</em></p>
+            </div>
+          </div>
 
-        <div class="debate-opponent">
-          <h3>Your Opponent:</h3>
-          <p><%= opponentModel.name %> AI from <%= opponentModel.provider %></p>
-        </div>
-      </div>
+          <div class="debate-opponent">
+            <h3>Your AI Opponent:</h3>
+            <p>Llama 3.1 405B Instruct from Meta</p>
+          </div>
 
       <div class="debate-structure">
         <h3>Oxford-Style Format:</h3>
@@ -225,6 +227,20 @@
 
     .info-box p:last-child {
       margin-bottom: 0;
+    }
+
+    .position-info {
+    background-color: #f0f7ff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    }
+
+    .opponent-description {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 5px;
     }
   </style>
 
