@@ -6,6 +6,7 @@
   <title>Oxford-Style Debate - Your Turn</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/prevent-paste.js"></script>
 </head>
 
 <body>
@@ -30,35 +31,34 @@
 
       <div class="debate-flow">
         <% if (previousTurns && previousTurns.length > 0) { %>
-          <div class="previous-turns">
-            <h3>Previous Arguments</h3>
-            <div class="turns-container">
-              <% previousTurns.forEach(turn => { %>
-                <div class="turn-card <%= turn.isAI ? aiSide : humanSide %>">
-                  <div class="turn-header">
-                    <span class="turn-side"><%= turn.side.toUpperCase() %></span>
-                    <span class="turn-type"><%= turn.type.toUpperCase() %></span>
+            <div class="previous-turns">
+              <h3>Previous Arguments</h3>
+              <div class="turns-container">
+                <% previousTurns.forEach(turn => { %>
+                  <div class="turn-card <%= turn.isAI ? aiSide : humanSide %>">
+                    <div class="turn-header">
+                      <div class="turn-meta">
+                        <span class="turn-participant"><%= turn.isAI ? 'AI' : 'You' %></span>
+                        <span class="turn-side">(<%= turn.side.toUpperCase() %>)</span>
+                        <span class="turn-type"><%= turn.type.toUpperCase() %></span>
+                      </div>
+                      <div class="turn-stats">
+                        <span class="word-count-badge">
+                          <%= turn.wordCount || turn.content.split(/\s+/).filter(word => word.length > 0).length %> words
+                        </span>
+                      </div>
+                    </div>
+                    <div class="turn-content">
+                      <%= turn.content %>
+                    </div>
                   </div>
-                  <div class="turn-content">
-                    <%= turn.content %>
-                  </div>
-                  <div class="turn-footer">
-                    <% if (turn.wordCount) { %>
-                      <span class="word-count-badge"><%= turn.wordCount %> words</span>
-                    <% } else { %>
-                      <span class="word-count-badge">
-                        <%= turn.content.split(/\s+/).filter(word => word.length > 0).length %> words
-                      </span>
-                    <% } %>
-                  </div>
-                </div>
-              <% }); %>
+                <% }); %>
+              </div>
             </div>
-          </div>
-        <% } %>
+          <% } %>
 
         <div class="current-turn">
-          <h3>Your <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</h3>
+            <h3>Your <%= turnTitle %></h3>
           
           <% if (locals.error) { %>
             <div class="error-message">
@@ -70,15 +70,38 @@
             <input type="hidden" name="turnType" value="<%= turnType %>">
             
             <div class="form-group">
-              <div class="argument-guidelines">
-                <% if (turnType === 'opening') { %>
-                  <p>Present your main arguments supporting your position. Clearly state your stance and provide 2-3 key points.</p>
-                <% } else if (turnType === 'rebuttal') { %>
-                  <p>Address your opponent's arguments and strengthen your own position with additional evidence or reasoning.</p>
-                <% } else { %>
-                  <p>Summarize your key points and address any remaining counterarguments. End with a strong conclusion.</p>
-                <% } %>
-              </div>
+                <div class="argument-guidelines">
+                    <% if (turnType === 'opening') { %>
+                      <div class="guidelines-content">
+                        <h4>Guidelines for Opening Statement</h4>
+                        <ul>
+                          <li>Clearly state your position on the motion</li>
+                          <li>Present 2-3 key arguments to support your case</li>
+                          <li>Establish a strong foundation for later arguments</li>
+                        </ul>
+                      </div>
+                    <% } else if (turnType === 'rebuttal') { %>
+                      <div class="guidelines-content">
+                        <h4>Guidelines for Rebuttal</h4>
+                        <ul>
+                          <li>Address the key points raised by your opponent</li>
+                          <li>Defend your position against their criticisms</li>
+                          <li>Reinforce your strongest arguments</li>
+                          <li>Identify weaknesses in their reasoning</li>
+                        </ul>
+                      </div>
+                    <% } else { %>
+                      <div class="guidelines-content">
+                        <h4>Guidelines for Closing Statement</h4>
+                        <ul>
+                          <li>Recap your strongest arguments</li>
+                          <li>Address the key points of contention</li>
+                          <li>Emphasize why your position is more compelling</li>
+                          <li>Leave a lasting impression</li>
+                        </ul>
+                      </div>
+                    <% } %>
+                  </div>
               
               <label for="argument">Write your argument (100-150 words):</label>
               <textarea id="argument" name="argument" rows="10" placeholder="Write your <%= turnType %> statement here..." autofocus required><%= locals.previousArgument || '' %></textarea>
@@ -108,9 +131,9 @@
                 </div>
               </div>
 
-            <div class="button-container">
-              <button type="submit" id="submitButton" class="button" disabled>Submit <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</button>
-            </div>
+              <div class="button-container">
+                <button type="submit" id="submitButton" class="button" disabled>Submit <%= turnTitle %></button>
+              </div>
           </form>
         </div>
       </div>
@@ -173,11 +196,24 @@
       flex-direction: column;
       gap: 20px;
     }
+    .paste-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85em;
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    }
+
+    .paste-warning svg {
+    flex-shrink: 0;
+    }
 
     .previous-turns {
-      max-height: 300px;
-      overflow-y: auto;
-      padding-right: 10px;
+    margin-bottom: 30px;
     }
 
     .turns-container {
@@ -249,12 +285,30 @@
     }
 
     .argument-guidelines {
-      background-color: #f8f9fa;
-      padding: 10px 15px;
-      border-radius: 4px;
-      margin-bottom: 15px;
-      font-size: 0.9em;
-      border-left: 4px solid #6c757d;
+    background-color: #f0f7ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4285f4;
+    }
+
+    .guidelines-content h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #4285f4;
+    }
+
+    .guidelines-content ul {
+    margin: 0;
+    padding-left: 20px;
+    }
+
+    .guidelines-content li {
+    margin-bottom: 5px;
+    }
+
+    .guidelines-content li:last-child {
+    margin-bottom: 0;
     }
 
     .word-counter {

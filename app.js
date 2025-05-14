@@ -368,38 +368,56 @@ app.get('/debate-turn', requireSession, (req, res) => {
   const format = debateFormats.find(f => f.id === debate.format);
   
   // Determine turn type based on current turn index
-  let turnType;
-  let humanSide;
-  let aiSide;
+let turnType;
+let humanSide;
+let aiSide;
+let turnTitle; // Added variable for the properly formatted turn title
+
+const isProposition = debate.side === 'proposition';
+
+if (isProposition) {
+  // Human is proposition
+  humanSide = 'proposition';
+  aiSide = 'opposition';
   
-  const isProposition = debate.side === 'proposition';
-  
-  if (isProposition) {
-    // Human is proposition
-    humanSide = 'proposition';
-    aiSide = 'opposition';
-    
-    if (currentTurnIndex === 0) {
-      turnType = 'opening';
-    } else if (currentTurnIndex === debate.turns.length - 1) {
-      turnType = 'closing';
-    } else {
-      turnType = 'rebuttal';
-    }
+  if (currentTurnIndex === 0) {
+    turnType = 'opening';
+    turnTitle = 'Opening Statement';
+  } else if (currentTurnIndex === debate.turns.length - 1) {
+    turnType = 'closing';
+    turnTitle = 'Closing Statement';
   } else {
-    // Human is opposition
-    humanSide = 'opposition';
-    aiSide = 'proposition';
-    
-    if (currentTurnIndex === 1) {
-      turnType = 'opening';
-    } else if (currentTurnIndex === debate.turns.length) {
-      turnType = 'closing';
-    } else {
-      turnType = 'rebuttal';
-    }
+    turnType = 'rebuttal';
+    turnTitle = 'Rebuttal';
   }
+} else {
+  // Human is opposition
+  humanSide = 'opposition';
+  aiSide = 'proposition';
   
+  if (currentTurnIndex === 1) {
+    turnType = 'opening';
+    turnTitle = 'Opening Statement';
+  } else if (currentTurnIndex === debate.turns.length) {
+    turnType = 'closing';
+    turnTitle = 'Closing Statement';
+  } else {
+    turnType = 'rebuttal';
+    turnTitle = 'Rebuttal';
+  }
+}
+
+// Then pass turnTitle to the template:
+res.render('debate-human-turn', {
+  debate: debate,
+  turnType: turnType,
+  turnTitle: turnTitle, // Add this
+  turnIndex: currentTurnIndex,
+  humanSide: humanSide,
+  aiSide: aiSide,
+  previousTurns: debate.turns
+});
+
   // Check if it's the human's turn
   const isHumanTurn = (
     (isProposition && currentTurnIndex % 2 === 0) || // Proposition speaks on even turns
@@ -661,60 +679,81 @@ function generateCompletionCode() {
 
 // Generate LLM debate arguments
 async function generateDebateArgument(topic, side, turnType, modelConfig, previousTurns) {
-  // Construct the prompt based on the debate context
-  let systemPrompt = `You are an expert debater participating in an Oxford-style debate. 
+  // Base system prompt that's consistent for all turn types
+  let systemPrompt = `You are an expert debater participating in an Oxford-style debate.
 You are on the ${side === 'proposition' ? 'PROPOSITION' : 'OPPOSITION'} side, which means you ${side === 'proposition' ? 'SUPPORT' : 'OPPOSE'} the motion: "${topic.title}".
 
 Follow these guidelines:
 1. Make compelling, logical arguments supported by evidence
-2. Address counterarguments raised by the other side
+2. Address counterarguments raised by the other side when relevant
 3. Use formal debate language and structure
 4. Be persuasive but fair in your representation of facts
 5. For Oxford-style debates, focus on clarity, reasoning, and persuasion
 6. IMPORTANT: Your response MUST be between 100-150 words ONLY`;
 
-  let userPrompt = `You are now making a ${turnType} statement for the ${side === 'proposition' ? 'PROPOSITION' : 'OPPOSITION'} side.`;
+  // Specialized prompts for each turn type
+  let userPrompt = '';
   
-  // Add context based on turn type
   if (turnType === 'opening') {
-    userPrompt += `
-For an opening statement:
-- Clearly state your position
-- Provide 3-4 main arguments to support your position
-- Define key terms as needed
-- Present a roadmap of your arguments
-- Speak for approximately 500-600 words`;
-  } else if (turnType === 'rebuttal') {
-    userPrompt += `
-For a rebuttal:
-- Directly address the points made by the other side
-- Refute their arguments with counter-evidence
-- Strengthen your own arguments
-- Identify logical fallacies in their reasoning
-- Speak for approximately 400-500 words`;
-  } else if (turnType === 'closing') {
-    userPrompt += `
-For a closing statement:
-- Summarize your key arguments
-- Address the main points of contention
-- Emphasize why your position is stronger
-- End with a compelling conclusion
-- Speak for approximately 300-400 words`;
+    // Opening statement prompt - no previous context needed
+    userPrompt = `Write your opening statement for the motion: "${topic.title}"
+
+As the ${side.toUpperCase()} side, you should:
+- Clearly state your position 
+- Present 2-3 key arguments
+- Establish a strong foundation for your case
+
+Keep your response between 100-150 words.`;
+  } 
+  else if (turnType === 'rebuttal') {
+    // Rebuttal prompt - include opening statements
+    userPrompt = `Respond to your opponent's opening statement and strengthen your own case.
+
+As the ${side.toUpperCase()} side, you should:
+- Address the key points raised by your opponent
+- Defend your position against their criticisms
+- Reinforce your strongest arguments
+- Identify weaknesses in their reasoning
+
+Keep your response between 100-150 words.`;
+
+    // Include only opening statements as context
+    if (previousTurns && previousTurns.length > 0) {
+      userPrompt += `\n\nPrevious arguments in this debate:\n\n`;
+      
+      // Filter to only include opening statements
+      const openingStatements = previousTurns.filter(turn => turn.type === 'opening');
+      
+      openingStatements.forEach(turn => {
+        userPrompt += `${turn.side.toUpperCase()} OPENING: ${turn.content}\n\n`;
+      });
+    }
+  } 
+  else if (turnType === 'closing') {
+    // Closing statement prompt - include all previous turns
+    userPrompt = `Summarize and close your case for the motion: "${topic.title}"
+
+As the ${side.toUpperCase()} side, you should:
+- Recap your strongest arguments
+- Address the key points of contention
+- Emphasize why your position is more compelling
+- Leave a lasting impression
+
+Keep your response between 100-150 words.`;
+
+    // Include all previous arguments as context
+    if (previousTurns && previousTurns.length > 0) {
+      userPrompt += `\n\nPrevious arguments in this debate:\n\n`;
+      
+      previousTurns.forEach(turn => {
+        const turnTypeUpper = turn.type.toUpperCase();
+        userPrompt += `${turn.side.toUpperCase()} ${turnTypeUpper}: ${turn.content}\n\n`;
+      });
+    }
   }
   
-  // Add previous turns context
-  if (previousTurns && previousTurns.length > 0) {
-    userPrompt += `\n\nPrevious arguments in this debate:\n\n`;
-    
-    previousTurns.forEach(turn => {
-      userPrompt += `${turn.side.toUpperCase()} ${turn.type.toUpperCase()}: ${turn.content}\n\n`;
-    });
-  }
-  
-  userPrompt += `\nNow, provide your ${turnType} statement for the ${side.toUpperCase()} side.
-Make a compelling case with clear reasoning and evidence.
-Your response MUST be between 100-150 words only. This is a strict requirement for the Oxford-style debate format.
-Do not mention that you are an AI, just focus on making your argument.`;
+  // Final instructions to ensure proper output
+  userPrompt += `\nYour ${turnType} statement must be between 100-150 words. Do not mention that you are an AI.`;
 
   try {
     // Call the OpenRouter API with the selected model
