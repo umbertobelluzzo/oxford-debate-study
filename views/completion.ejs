@@ -3,33 +3,431 @@
 <html>
 
 <head>
-  <title>Political Opinion Study - Completion</title>
+  <title>Oxford-Style Debate Research - Completion Certificate</title>
   <link rel="stylesheet" href="/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
-  <div class="container">
+  <div class="container" style="width: 800px;">
     <div class="study-card">
-      <h1>Thank You!</h1>
-
-      <div class="completion-content">
-        <p>Thank you for completing this survey!</p>
-
-        <p>We can now explain more about our study. The content you created will help us understand whether the use of
-          AI for writing assistance impacts how this content is perceived. Our findings, made possible by you, will
-          contribute to a better understanding of AI's role in political discourse and opinion formation.</p>
-
-        <div class="completion-code">
-          <h3>Your Prolific Completion Code:</h3>
-          <div class="code-box">
-            <%= completionCode %>
+      <div class="certificate">
+        <div class="certificate-header">
+          <div class="logo">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#002147" stroke-width="2"/>
+              <path d="M16 16V8M8 8V16M8 12H16" stroke="#002147" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
-          <p>Please copy this code and enter it on Prolific to receive your payment.</p>
+          <div class="certificate-title">
+            <h2>Certificate of Completion</h2>
+            <div class="certificate-subtitle">Oxford-Style Debate Research Study</div>
+          </div>
+        </div>
+        
+        <div class="certificate-body">
+          <p>This is to certify that</p>
+          <div class="participant-name">Participant ID: <%= participantId %></div>
+          <p>has successfully completed a series of Oxford-style debates against AI language models as part of our research study investigating the performance of large language models in structured argumentation settings.</p>
+          
+          <div class="completion-details">
+            <div class="completion-item">
+              <div class="item-label">Debates Completed</div>
+              <div class="item-value">5</div>
+            </div>
+            <div class="completion-item">
+              <div class="item-label">Date of Completion</div>
+              <div class="item-value"><%= new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+            </div>
+            <div class="completion-item">
+              <div class="item-label">Completion Code</div>
+              <div class="item-value"><%= completionCode %></div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="certificate-footer">
+          <div class="researcher-signature">
+            <div class="signature-line"></div>
+            <div class="signature-name">Umberto Belluzzo</div>
+            <div class="signature-title">Lead Researcher</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="debate-summary">
+        <h2>Your Debate Summary</h2>
+        
+        <div class="summary-stats">
+          <div class="stat-block">
+            <div class="stat-value"><%= completedDebates.length %></div>
+            <div class="stat-label">Debates Completed</div>
+          </div>
+          
+          <% 
+            // Calculate statistics
+            const winsByHuman = completedDebates.filter(d => d.winnerSideValue < 45).length;
+            const winsByAI = completedDebates.filter(d => d.winnerSideValue > 55).length;
+            const draws = completedDebates.filter(d => d.winnerSideValue >= 45 && d.winnerSideValue <= 55).length;
+          %>
+          
+          <div class="stat-block">
+            <div class="stat-value"><%= winsByHuman %></div>
+            <div class="stat-label">Debates Won by You</div>
+          </div>
+          
+          <div class="stat-block">
+            <div class="stat-value"><%= winsByAI %></div>
+            <div class="stat-label">Debates Won by AI</div>
+          </div>
+          
+          <div class="stat-block">
+            <div class="stat-value"><%= draws %></div>
+            <div class="stat-label">Draws</div>
+          </div>
+        </div>
+        
+        <div class="debate-list">
+          <h3>Your Completed Debates</h3>
+          
+          <div class="debates-table">
+            <div class="table-header">
+              <div class="header-cell">#</div>
+              <div class="header-cell">Topic</div>
+              <div class="header-cell">Your Position</div>
+              <div class="header-cell">Result</div>
+              <div class="header-cell">Date</div>
+            </div>
+            
+            <% completedDebates.forEach((debate, index) => { 
+              // Find the topic details
+              const topic = debateTopics.find(t => t.id === debate.topic) || { 
+                title: "Unknown Topic", 
+                description: "Topic details not available" 
+              };
+              
+              // Determine result
+              let resultText = "Draw";
+              let resultClass = "draw";
+              
+              if (debate.winnerSideValue < 45) {
+                resultText = "You won";
+                resultClass = "win";
+              } else if (debate.winnerSideValue > 55) {
+                resultText = "AI won";
+                resultClass = "loss";
+              }
+            %>
+              <div class="table-row">
+                <div class="table-cell"><%= index + 1 %></div>
+                <div class="table-cell topic-cell"><%= topic.title %></div>
+                <div class="table-cell position-cell <%= debate.side %>">
+                  <%= debate.side === 'proposition' ? 'Proposition (For)' : 'Opposition (Against)' %>
+                </div>
+                <div class="table-cell result-cell <%= resultClass %>"><%= resultText %></div>
+                <div class="table-cell date-cell">
+                  <%= new Date(debate.completedAt).toLocaleDateString('en-GB', { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric'
+                  }) %>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+      
+      <div class="completion-actions">
+        <div class="thank-you-message">
+          <h3>Thank You for Your Participation!</h3>
+          <p>Your contributions are valuable to our research on AI language models in structured debate settings. We appreciate the time and effort you've dedicated to this study.</p>
+        </div>
+        
+        <div class="button-container">
+          <button class="button" onclick="window.print();">Print Certificate</button>
+          <a href="/logout" class="button button-secondary">Exit Study</a>
         </div>
       </div>
     </div>
   </div>
+  
+  <style>
+    /* Certificate styles */
+    .certificate {
+      background-color: #fff;
+      border: 2px solid #002147;
+      border-radius: 8px;
+      padding: 30px;
+      margin-bottom: 30px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 33, 71, 0.1);
+    }
+    
+    .certificate::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 1px solid #002147;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    
+    .certificate-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      margin-right: 20px;
+    }
+    
+    .certificate-title {
+      flex-grow: 1;
+      text-align: center;
+    }
+    
+    .certificate-title h2 {
+      font-family: 'Crimson Text', serif;
+      font-size: 28px;
+      color: #002147;
+      margin: 0;
+    }
+    
+    .certificate-subtitle {
+      font-size: 18px;
+      color: #8f1738;
+      margin-top: 5px;
+    }
+    
+    .certificate-body {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .participant-name {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 15px 0;
+      color: #002147;
+      font-family: 'Crimson Text', serif;
+    }
+    
+    .completion-details {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 30px;
+      border-top: 1px solid #dee2e6;
+      padding-top: 20px;
+    }
+    
+    .completion-item {
+      text-align: center;
+    }
+    
+    .item-label {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 5px;
+    }
+    
+    .item-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #002147;
+    }
+    
+    .certificate-footer {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+    }
+    
+    .researcher-signature {
+      text-align: center;
+      width: 200px;
+    }
+    
+    .signature-line {
+      height: 1px;
+      background-color: #002147;
+      margin-bottom: 5px;
+    }
+    
+    .signature-name {
+      font-weight: bold;
+    }
+    
+    .signature-title {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    /* Summary styles */
+    .debate-summary {
+      margin-bottom: 30px;
+    }
+    
+    .summary-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    
+    .stat-block {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      text-align: center;
+      padding: 15px;
+      width: 23%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .stat-block .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #4285f4;
+      margin-bottom: 5px;
+    }
+    
+    .stat-block .stat-label {
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    .debates-table {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .table-header {
+      display: flex;
+      background-color: #f8f9fa;
+      font-weight: bold;
+      border-bottom: 2px solid #dee2e6;
+    }
+    
+    .header-cell {
+      padding: 12px 15px;
+      flex: 1;
+    }
+    
+    .header-cell:first-child {
+      flex: 0 0 40px;
+      text-align: center;
+    }
+    
+    .table-row {
+      display: flex;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .table-row:last-child {
+      border-bottom: none;
+    }
+    
+    .table-cell {
+      padding: 12px 15px;
+      flex: 1;
+    }
+    
+    .table-cell:first-child {
+      flex: 0 0 40px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .topic-cell {
+      flex: 2;
+    }
+    
+    .position-cell {
+      font-size: 0.9em;
+    }
+    
+    .position-cell.proposition {
+      color: #155724;
+    }
+    
+    .position-cell.opposition {
+      color: #721c24;
+    }
+    
+    .result-cell {
+      font-weight: bold;
+    }
+    
+    .result-cell.win {
+      color: #28a745;
+    }
+    
+    .result-cell.loss {
+      color: #dc3545;
+    }
+    
+    .result-cell.draw {
+      color: #6c757d;
+    }
+    
+    .date-cell {
+      font-size: 0.9em;
+      color: #6c757d;
+    }
+    
+    .completion-actions {
+      background-color: #e6f2ff;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .thank-you-message {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .thank-you-message h3 {
+      margin-top: 0;
+      color: #4285f4;
+    }
+    
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+        margin: 0;
+      }
+      
+      .container {
+        width: 100% !important;
+        max-width: 100%;
+      }
+      
+      .study-card {
+        box-shadow: none;
+        padding: 0;
+      }
+      
+      .debate-summary,
+      .completion-actions,
+      .button-container {
+        display: none;
+      }
+      
+      .certificate {
+        border: none;
+        box-shadow: none;
+      }
+      
+      .certificate::before {
+        display: none;
+      }
+    }
+  </style>
 </body>
 
 </html>

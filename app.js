@@ -703,6 +703,405 @@ app.get('/completion', requireSession, (req, res) => {
 function generateCompletionCode() {
   return 'OXFORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 }
+
+// ===========================
+// USER AUTHENTICATION & PROGRESS ROUTES
+// ===========================
+
+// Helper function to generate a unique participant ID
+function generateParticipantId() {
+  const prefix = 'OXD-';
+  const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed potentially confusing characters like I, O, 0, 1
+  let result = prefix;
+  
+  // Generate 6 random characters
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  
+  return result;
+}
+
+// Function to load participant data from storage
+async function loadParticipantData(participantId) {
+  try {
+    // Try to find the participant data in S3 or local storage
+    // First try S3
+    try {
+      const params = {
+        Bucket: bucketName,
+        Prefix: `participants/${participantId}/`,
+      };
+      
+      const result = await s3Client.send(new ListObjectsCommand(params));
+      
+      if (result.Contents && result.Contents.length > 0) {
+        // Get the most recent file
+        const latestObject = result.Contents.sort((a, b) => 
+          new Date(b.LastModified) - new Date(a.LastModified))[0];
+          
+        const getParams = {
+          Bucket: bucketName,
+          Key: latestObject.Key,
+        };
+        
+        const response = await s3Client.send(new GetObjectCommand(getParams));
+        const dataString = await streamToString(response.Body);
+        return JSON.parse(dataString);
+      }
+    } catch (s3Error) {
+      console.error("S3 retrieval failed, trying local backup:", s3Error);
+    }
+    
+    // Fallback to local file storage
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, 'data', 'participants');
+    
+    if (!fs.existsSync(dir)) {
+      return null;
+    }
+    
+    const files = fs.readdirSync(dir);
+    const participantFiles = files.filter(file => file.startsWith(`participant_${participantId}_`));
+    
+    if (participantFiles.length === 0) {
+      return null;
+    }
+    
+    // Get the most recent file
+    const latestFile = participantFiles.sort().pop();
+    const filePath = path.join(dir, latestFile);
+    const fileData = fs.readFileSync(filePath, 'utf8');
+    
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error("Error loading participant data:", error);
+    return null;
+  }
+}
+
+// Helper function to convert stream to string
+function streamToString(stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+  });
+}
+
+// Function to save participant data
+async function saveParticipantData(data) {
+  try {
+    const participantId = data.participantId;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    
+    // Try to save to S3
+    try {
+      const key = `participants/${participantId}/participant_${timestamp}.json`;
+      const params = {
+        Bucket: bucketName,
+        Key: key,
+        Body: JSON.stringify(data, null, 2),
+        ContentType: 'application/json'
+      };
+      
+      await s3Client.send(new PutObjectCommand(params));
+      console.log(`Participant data saved to S3: ${key}`);
+      return { success: true, key };
+    } catch (s3Error) {
+      console.error("S3 save failed, falling back to local storage:", s3Error);
+    }
+    
+    // Fallback to local file storage
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, 'data', 'participants');
+    
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    const filePath = path.join(dir, `participant_${participantId}_${timestamp}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    
+    console.log(`Participant data saved locally to ${filePath}`);
+    return { success: true, filePath };
+  } catch (error) {
+    console.error("Error saving participant data:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Modify the root route to show the login page
+app.get('/', (req, res) => {
+  res.render('login');
+});
+
+// Handle login attempts
+app.post('/login', async (req, res) => {
+  const participantId = req.body.participantId;
+  
+  // Validate the participant ID (basic format check)
+  if (!participantId || !participantId.startsWith('OXD-') || participantId.length !== 10) {
+    return res.render('login', { error: 'Invalid participant ID format. Please check and try again.' });
+  }
+  
+  // Try to load the participant data
+  const participantData = await loadParticipantData(participantId);
+  
+  if (!participantData) {
+    return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
+  }
+  
+  // Store the participant data in the session
+  req.session.debateData = participantData;
+  
+  // Redirect to the dashboard
+  res.redirect('/dashboard');
+});
+
+// Dashboard route to show progress
+app.get('/dashboard', requireSession, (req, res) => {
+  const user = {
+    participantId: req.session.debateData.participantId,
+    demographics: req.session.debateData.demographics || {}
+  };
+  
+  // Get completed debates information
+  const completedDebates = req.session.debateData.completedDebates || [];
+  
+  // Render the dashboard
+  res.render('dashboard', {
+    user,
+    completedDebates,
+    debateTopics
+  });
+});
+
+// Exit route - when user wants to continue later
+app.get('/exit', requireSession, (req, res) => {
+  const participantId = req.session.debateData.participantId;
+  const completedDebates = req.session.debateData.completedDebates || [];
+  
+  // Render the exit page
+  res.render('exit', {
+    participantId,
+    completedDebates
+  });
+});
+
+// Email participant ID route
+app.post('/email-id', requireSession, async (req, res) => {
+  const email = req.body.email;
+  const participantId = req.session.debateData.participantId;
+  
+  // Email sending logic would go here
+  // For now, just log it and return success
+  console.log(`Would send participant ID ${participantId} to email: ${email}`);
+  
+  // If you have an email service set up, you would use it here
+  // For example, with nodemailer:
+  /*
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+  
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Your Oxford-Style Debate Research Participant ID',
+    text: `Thank you for participating in our research study. Your participant ID is: ${participantId}\n\nPlease keep this ID safe so you can continue your participation later.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2>Oxford-Style Debate Research</h2>
+        <p>Thank you for participating in our research study.</p>
+        <p>Your participant ID is: <strong>${participantId}</strong></p>
+        <p>Please keep this ID safe so you can continue your participation later.</p>
+        <p>To resume your participation:</p>
+        <ol>
+          <li>Return to the study link</li>
+          <li>Click "Returning Participant"</li>
+          <li>Enter your Participant ID</li>
+        </ol>
+        <p>If you have any questions, please contact the researcher.</p>
+      </div>
+    `
+  };
+  
+  await transporter.sendMail(mailOptions);
+  */
+  
+  res.json({ success: true });
+});
+
+// Modify the consent POST route to generate and assign a participant ID
+app.post('/consent', (req, res) => {
+  const consentResponse = req.body.consent;
+
+  // Generate a unique participant ID
+  const participantId = generateParticipantId();
+
+  // Initialize session
+  req.session.debateData = {
+    id: 'debate-' + Date.now(),
+    participantId: participantId,
+    startTimestamp: new Date().toISOString(),
+    demographics: {},
+    consent: consentResponse,
+    completedDebates: [] // Initialize empty array for completed debates
+  };
+
+  // If user does not consent, show a thank you page and exit
+  if (consentResponse === 'no') {
+    return res.render('error', {
+      header: 'Consent Not Given',
+      message: 'Thank you for considering our study. As you did not consent to participate, the session will now end.'
+    });
+  }
+
+  // Otherwise, continue to demographics
+  res.redirect('/demographics');
+});
+
+// Modify the debate-results POST handler to update completedDebates
+app.post('/debate-results', requireSession, async (req, res) => {
+  const debate = req.session.debateData.debate;
+  
+  // Parse slider values as numbers
+  const winnerSideValue = parseInt(req.body.winnerSide);
+  const humanPerformanceValue = parseInt(req.body.humanPerformance);
+  const aiPerformanceValue = parseInt(req.body.aiPerformance);
+  const aiFactualAccuracyValue = parseInt(req.body.aiFactualAccuracy);
+  
+  // Interpret winner based on slider value
+  let winnerSideInterpretation = "draw";
+  if (winnerSideValue < 45) {
+    winnerSideInterpretation = "human";
+  } else if (winnerSideValue > 55) {
+    winnerSideInterpretation = "ai";
+  }
+  
+  // Save ratings and comments with continuous values
+  debate.ratings = {
+    // Continuous values (0-100)
+    winnerSideValue: winnerSideValue,
+    winnerSide: winnerSideInterpretation, // Interpreted categorical value for backward compatibility
+    humanPerformance: humanPerformanceValue,
+    aiPerformance: aiPerformanceValue,
+    aiFactualAccuracy: aiFactualAccuracyValue,
+    
+    // Other feedback
+    comments: req.body.comments,
+    participateAgain: req.body.participateAgain === 'yes',
+    
+    // Timestamp for the ratings
+    ratedAt: new Date().toISOString()
+  };
+  
+  // Mark debate as complete
+  debate.status = 'rated';
+  debate.endTime = new Date().toISOString();
+  
+  // Add some analysis for easier data processing later
+  debate.analysis = {
+    performanceGap: humanPerformanceValue - aiPerformanceValue, // Positive means human performed better
+    winnerMargin: Math.abs(50 - winnerSideValue), // How decisive was the win
+    isHumanWin: winnerSideValue < 45,
+    isAIWin: winnerSideValue > 55,
+    isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
+  };
+  
+  // Initialize completedDebates array if it doesn't exist
+  if (!req.session.debateData.completedDebates) {
+    req.session.debateData.completedDebates = [];
+  }
+  
+  // Add current debate to completed list with metadata
+  req.session.debateData.completedDebates.push({
+    id: req.session.debateData.id,
+    topic: debate.topic.id,
+    side: debate.side,
+    winnerSideValue: winnerSideValue,
+    completedAt: new Date().toISOString()
+  });
+  
+  // Save participant data (includes all completed debates)
+  try {
+    await saveParticipantData(req.session.debateData);
+    console.log("Participant data saved successfully");
+  } catch (error) {
+    console.error("Error saving participant data:", error);
+  }
+  
+  // Also save debate data separately (for debate-specific analysis)
+  try {
+    await saveDebateData(req.session.debateData);
+    console.log("Debate data saved successfully");
+  } catch (error) {
+    console.error("Error saving final debate data:", error);
+  }
+  
+  // Check nextAction to determine where to redirect
+  const nextAction = req.body.nextAction;
+  
+  if (nextAction === 'continue') {
+    // Check if user has completed all 5 debates
+    if (req.session.debateData.completedDebates.length >= 5) {
+      // All debates complete - redirect to final completion
+      return res.redirect('/completion');
+    }
+    
+    // Prepare for next debate but keep completed debates history
+    // Create a new debate ID while preserving the session
+    req.session.debateData.id = 'debate-' + Date.now();
+    req.session.debateData.startTimestamp = new Date().toISOString();
+    
+    // Remove current debate data to prepare for next one
+    delete req.session.debateData.debate;
+    
+    // Redirect to dashboard
+    return res.redirect('/dashboard');
+  } else {
+    // User wants to exit - go to exit page
+    return res.redirect('/exit');
+  }
+});
+
+// Update completion route to show certificate only after all debates
+app.get('/completion', requireSession, (req, res) => {
+  // Check if the user has completed 5 debates
+  const completedDebates = req.session.debateData.completedDebates || [];
+  
+  if (completedDebates.length < 5) {
+    // Not finished yet - redirect to dashboard
+    return res.redirect('/dashboard');
+  }
+  
+  // Generate a completion code for the participant
+  const completionCode = generateCompletionCode();
+  
+  // Final completion page
+  res.render('completion', {
+    debate: req.session.debateData.debate,
+    completionCode: completionCode,
+    completedDebates: completedDebates
+  });
+  
+  // Don't destroy the session yet in case they need to view their certificate again
+});
+
+// Add a final logout route that clears the session
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
 // ===========================
 // HELPER FUNCTIONS
 // ===========================

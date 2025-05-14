@@ -1,0 +1,132 @@
+<!-- views/login.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate Research - Login</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 600px;">
+    <div class="study-card">
+      <h1>Welcome to the Oxford-Style Debate Research</h1>
+      
+      <div class="login-container">
+        <div class="login-options">
+          <div class="login-option">
+            <h3>New Participant?</h3>
+            <p>If this is your first time participating, click the button below to start.</p>
+            <div class="button-container" style="justify-content: flex-start;">
+              <a href="/consent" class="button">Start as New Participant</a>
+            </div>
+          </div>
+          
+          <div class="login-divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">OR</div>
+            <div class="divider-line"></div>
+          </div>
+          
+          <div class="login-option">
+            <h3>Returning Participant?</h3>
+            <p>If you've already started the study and have a participant ID, enter it below to continue where you left off.</p>
+            
+            <% if (locals.error) { %>
+              <div class="error-message">
+                <%= error %>
+              </div>
+            <% } %>
+            
+            <form action="/login" method="POST">
+              <div class="form-group">
+                <label for="participantId">Your Participant ID:</label>
+                <input type="text" id="participantId" name="participantId" required placeholder="Enter your participant ID (e.g., OXD-123456)">
+              </div>
+              <div class="button-container" style="justify-content: flex-start;">
+                <button type="submit" class="button">Continue My Debates</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <div class="login-info">
+          <h3>About This Study</h3>
+          <p>This research examines how AI language models perform in structured Oxford-style debates compared to human debaters. You'll complete 5 short debates, each lasting around 10-15 minutes.</p>
+          <p>You can complete all debates in one session or spread them out over multiple sessions using your participant ID to return later.</p>
+          <div class="login-help">
+            <p><strong>Lost your participant ID?</strong> If you've lost your ID, please contact the researcher at <a href="mailto:umberto.belluzzo@oii.ox.ac.uk">umberto.belluzzo@oii.ox.ac.uk</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    .login-container {
+      margin-top: 20px;
+    }
+    
+    .login-options {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .login-option {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .login-option h3 {
+      margin-top: 0;
+      color: #4285f4;
+    }
+    
+    .login-divider {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    
+    .divider-line {
+      flex-grow: 1;
+      height: 1px;
+      background-color: #dee2e6;
+    }
+    
+    .divider-text {
+      padding: 0 15px;
+      color: #6c757d;
+      font-weight: bold;
+    }
+    
+    .login-info {
+      margin-top: 30px;
+      background-color: #e6f2ff;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .login-info h3 {
+      margin-top: 0;
+      color: #4285f4;
+    }
+    
+    .login-help {
+      margin-top: 15px;
+      border-top: 1px solid #c5dcff;
+      padding-top: 15px;
+      font-size: 0.9em;
+    }
+    
+    .login-help p {
+      margin: 0;
+    }
+  </style>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>

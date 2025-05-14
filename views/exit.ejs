@@ -1,0 +1,329 @@
+<!-- views/exit.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate Research - Continue Later</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 600px;">
+    <div class="study-card">
+      <div class="exit-header">
+        <h1>Your Progress Saved</h1>
+        <div class="checkmark-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M22 4 12 14.01l-3-3" stroke="#28a745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="exit-content">
+        <div class="progress-summary">
+          <h3>Your Progress Summary</h3>
+          <div class="progress-stats">
+            <div class="stat-item">
+              <div class="stat-value"><%= completedDebates.length %></div>
+              <div class="stat-label">Debates Completed</div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-percentage">
+                <%= Math.round((completedDebates.length / 5) * 100) %>%
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: <%= (completedDebates.length / 5) * 100 %>%;"></div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value"><%= 5 - completedDebates.length %></div>
+              <div class="stat-label">Debates Remaining</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="participant-id-section">
+          <h3>Your Participant ID</h3>
+          <p>Please save this ID to continue your participation later:</p>
+          
+          <div class="id-container">
+            <div class="id-display">
+              <span id="participantId"><%= participantId %></span>
+              <button id="copyButton" class="copy-button" onclick="copyToClipboard()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Copy
+              </button>
+            </div>
+          </div>
+          
+          <div class="id-instructions">
+            <p>When you want to resume your participation:</p>
+            <ol>
+              <li>Return to the study link</li>
+              <li>Click "Returning Participant"</li>
+              <li>Enter your Participant ID</li>
+            </ol>
+          </div>
+        </div>
+        
+        <div class="email-option">
+          <h3>Email Your ID (Optional)</h3>
+          <p>You can also have your Participant ID sent to your email:</p>
+          
+          <form action="/email-id" method="POST" id="emailForm">
+            <div class="form-group email-form">
+              <input type="email" id="email" name="email" placeholder="Your email address" required>
+              <button type="submit" class="button">Send ID</button>
+            </div>
+            <div class="email-privacy">
+              <small>Your email will only be used to send your participant ID and will not be stored or used for any other purpose.</small>
+            </div>
+          </form>
+        </div>
+        
+        <div class="return-options">
+          <h3>What would you like to do now?</h3>
+          <div class="button-container">
+            <a href="/dashboard" class="button button-secondary">Return to Dashboard</a>
+            <a href="/" class="button">Exit Study</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    .exit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .checkmark-icon {
+      background-color: #e7f5eb;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .exit-content {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    
+    .progress-summary {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .progress-summary h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #4285f4;
+    }
+    
+    .progress-stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .stat-item {
+      text-align: center;
+      width: 90px;
+    }
+    
+    .stat-value {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #4285f4;
+    }
+    
+    .stat-label {
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+    
+    .progress-bar-container {
+      flex-grow: 1;
+      max-width: 300px;
+      margin: 0 15px;
+    }
+    
+    .progress-percentage {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #4285f4;
+    }
+    
+    .progress-bar {
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: #4285f4;
+      border-radius: 5px;
+    }
+    
+    .participant-id-section {
+      background-color: #fff3cd;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .participant-id-section h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    
+    .id-container {
+      margin: 15px 0;
+    }
+    
+    .id-display {
+      display: flex;
+      align-items: center;
+      background-color: #fff;
+      border: 2px solid #ffc107;
+      border-radius: 4px;
+      padding: 10px 15px;
+      font-size: 1.2em;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    
+    #participantId {
+      flex-grow: 1;
+    }
+    
+    .copy-button {
+      background-color: #ffc107;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 0.8em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .copy-button:hover {
+      background-color: #e0a800;
+    }
+    
+    .id-instructions {
+      font-size: 0.9em;
+    }
+    
+    .id-instructions ol {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    
+    .email-option {
+      background-color: #e6f2ff;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .email-option h3 {
+      margin-top: 0;
+      color: #4285f4;
+    }
+    
+    .email-form {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .email-form input {
+      flex-grow: 1;
+    }
+    
+    .email-privacy {
+      margin-top: 10px;
+      font-size: 0.8em;
+      color: #6c757d;
+    }
+    
+    .return-options {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .return-options h3 {
+      margin-top: 0;
+      color: #4285f4;
+    }
+  </style>
+  
+  <script>
+    function copyToClipboard() {
+      const participantId = document.getElementById('participantId').textContent;
+      navigator.clipboard.writeText(participantId).then(() => {
+        const copyButton = document.getElementById('copyButton');
+        copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copied!';
+        
+        setTimeout(() => {
+          copyButton.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copy';
+        }, 2000);
+      });
+    }
+    
+    // Form submission handler
+    document.getElementById('emailForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const participantId = document.getElementById('participantId').textContent;
+      
+      // Send the email (this would be handled by your backend)
+      fetch('/email-id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, participantId }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const emailForm = document.querySelector('.email-form');
+          emailForm.innerHTML = '<div class="email-sent-message">ID sent successfully! Please check your inbox.</div>';
+        } else {
+          alert('There was an error sending the email. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error sending the email. Please try again.');
+      });
+    });
+  </script>
+  <script src="/button-disable.js"></script>
+</body>
+
+</html>
