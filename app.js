@@ -97,7 +97,7 @@ const debateModels = [
     id: "llama3-1-405b",
     name: "Llama 3.1 405B Instruct",
     provider: "Meta",
-    model: "meta/llama-3-1-405b-instruct",
+    model: "meta-llama/llama-3.1-405b-instruct",
     maxTokens: 4000,
     temperature: 0.7
   }
@@ -135,6 +135,18 @@ const debateFormats = [
 
 // Home page
 app.get('/', (req, res) => {
+  // If user already has a session, redirect to dashboard
+  if (req.session && req.session.debateData) {
+    return res.redirect('/dashboard');
+  }
+  
+  // Otherwise show the login page
+  res.render('login');
+});
+
+// If you still want to keep the index page accessible, 
+// add a new route for it:
+app.get('/index', (req, res) => {
   res.render('index', {
     debateTopics: debateTopics,
     debateModels: debateModels,
@@ -407,17 +419,6 @@ if (isProposition) {
   }
 }
 
-// Then pass turnTitle to the template:
-res.render('debate-human-turn', {
-  debate: debate,
-  turnType: turnType,
-  turnTitle: turnTitle, // Add this
-  turnIndex: currentTurnIndex,
-  humanSide: humanSide,
-  aiSide: aiSide,
-  previousTurns: debate.turns
-});
-
   // Check if it's the human's turn
   const isHumanTurn = (
     (isProposition && currentTurnIndex % 2 === 0) || // Proposition speaks on even turns
@@ -429,6 +430,7 @@ res.render('debate-human-turn', {
     res.render('debate-human-turn', {
       debate: debate,
       turnType: turnType,
+      turnTitle: turnTitle, // Add this
       turnIndex: currentTurnIndex,
       humanSide: humanSide,
       aiSide: aiSide,
