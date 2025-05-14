@@ -94,23 +94,19 @@
             </div>
 
             <div class="notes-preview">
-              <h4>Your Preparation Notes</h4>
-              <div class="notes-container">
-                <% if (debate.prepNotes) { %>
-                  <div class="note-section">
-                    <h5>Main Arguments:</h5>
-                    <p><%= debate.prepNotes %></p>
-                  </div>
-                <% } %>
-                
-                <% if (debate.researchPoints) { %>
-                  <div class="note-section">
-                    <h5>Counterarguments & Responses:</h5>
-                    <p><%= debate.researchPoints %></p>
-                  </div>
-                <% } %>
+                <h4>Your Preparation Notes</h4>
+                <div class="notes-container">
+                  <% if (debate.prepNotes) { %>
+                    <div class="note-section">
+                      <p><%= debate.prepNotes %></p>
+                    </div>
+                  <% } else { %>
+                    <div class="note-section">
+                      <p><em>No preparation notes available.</em></p>
+                    </div>
+                  <% } %>
+                </div>
               </div>
-            </div>
 
             <div class="button-container">
               <button type="submit" id="submitButton" class="button" disabled>Submit <%= turnType.charAt(0).toUpperCase() + turnType.slice(1) %> Statement</button>

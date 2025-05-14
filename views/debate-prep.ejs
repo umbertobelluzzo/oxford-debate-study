@@ -73,49 +73,18 @@
       <div class="prep-container">
         <form action="/debate-prep" method="POST">
           <h3>Preparation Notes</h3>
-          <p class="form-hint">Use this space to organize your thoughts and arguments. These notes will only be visible to you during the debate.</p>
+          <p class="form-hint">Use this space to organize your thoughts and arguments. These notes will be visible to you during the debate.</p>
           
           <div class="form-group">
-            <label for="prepNotes">Your Main Arguments:</label>
-            <textarea id="prepNotes" name="prepNotes" rows="5" placeholder="Outline your key points here..."></textarea>
-          </div>
-          
-          <div class="form-group">
-            <label for="researchPoints">Potential Counterarguments & Responses:</label>
-            <textarea id="researchPoints" name="researchPoints" rows="5" placeholder="Anticipate what your opponent might say and how you'll respond..."></textarea>
-          </div>
-
-          <div class="debate-tips">
-            <h3>Tips for Effective Oxford-Style Debating</h3>
-            <div class="tips-content">
-              <div class="tip-item">
-                <h4>Structure</h4>
-                <p>Begin with a clear thesis, present 2-3 main arguments, and end with a strong conclusion.</p>
-              </div>
-              <div class="tip-item">
-                <h4>Evidence</h4>
-                <p>Support your claims with specific examples, statistics, or expert opinions when possible.</p>
-              </div>
-              <div class="tip-item">
-                <h4>Rebuttal</h4>
-                <p>Address your opponent's strongest points directly rather than ignoring them.</p>
-              </div>
-              <div class="tip-item">
-                <h4>Rhetoric</h4>
-                <p>Use rhetorical techniques like repetition, contrast, and rhetorical questions for emphasis.</p>
-              </div>
-              <div class="tip-item">
-                <h4>Word Count</h4>
-                <p>Be concise and focused—each turn must be between 100-150 words.</p>
-              </div>
-            </div>
+            <label for="prepNotes">Your Notes:</label>
+            <textarea id="prepNotes" name="prepNotes" rows="8" placeholder="Outline your key points, potential counterarguments, and responses here..."></textarea>
           </div>
 
           <div class="info-box study-info">
             <h3>About This Study</h3>
             <p>This research examines how well large language models (LLMs) perform in structured Oxford-style debates when judged against experienced human debaters. Your participation will help establish a high-quality human benchmark for evaluating AI-generated argumentation.</p>
             
-            <p>You'll participate in approximately 5-10 debates against one or more LLMs. Each debate contains three short turns per side, with a 100-150 word limit per turn. A single debate typically lasts 5-10 minutes.</p>
+            <p>You'll participate in approximately 5 debates against one LLM. Each debate contains three short turns per side, with a 100-150 word limit per turn. A single debate typically lasts 10-15 minutes.</p>
             
             <p>Your texts will be saved automatically in an encrypted database and later shown—without any identifying details—to independent raters in Phase 2 of the study.</p>
             
@@ -233,31 +202,6 @@
       color: #666;
       font-style: italic;
       margin-bottom: 15px;
-    }
-
-    .debate-tips {
-      margin: 25px 0;
-      background-color: #e8f4f8;
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #4285f4;
-    }
-
-    .tips-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .tip-item h4 {
-      margin: 0 0 5px 0;
-      color: #2c3e50;
-    }
-
-    .tip-item p {
-      margin: 0;
-      font-size: 0.9em;
     }
 
     .study-info {

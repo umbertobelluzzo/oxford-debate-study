@@ -273,9 +273,8 @@ app.get('/debate-prep', requireSession, (req, res) => {
 app.post('/debate-prep', requireSession, (req, res) => {
   const debate = req.session.debateData.debate;
   
-  // Save preparation notes
+  // Save preparation notes - just one field now
   debate.prepNotes = req.body.prepNotes;
-  debate.researchPoints = req.body.researchPoints;
   debate.prepComplete = true;
   
   // Initialize debate based on who goes first (proposition always goes first in Oxford style)
