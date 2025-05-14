@@ -73,8 +73,27 @@
           </select>
         </div>
 
+        <!-- New field for debate training/competitions -->
         <div class="form-group">
-          <label for="oxfordDebate">How familiar are you with the <b>Oxford-style debate format</b> specifically?</label>
+          <label for="debateTraining"><b>Have you ever taken part in formal debate training or competitions?</b></label>
+          <div class="radio-options">
+            <div class="radio-option">
+              <input type="radio" id="debateTrainingYes" name="debateTraining" value="Yes" required>
+              <label for="debateTrainingYes">Yes</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="debateTrainingNo" name="debateTraining" value="No">
+              <label for="debateTrainingNo">No</label>
+            </div>
+          </div>
+          <div id="debateTrainingSpecifyContainer" style="margin-top: 10px; display: none;">
+            <label for="debateTrainingSpecify">Please specify:</label>
+            <textarea id="debateTrainingSpecify" name="debateTrainingSpecify" rows="2" placeholder="Please provide details about your debate training or competition experience..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="oxfordDebate">How familiar are you with the <b>Oxford-style debate format</b> specifically? (3-turn Oxford style = Opening→Rebuttal→Closing)</label>
           <select id="oxfordDebate" name="oxfordDebate" required>
             <option value="">Please select</option>
             <option value="Not at all familiar">Not at all familiar</option>
@@ -82,6 +101,21 @@
             <option value="Moderately familiar">Moderately familiar</option>
             <option value="Very familiar">Very familiar</option>
             <option value="Expert in this format">Expert in this format</option>
+            <option value="Prefer not to say">Prefer not to say</option>
+          </select>
+        </div>
+
+        <!-- Reordered AI questions - frequency first, then knowledge level -->
+        <div class="form-group">
+          <label for="aiUsage">How often do you <b>use AI tools</b> like ChatGPT, Claude, or other large language models?</label>
+          <select id="aiUsage" name="aiUsage" required>
+            <option value="">Please select</option>
+            <option value="Never used">Never used</option>
+            <option value="Rarely (few times a year)">Rarely (few times a year)</option>
+            <option value="Occasionally (monthly)">Occasionally (monthly)</option>
+            <option value="Regularly (weekly)">Regularly (weekly)</option>
+            <option value="Frequently (daily)">Frequently (daily)</option>
+            <option value="Very frequently (multiple times daily)">Very frequently (multiple times daily)</option>
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
@@ -99,20 +133,6 @@
             <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
-
-        <div class="form-group">
-          <label for="aiUsage">How often do you <b>use AI tools</b> like ChatGPT, Claude, or other large language models?</label>
-          <select id="aiUsage" name="aiUsage" required>
-            <option value="">Please select</option>
-            <option value="Never used">Never used</option>
-            <option value="Rarely (few times a year)">Rarely (few times a year)</option>
-            <option value="Occasionally (monthly)">Occasionally (monthly)</option>
-            <option value="Regularly (weekly)">Regularly (weekly)</option>
-            <option value="Frequently (daily)">Frequently (daily)</option>
-            <option value="Very frequently (multiple times daily)">Very frequently (multiple times daily)</option>
-            <option value="Prefer not to say">Prefer not to say</option>
-          </select>
-        </div>
         <br>
 
         <div class="button-container">
@@ -121,6 +141,47 @@
       </form>
     </div>
   </div>
+
+  <style>
+    .radio-options {
+      display: flex;
+      gap: 20px;
+      margin-top: 8px;
+    }
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+
+  <script>
+    // Show/hide specify field based on radio selection
+    document.addEventListener('DOMContentLoaded', function() {
+      const yesRadio = document.getElementById('debateTrainingYes');
+      const noRadio = document.getElementById('debateTrainingNo');
+      const specifyContainer = document.getElementById('debateTrainingSpecifyContainer');
+      const specifyField = document.getElementById('debateTrainingSpecify');
+      
+      function updateSpecifyVisibility() {
+        if (yesRadio.checked) {
+          specifyContainer.style.display = 'block';
+          specifyField.setAttribute('required', 'required');
+        } else {
+          specifyContainer.style.display = 'none';
+          specifyField.removeAttribute('required');
+          specifyField.value = '';
+        }
+      }
+      
+      yesRadio.addEventListener('change', updateSpecifyVisibility);
+      noRadio.addEventListener('change', updateSpecifyVisibility);
+      
+      // Initial state check
+      updateSpecifyVisibility();
+    });
+  </script>
   <script src="/button-disable.js"></script>
 </body>
 

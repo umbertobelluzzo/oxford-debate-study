@@ -214,9 +214,13 @@ app.post('/demographics', requireSession, (req, res) => {
     age: req.body.age,
     gender: req.body.gender,
     education: req.body.education,
+    english: req.body.english,
     debateExperience: req.body.debateExperience,
-    aiKnowledge: req.body.aiKnowledge,
-    politicalOrientation: req.body.politicalOrientation
+    debateTraining: req.body.debateTraining,
+    debateTrainingSpecify: req.body.debateTrainingSpecify,
+    oxfordDebate: req.body.oxfordDebate,
+    aiUsage: req.body.aiUsage,
+    aiKnowledge: req.body.aiKnowledge
   };
 
   // Continue to setup
