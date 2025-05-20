@@ -271,35 +271,29 @@ async function getPositionCounts() {
 }
 
 app.post('/setup', requireSession, async (req, res) => {
-  let topicId = req.body.topicId;
+  // Always randomly assign a topic
   
-  // If topicId is not explicitly provided (e.g., if we're auto-assigning)
-  // or if they've already debated this topic, select a random topic
-  if (!topicId || (req.session.debateData.completedDebates && 
-      req.session.debateData.completedDebates.some(d => d.topic === topicId))) {
-    
-    // Get list of completed topic IDs
-    const completedTopics = req.session.debateData.completedDebates 
-      ? req.session.debateData.completedDebates.map(d => d.topic) 
-      : [];
-    
-    // Filter out topics they've already done
-    const availableTopics = debateTopics.filter(topic => 
-      !completedTopics.includes(topic.id));
-    
-    // If all topics have been used (unlikely with 10 topics and 5 debates), 
-    // allow repeats but prefer least recently used
-    let topicsToChooseFrom = availableTopics.length > 0 ? availableTopics : debateTopics;
-    
-    // Randomly select a topic from available ones
-    const randomIndex = Math.floor(Math.random() * topicsToChooseFrom.length);
-    topicId = topicsToChooseFrom[randomIndex].id;
-  }
+  // Get list of completed topic IDs
+  const completedTopics = req.session.debateData.completedDebates 
+    ? req.session.debateData.completedDebates.map(d => d.topic) 
+    : [];
+  
+  // Filter out topics they've already done
+  const availableTopics = debateTopics.filter(topic => 
+    !completedTopics.includes(topic.id));
+  
+  // If all topics have been used (unlikely with 10 topics and 5 debates), 
+  // allow repeats but prefer least recently used
+  let topicsToChooseFrom = availableTopics.length > 0 ? availableTopics : debateTopics;
+  
+  // Randomly select a topic from available ones
+  const randomIndex = Math.floor(Math.random() * topicsToChooseFrom.length);
+  const topicId = topicsToChooseFrom[randomIndex].id;
   
   const selectedTopic = debateTopics.find(topic => topic.id === topicId);
   
   if (!selectedTopic) {
-    return res.render('error', { message: 'Invalid debate topic selected.' });
+    return res.render('error', { message: 'Error selecting debate topic. Please try again.' });
   }
   
   // If the participant already has a side assigned, use that

@@ -13,23 +13,20 @@
     <div class="study-card">
       <h1>Debate Setup</h1>
       <br>
-      <p>Please select a debate topic. Your position (Proposition or Opposition) will be assigned automatically to ensure balanced participation across the study.</p>
+      <p>Your debate topic and position (Proposition or Opposition) will be assigned automatically to ensure balanced participation across the study.</p>
       <br>
       <form action="/setup" method="POST">
-        <!-- Debate Topic Selection -->
-        <div class="form-group">
-          <label for="topicId"><b>Select a Debate Topic</b></label>
-          <div class="topics-container">
-            <% debateTopics.forEach(topic => { %>
-              <div class="topic-option">
-                <input type="radio" id="topic-<%= topic.id %>" name="topicId" value="<%= topic.id %>" required>
-                <label for="topic-<%= topic.id %>">
-                  <div class="topic-title"><%= topic.title %></div>
-                  <div class="topic-description"><%= topic.description %></div>
-                </label>
-              </div>
+        <!-- Replace topic selection with info about random assignment -->
+        <div class="info-box">
+          <h3>Random Debate Assignment</h3>
+          <p>For research integrity, debate topics are randomly assigned to participants. You will receive one of the following topics:</p>
+          <ul class="topics-preview">
+            <% debateTopics.slice(0, 3).forEach(topic => { %>
+              <li><strong><%= topic.title %></strong></li>
             <% }); %>
-          </div>
+            <li><em>... and others</em></li>
+          </ul>
+          <p>The system ensures you won't debate the same topic twice across your five required debates.</p>
         </div>
 
         <!-- Information about AI Opponent -->
@@ -77,40 +74,13 @@
 
   <style>
     /* Additional styles for the setup page */
-    .topics-container {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+    .topics-preview {
       margin-top: 10px;
+      margin-bottom: 10px;
     }
 
-    .topic-option {
-      display: flex;
-      align-items: flex-start;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-
-    .topic-option:hover {
-      background-color: #f9f9f9;
-      border-color: #ccc;
-    }
-
-    .topic-option input {
-      margin-top: 3px;
-      margin-right: 15px;
-    }
-
-    .topic-title {
-      font-weight: bold;
+    .topics-preview li {
       margin-bottom: 5px;
-    }
-
-    .topic-description {
-      font-size: 0.9em;
-      color: #555;
     }
 
     .info-box {
@@ -119,6 +89,11 @@
       padding: 15px;
       margin: 20px 0;
       border-radius: 4px;
+    }
+
+    .info-box h3 {
+      margin-top: 0;
+      color: #4285f4;
     }
 
     .info-box ul {
