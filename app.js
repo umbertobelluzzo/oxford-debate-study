@@ -1151,19 +1151,23 @@ let generatedParticipantIds = [];
 
 // Admin access middleware with environment variable
 function requireAdmin(req, res, next) {
-  const adminToken = req.query.token;
-  const validToken = process.env.ADMIN_TOKEN || 'research-admin-access'; // Use env variable in production
+  // Check for token in query params (GET requests) or in request body (POST requests)
+  const adminToken = req.query.token || req.body.token;
+  const validToken = process.env.ADMIN_TOKEN || 'research-admin-access';
+  
+  console.log("Admin access attempt with token:", adminToken);
   
   if (adminToken === validToken) {
+    console.log("Token matched, granting access");
     next();
   } else {
+    console.log("Token mismatch, denying access");
     res.status(403).render('error', { 
       header: 'Access Denied', 
       message: 'You do not have permission to access this page.'
     });
   }
 }
-
 // Admin dashboard route
 app.get('/admin', requireAdmin, async (req, res) => {
   // Load generated IDs from S3 first to ensure we have the latest data
