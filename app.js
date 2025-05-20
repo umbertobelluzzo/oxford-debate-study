@@ -60,34 +60,54 @@ app.use(session(sessionConfig));
 // Define debate topics
 const debateTopics = [
   {
-    id: "ai-regulation",
-    title: "AI Development Should Be Heavily Regulated by Governments",
-    description: "This debate examines whether AI development should be subject to extensive government oversight and regulation to ensure safety and ethical use.",
-    resources: ["https://example.com/ai-regulation-info"]
+    id: "facial-recognition",
+    title: "This House Would Ban Facial Recognition Technology in All Public Spaces",
+    description: "This debate examines whether facial recognition technology should be prohibited from use in public areas due to privacy, surveillance, and civil liberties concerns.",
   },
   {
-    id: "universal-basic-income",
-    title: "Universal Basic Income Should Be Implemented Globally",
-    description: "This debate considers whether governments worldwide should provide all citizens with a regular stipend regardless of their income or employment status.",
-    resources: ["https://example.com/ubi-info"]
+    id: "single-use-plastics",
+    title: "This House Would Ban Single‑Use Plastics Entirely",
+    description: "This debate considers whether a complete ban on all single-use plastic products is necessary to address environmental pollution and sustainability challenges.",
   },
   {
-    id: "social-media-harm",
-    title: "Social Media Does More Harm Than Good to Society",
-    description: "This debate explores whether social media platforms have a net negative impact on individuals and communities despite their benefits.",
-    resources: ["https://example.com/social-media-research"]
+    id: "remote-work",
+    title: "This House Regrets the Rise of Remote Work",
+    description: "This debate explores whether the widespread transition to remote work models has ultimately been detrimental to workplace culture, productivity, and social connections.",
   },
   {
-    id: "climate-action-economy",
-    title: "Aggressive Climate Action Will Harm Economic Growth",
-    description: "This debate discusses whether ambitious policies to combat climate change will negatively impact economic development and prosperity.",
-    resources: ["https://example.com/climate-economy"]
+    id: "dating-apps",
+    title: "This House Regrets the Rise of Dating Apps",
+    description: "This debate examines whether dating applications have negatively impacted human relationships, romantic connections, and social interactions.",
   },
   {
-    id: "genetic-engineering",
-    title: "Human Genetic Engineering Should Be Permitted for Non-Medical Purposes",
-    description: "This debate examines the ethics of allowing genetic modification of humans for enhancement rather than just disease prevention.",
-    resources: ["https://example.com/genetic-ethics"]
+    id: "compulsory-voting",
+    title: "This House Would Make Voting Compulsory",
+    description: "This debate discusses whether mandatory voting should be implemented to increase civic participation and ensure more representative electoral outcomes.",
+  },
+  {
+    id: "ai-art",
+    title: "This House Regrets the Rise of AI-Generated Art",
+    description: "This debate considers whether AI-generated art represents a positive evolution in creative expression or undermines human creativity and artistic value.",
+  },
+  {
+    id: "nuclear-energy",
+    title: "This House Believes Nuclear Energy Is Essential to Achieve Net Zero",
+    description: "This debate examines whether nuclear power should play a central role in global strategies to reduce carbon emissions and combat climate change.",
+  },
+  {
+    id: "four-day-workweek",
+    title: "This House Would Mandate a Four‑Day Workweek",
+    description: "This debate discusses whether a legally mandated four-day workweek would improve work-life balance, productivity, and overall well-being.",
+  },
+  {
+    id: "reality-tv",
+    title: "This House Regrets the Proliferation of Reality Television",
+    description: "This debate explores whether the widespread popularity of reality TV programming has had a negative impact on media quality, cultural values, and social behavior.",
+  },
+  {
+    id: "political-advertising",
+    title: "This House Would Ban Targeted Political Advertising Online",
+    description: "This debate examines whether microtargeted political ads on digital platforms should be prohibited to protect electoral integrity and reduce polarization.",
   }
 ];
 
@@ -251,7 +271,31 @@ async function getPositionCounts() {
 }
 
 app.post('/setup', requireSession, async (req, res) => {
-  const topicId = req.body.topicId;
+  let topicId = req.body.topicId;
+  
+  // If topicId is not explicitly provided (e.g., if we're auto-assigning)
+  // or if they've already debated this topic, select a random topic
+  if (!topicId || (req.session.debateData.completedDebates && 
+      req.session.debateData.completedDebates.some(d => d.topic === topicId))) {
+    
+    // Get list of completed topic IDs
+    const completedTopics = req.session.debateData.completedDebates 
+      ? req.session.debateData.completedDebates.map(d => d.topic) 
+      : [];
+    
+    // Filter out topics they've already done
+    const availableTopics = debateTopics.filter(topic => 
+      !completedTopics.includes(topic.id));
+    
+    // If all topics have been used (unlikely with 10 topics and 5 debates), 
+    // allow repeats but prefer least recently used
+    let topicsToChooseFrom = availableTopics.length > 0 ? availableTopics : debateTopics;
+    
+    // Randomly select a topic from available ones
+    const randomIndex = Math.floor(Math.random() * topicsToChooseFrom.length);
+    topicId = topicsToChooseFrom[randomIndex].id;
+  }
+  
   const selectedTopic = debateTopics.find(topic => topic.id === topicId);
   
   if (!selectedTopic) {
@@ -1109,6 +1153,7 @@ app.get('/logout', (req, res) => {
 // ===========================
 
 // Generate LLM debate arguments
+// Generate LLM debate arguments
 async function generateDebateArgument(topic, side, turnType, modelConfig, previousTurns) {
   // Base system prompt that's consistent for all turn types
   let systemPrompt = `You are an expert debater participating in an Oxford-style debate.
@@ -1148,37 +1193,42 @@ As the ${side.toUpperCase()} side, you should:
 
 Keep your response between 100-150 words.`;
 
-    // Include only opening statements as context
+    // Include only relevant previous arguments
     if (previousTurns && previousTurns.length > 0) {
       userPrompt += `\n\nPrevious arguments in this debate:\n\n`;
       
-      // Filter to only include opening statements
-      const openingStatements = previousTurns.filter(turn => turn.type === 'opening');
+      // Include all arguments up to this point to provide better context
+      const relevantTurns = previousTurns.filter(turn => turn.type === 'opening' || turn.type === 'rebuttal');
       
-      openingStatements.forEach(turn => {
-        userPrompt += `${turn.side.toUpperCase()} OPENING: ${turn.content}\n\n`;
+      relevantTurns.forEach(turn => {
+        const turnSide = turn.side.toUpperCase();
+        const turnType = turn.type.toUpperCase();
+        userPrompt += `${turnSide} ${turnType}: ${turn.content}\n\n`;
       });
     }
   } 
   else if (turnType === 'closing') {
-    // Closing statement prompt - include all previous turns
+    // Enhanced closing statement prompt - include ALL previous turns for comprehensive context
     userPrompt = `Summarize and close your case for the motion: "${topic.title}"
 
 As the ${side.toUpperCase()} side, you should:
-- Recap your strongest arguments
-- Address the key points of contention
-- Emphasize why your position is more compelling
-- Leave a lasting impression
+- Recap your strongest arguments throughout the debate
+- Address ALL key points of contention raised by your opponent
+- Specifically respond to your opponent's most recent arguments
+- Emphasize why your position is more compelling overall
+- Provide a coherent, persuasive final summary of your case
 
 Keep your response between 100-150 words.`;
 
-    // Include all previous arguments as context
+    // Include ALL previous arguments to provide complete context for closing
     if (previousTurns && previousTurns.length > 0) {
-      userPrompt += `\n\nPrevious arguments in this debate:\n\n`;
+      userPrompt += `\n\nAll previous arguments in this debate (in chronological order):\n\n`;
       
       previousTurns.forEach(turn => {
-        const turnTypeUpper = turn.type.toUpperCase();
-        userPrompt += `${turn.side.toUpperCase()} ${turnTypeUpper}: ${turn.content}\n\n`;
+        const turnSide = turn.side.toUpperCase();
+        const turnType = turn.type.toUpperCase();
+        const participant = turn.isAI ? "AI" : "HUMAN";
+        userPrompt += `${turnSide} ${turnType} (${participant}): ${turn.content}\n\n`;
       });
     }
   }
@@ -1291,11 +1341,16 @@ function getModelVersion(modelId) {
 function getCategoryForTopic(topicId) {
   // Map topics to broader categories for later analysis
   const categoryMap = {
-    'ai-regulation': 'technology',
-    'universal-basic-income': 'economics',
-    'social-media-harm': 'social',
-    'climate-action-economy': 'environment',
-    'genetic-engineering': 'ethics'
+    'facial-recognition': 'technology',
+    'single-use-plastics': 'environment',
+    'remote-work': 'social',
+    'dating-apps': 'social',
+    'compulsory-voting': 'politics',
+    'ai-art': 'technology',
+    'nuclear-energy': 'environment',
+    'four-day-workweek': 'economics',
+    'reality-tv': 'media',
+    'political-advertising': 'politics'
   };
   return categoryMap[topicId] || 'general';
 }
