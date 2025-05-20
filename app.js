@@ -9,7 +9,7 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 const { OpenAI } = require('openai');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsCommand } = require('@aws-sdk/client-s3');
 
 require('dotenv').config();
 
@@ -1142,11 +1142,338 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
+
+// New admin and participant ID routes for app.js
+// Replace the localStorage/file-based functions with these S3-compatible versions
+
+// Store generated participant IDs in memory and S3
+let generatedParticipantIds = [];
+
+// Admin access middleware with environment variable
+function requireAdmin(req, res, next) {
+  const adminToken = req.query.token;
+  const validToken = process.env.ADMIN_TOKEN || 'research-admin-access'; // Use env variable in production
+  
+  if (adminToken === validToken) {
+    next();
+  } else {
+    res.status(403).render('error', { 
+      header: 'Access Denied', 
+      message: 'You do not have permission to access this page.'
+    });
+  }
+}
+
+// Admin dashboard route
+app.get('/admin', requireAdmin, async (req, res) => {
+  // Load generated IDs from S3 first to ensure we have the latest data
+  await loadGeneratedIdsFromS3();
+  
+  // Load participant data for the admin dashboard
+  const participants = await loadAllParticipants();
+  
+  res.render('admin', {
+    generatedIds: generatedParticipantIds,
+    participants: participants
+  });
+});
+
+// Generate participant IDs route
+app.post('/admin/generate-ids', requireAdmin, async (req, res) => {
+  const count = parseInt(req.body.count) || 10;
+  const newIds = [];
+  
+  for (let i = 0; i < count; i++) {
+    const newId = generateParticipantId();
+    newIds.push({
+      code: newId,
+      created: new Date().toISOString(),
+      used: false
+    });
+  }
+  
+  // Add to existing IDs
+  generatedParticipantIds = [...newIds, ...generatedParticipantIds];
+  
+  // Save IDs to S3 and local backup
+  await saveGeneratedIdsToS3();
+  
+  res.render('admin', {
+    generatedIds: generatedParticipantIds,
+    participants: await loadAllParticipants() // Reload participants
+  });
+});
+
+// Save generated IDs to S3
+async function saveGeneratedIdsToS3() {
+  try {
+    // Save to S3
+    const key = 'admin/generated_participant_ids.json';
+    const params = {
+      Bucket: bucketName,
+      Key: key,
+      Body: JSON.stringify(generatedParticipantIds, null, 2),
+      ContentType: 'application/json'
+    };
+    
+    await s3Client.send(new PutObjectCommand(params));
+    console.log(`Saved ${generatedParticipantIds.length} generated IDs to S3: ${key}`);
+    
+    // Also save locally as backup
+    saveGeneratedIdsToFile();
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving generated participant IDs to S3:", error);
+    // Fall back to local file storage
+    return saveGeneratedIdsToFile();
+  }
+}
+
+// Local file backup for generated IDs
+function saveGeneratedIdsToFile() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const dir = path.join(__dirname, 'data');
+    
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    const filePath = path.join(dir, 'generated_participant_ids.json');
+    fs.writeFileSync(filePath, JSON.stringify(generatedParticipantIds, null, 2));
+    
+    console.log(`Backup: Saved ${generatedParticipantIds.length} generated IDs to ${filePath}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving generated participant IDs to file:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Load generated IDs from S3
+async function loadGeneratedIdsFromS3() {
+  try {
+    // Try to load from S3
+    const key = 'admin/generated_participant_ids.json';
+    const params = {
+      Bucket: bucketName,
+      Key: key
+    };
+    
+    try {
+      const response = await s3Client.send(new GetObjectCommand(params));
+      const dataString = await streamToString(response.Body);
+      generatedParticipantIds = JSON.parse(dataString);
+      console.log(`Loaded ${generatedParticipantIds.length} generated participant IDs from S3`);
+      return true;
+    } catch (s3Error) {
+      console.error("S3 retrieval failed, trying local backup:", s3Error);
+      // Fall back to local file
+      return loadGeneratedIdsFromFile();
+    }
+  } catch (error) {
+    console.error("Error loading generated participant IDs:", error);
+    generatedParticipantIds = [];
+    return false;
+  }
+}
+
+// Load from local file as backup
+function loadGeneratedIdsFromFile() {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, 'data', 'generated_participant_ids.json');
+    
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf8');
+      generatedParticipantIds = JSON.parse(data);
+      console.log(`Loaded ${generatedParticipantIds.length} generated participant IDs from local backup`);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("Error loading generated participant IDs from file:", error);
+    generatedParticipantIds = [];
+    return false;
+  }
+}
+
+// Load all participants for admin dashboard
+async function loadAllParticipants() {
+  const participants = [];
+  
+  try {
+    // Try to list all participant files from S3
+    const params = {
+      Bucket: bucketName,
+      Prefix: 'participants/'
+    };
+    
+    try {
+      const result = await s3Client.send(new ListObjectsCommand(params));
+      
+      if (result.Contents && result.Contents.length > 0) {
+        // Group files by participant ID
+        const participantFiles = {};
+        
+        for (const object of result.Contents) {
+          const key = object.Key;
+          // Extract participant ID from key (format: participants/OXD-123456/...)
+          const match = key.match(/participants\/(OXD-[A-Z0-9]+)/);
+          
+          if (match && match[1]) {
+            const participantId = match[1];
+            if (!participantFiles[participantId]) {
+              participantFiles[participantId] = [];
+            }
+            participantFiles[participantId].push({
+              key,
+              lastModified: object.LastModified
+            });
+          }
+        }
+        
+        // Get latest file for each participant
+        for (const [participantId, files] of Object.entries(participantFiles)) {
+          // Sort by lastModified date (newest first)
+          files.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+          
+          // Get participant data from the most recent file
+          if (files.length > 0) {
+            const getParams = {
+              Bucket: bucketName,
+              Key: files[0].key
+            };
+            
+            try {
+              const response = await s3Client.send(new GetObjectCommand(getParams));
+              const dataString = await streamToString(response.Body);
+              const participantData = JSON.parse(dataString);
+              
+              // Add to participants list with summary information
+              participants.push({
+                id: participantId,
+                completedDebates: participantData.completedDebates || [],
+                lastActive: participantData.lastActive || files[0].lastModified,
+                status: getParticipantStatus(participantData)
+              });
+            } catch (error) {
+              console.error(`Error retrieving participant data for ${participantId}:`, error);
+            }
+          }
+        }
+      }
+    } catch (s3Error) {
+      console.error("S3 listing failed, trying local backup:", s3Error);
+      // You could add local file fallback here if needed
+    }
+    
+    return participants;
+  } catch (error) {
+    console.error("Error loading participants:", error);
+    return [];
+  }
+}
+
+// Determine participant status based on their data
+function getParticipantStatus(participantData) {
+  if (!participantData) return 'new';
+  
+  const completedDebates = participantData.completedDebates || [];
+  
+  if (completedDebates.length >= 5) {
+    return 'completed';
+  } else if (completedDebates.length > 0 || participantData.lastActive) {
+    return 'active';
+  } else {
+    return 'new';
+  }
+}
+
+// Load on application startup
+loadGeneratedIdsFromS3();
+
+// Modified login POST route to check against generated IDs
+app.post('/login', async (req, res) => {
+  const participantId = req.body.participantId;
+  
+  // Validate the participant ID format
+  if (!participantId || !participantId.startsWith('OXD-') || participantId.length !== 10) {
+    return res.render('login', { error: 'Invalid participant ID format. Please check and try again.' });
+  }
+  
+  // Ensure we have the latest generated IDs from S3
+  await loadGeneratedIdsFromS3();
+  
+  // Check if ID exists in our generated IDs list
+  const idEntry = generatedParticipantIds.find(id => id.code === participantId);
+  
+  if (!idEntry) {
+    return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
+  }
+  
+  // Try to load existing participant data
+  const participantData = await loadParticipantData(participantId);
+  
+  if (participantData) {
+    // Returning participant - use existing data
+    req.session.debateData = participantData;
+    
+    // Mark the ID as used if not already
+    if (!idEntry.used) {
+      idEntry.used = true;
+      await saveGeneratedIdsToS3();
+    }
+    
+    // Update last active timestamp
+    req.session.debateData.lastActive = new Date().toISOString();
+    
+    // Save the updated timestamp
+    try {
+      await saveParticipantData(req.session.debateData);
+    } catch (error) {
+      console.error("Error saving updated participant timestamp:", error);
+    }
+    
+    // Redirect to dashboard
+    res.redirect('/dashboard');
+  } else {
+    // First time using this ID - create new participant data
+    
+    // Mark the ID as used
+    idEntry.used = true;
+    await saveGeneratedIdsToS3();
+    
+    // Initialize session with new participant data
+    req.session.debateData = {
+      id: 'debate-' + Date.now(),
+      participantId: participantId,
+      startTimestamp: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      demographics: {},
+      completedDebates: [],
+      consent: 'yes' // Auto-consent for pre-assigned IDs, modify if needed
+    };
+    
+    // Save initial participant data
+    try {
+      await saveParticipantData(req.session.debateData);
+    } catch (error) {
+      console.error("Error saving new participant data:", error);
+    }
+    
+    // For new participants, redirect to demographics first
+    res.redirect('/demographics');
+  }
+});
+
 // ===========================
 // HELPER FUNCTIONS
 // ===========================
 
-// Generate LLM debate arguments
 // Generate LLM debate arguments
 async function generateDebateArgument(topic, side, turnType, modelConfig, previousTurns) {
   // Base system prompt that's consistent for all turn types
@@ -1444,6 +1771,8 @@ function getAgeRange(age) {
   else if (age < 65) return '55-64';
   else return '65+';
 }
+
+
 
 // Start server
 app.listen(port, () => {

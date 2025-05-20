@@ -1,0 +1,281 @@
+<!-- views/admin.ejs -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Oxford-Style Debate Research - Admin</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <div class="container" style="width: 800px;">
+    <div class="study-card">
+      <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <div class="admin-badge">Researcher Access Only</div>
+      </div>
+      
+      <div class="admin-content">
+        <div class="admin-section">
+          <h2>Generate Participant IDs</h2>
+          <p>Create new participant IDs to distribute to research participants.</p>
+          
+          <form action="/admin/generate-ids" method="POST">
+            <div class="form-group">
+              <label for="count">Number of IDs to generate:</label>
+              <input type="number" id="count" name="count" min="1" max="100" value="10" required>
+            </div>
+            <div class="button-container" style="justify-content: flex-start;">
+              <button type="submit" class="button">Generate IDs</button>
+            </div>
+          </form>
+        </div>
+        
+        <% if (locals.generatedIds && generatedIds.length > 0) { %>
+          <div class="admin-section">
+            <h2>Generated Participant IDs</h2>
+            <p>Share these IDs with your research participants. <button id="copyAllIds" class="copy-button">Copy All IDs</button></p>
+            
+            <div class="id-list">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Participant ID</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% generatedIds.forEach((id, index) => { %>
+                    <tr>
+                      <td><%= index + 1 %></td>
+                      <td><span class="id-code"><%= id.code %></span></td>
+                      <td><%= new Date(id.created).toLocaleString() %></td>
+                      <td>
+                        <button class="copy-id-button" data-id="<%= id.code %>">Copy</button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="export-options">
+              <button id="exportCsv" class="button button-secondary">Export as CSV</button>
+            </div>
+          </div>
+        <% } %>
+        
+        <div class="admin-section">
+          <h2>Participant Management</h2>
+          <p>View and manage existing participants in the system.</p>
+          
+          <% if (locals.participants && participants.length > 0) { %>
+            <div class="participant-list">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Participant ID</th>
+                    <th>Debates Completed</th>
+                    <th>Last Active</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% participants.forEach(participant => { %>
+                    <tr>
+                      <td><%= participant.id %></td>
+                      <td><%= participant.completedDebates ? participant.completedDebates.length : 0 %> / 5</td>
+                      <td><%= participant.lastActive ? new Date(participant.lastActive).toLocaleString() : 'Never' %></td>
+                      <td>
+                        <span class="status-badge <%= participant.status %>">
+                          <%= participant.status === 'active' ? 'Active' : (participant.status === 'completed' ? 'Completed' : 'New') %>
+                        </span>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p>No participants have used the system yet.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .admin-badge {
+      background-color: #dc3545;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    
+    .admin-content {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    
+    .admin-section {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .admin-section h2 {
+      margin-top: 0;
+      color: #343a40;
+      font-size: 1.3em;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    th {
+      background-color: #f1f3f5;
+      font-weight: 600;
+    }
+    
+    .id-code {
+      font-family: monospace;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+    
+    .copy-button, .copy-id-button {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
+    
+    .copy-button:hover, .copy-id-button:hover {
+      background-color: #5a6268;
+    }
+    
+    .export-options {
+      margin-top: 15px;
+      text-align: right;
+    }
+    
+    .participant-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    
+    .status-badge.active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-badge.completed {
+      background-color: #cce5ff;
+      color: #004085;
+    }
+    
+    .status-badge.new {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Copy individual ID button functionality
+      const copyIdButtons = document.querySelectorAll('.copy-id-button');
+      copyIdButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          navigator.clipboard.writeText(id).then(() => {
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+              this.textContent = originalText;
+            }, 2000);
+          });
+        });
+      });
+      
+      // Copy all IDs button functionality
+      const copyAllButton = document.getElementById('copyAllIds');
+      if (copyAllButton) {
+        copyAllButton.addEventListener('click', function() {
+          const idElements = document.querySelectorAll('.id-code');
+          const idsList = Array.from(idElements).map(el => el.textContent).join('\n');
+          
+          navigator.clipboard.writeText(idsList).then(() => {
+            const originalText = this.textContent;
+            this.textContent = 'All Copied!';
+            setTimeout(() => {
+              this.textContent = originalText;
+            }, 2000);
+          });
+        });
+      }
+      
+      // Export as CSV functionality
+      const exportCsvButton = document.getElementById('exportCsv');
+      if (exportCsvButton) {
+        exportCsvButton.addEventListener('click', function() {
+          const idElements = document.querySelectorAll('.id-code');
+          const dateElements = document.querySelectorAll('td:nth-child(3)');
+          
+          let csvContent = "Participant ID,Created Date\n";
+          idElements.forEach((idEl, index) => {
+            const id = idEl.textContent;
+            const date = dateElements[index].textContent;
+            csvContent += `${id},${date}\n`;
+          });
+          
+          const blob = new Blob([csvContent], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'participant_ids.csv';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

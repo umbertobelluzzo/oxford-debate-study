@@ -16,22 +16,8 @@
       <div class="login-container">
         <div class="login-options">
           <div class="login-option">
-            <h3>New Participant?</h3>
-            <p>If this is your first time participating, click the button below to start.</p>
-            <div class="button-container" style="justify-content: flex-start;">
-              <a href="/consent" class="button">Start as New Participant</a>
-            </div>
-          </div>
-          
-          <div class="login-divider">
-            <div class="divider-line"></div>
-            <div class="divider-text">OR</div>
-            <div class="divider-line"></div>
-          </div>
-          
-          <div class="login-option">
-            <h3>Returning Participant?</h3>
-            <p>If you've already started the study and have a participant ID, enter it below to continue where you left off.</p>
+            <h3>Participant Login</h3>
+            <p>Please enter the participant ID that was provided to you by the researcher.</p>
             
             <% if (locals.error) { %>
               <div class="error-message">
@@ -45,7 +31,7 @@
                 <input type="text" id="participantId" name="participantId" required placeholder="Enter your participant ID (e.g., OXD-123456)">
               </div>
               <div class="button-container" style="justify-content: flex-start;">
-                <button type="submit" class="button">Continue My Debates</button>
+                <button type="submit" class="button">Begin / Continue My Debates</button>
               </div>
             </form>
           </div>
@@ -83,24 +69,6 @@
     .login-option h3 {
       margin-top: 0;
       color: #4285f4;
-    }
-    
-    .login-divider {
-      display: flex;
-      align-items: center;
-      margin: 10px 0;
-    }
-    
-    .divider-line {
-      flex-grow: 1;
-      height: 1px;
-      background-color: #dee2e6;
-    }
-    
-    .divider-text {
-      padding: 0 15px;
-      color: #6c757d;
-      font-weight: bold;
     }
     
     .login-info {
