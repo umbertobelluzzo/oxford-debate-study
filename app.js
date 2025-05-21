@@ -888,6 +888,22 @@ app.post('/login', async (req, res) => {
     return res.render('login', { error: 'Invalid participant ID format. Please check and try again.' });
   }
   
+  // Get latest generated IDs from S3
+  await loadGeneratedIdsFromS3();
+
+  // Add some console logging
+  console.log(`Attempting login with ID: ${participantId}`);
+  console.log(`Total generated IDs in memory: ${generatedParticipantIds.length}`);
+  
+  // Check if ID exists in our generated IDs list
+  const idEntry = generatedParticipantIds.find(id => id.code === participantId);
+  
+  console.log(`Found ID entry: ${idEntry ? 'Yes' : 'No'}`);
+  
+  if (!idEntry) {
+    return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
+  }
+
   // Try to load the participant data
   const participantData = await loadParticipantData(participantId);
   
