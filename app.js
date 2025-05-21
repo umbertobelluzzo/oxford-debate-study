@@ -1040,10 +1040,10 @@ app.post('/login', async (req, res) => {
   }
   
   // Ensure we have the latest generated IDs from S3
-  await loadGeneratedIdsFromS3();
+  await loadgeneratedParticipantIds();
   
   // Check if ID exists in our generated IDs list
-  const idEntry = generatedIdsFromS3.find(id => id.code === participantId);
+  const idEntry = generatedParticipantIds.find(id => id.code === participantId);
   
   if (!idEntry) {
     return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
@@ -1426,7 +1426,7 @@ function requireAdmin(req, res, next) {
 // Admin dashboard route
 app.get('/admin', requireAdmin, async (req, res) => {
   // Load generated IDs from S3 first to ensure we have the latest data
-  await loadGeneratedIdsFromS3();
+  await loadgeneratedParticipantIds();
   
   // Load participant data for the admin dashboard
   const participants = await loadAllParticipants();
@@ -1516,7 +1516,7 @@ function saveGeneratedIdsToFile() {
 }
 
 // Load generated IDs from S3
-async function loadGeneratedIdsFromS3() {
+async function loadgeneratedParticipantIds() {
   try {
     // Try to load from S3
     const key = 'admin/generated_participant_ids.json';
@@ -1657,7 +1657,7 @@ function getParticipantStatus(participantData) {
 }
 
 // Load on application startup
-loadGeneratedIdsFromS3();
+loadgeneratedParticipantIds();
 
 // Modified login POST route to check against generated IDs
 app.post('/login', async (req, res) => {
@@ -1669,16 +1669,15 @@ app.post('/login', async (req, res) => {
   }
   
   // Ensure we have the latest generated IDs from S3
-  await loadGeneratedIdsFromS3();
+  await loadgeneratedParticipantIds();
   
   // Check if ID exists in our generated IDs list
-  // FIXED: Use generatedParticipantIds instead of generatedIdsFromS3
   const idEntry = generatedParticipantIds.find(id => id.code === participantId);
   
   if (!idEntry) {
     return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
   }
-  
+
   // Try to load existing participant data
   const participantData = await loadParticipantData(participantId);
   
