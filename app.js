@@ -1231,6 +1231,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
     // User wants to exit - go to exit page
     return res.redirect('/exit');
   }
+});
 
 // Update completion route to show certificate only after all debates
 app.get('/completion', requireSession, (req, res) => {
