@@ -871,12 +871,25 @@ function streamToString(stream) {
 // Function to save participant data
 async function saveParticipantData(data) {
   try {
+    // Validate data before saving
+    if (!data || !data.participantId) {
+      throw new Error('Invalid participant data provided');
+    }
+    
+    // Log data structure before saving
+    console.log(`Saving participant data for ${data.participantId}. Completed debates: ${data.completedDebates ? data.completedDebates.length : 0}`);
+    
     const participantId = data.participantId;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     
     // Try to save to S3
     try {
       const key = `participants/${participantId}/participant_${timestamp}.json`;
+      
+      // Log the data we're about to save
+      console.log(`S3 save attempt: ${key}`);
+      console.log(`Data structure: ${Object.keys(data).join(', ')}`);
+      
       const params = {
         Bucket: bucketName,
         Key: key,
@@ -888,10 +901,19 @@ async function saveParticipantData(data) {
       console.log(`Participant data saved to S3: ${key}`);
       return { success: true, key };
     } catch (s3Error) {
-      console.error("S3 save failed, falling back to local storage:", s3Error);
+      console.error("S3 save failed with error:", s3Error);
+      throw s3Error; // Rethrow to trigger fallback
     }
-    
-    // Fallback to local file storage
+  } catch (error) {
+    console.error("Error in saveParticipantData:", error);
+    // We should still try local fallback
+    return saveParticipantDataToFile(data);
+  }
+}
+
+// Add a local fallback function if it doesn't exist
+function saveParticipantDataToFile(data) {
+  try {
     const fs = require('fs');
     const path = require('path');
     const dir = path.join(__dirname, 'data', 'participants');
@@ -900,13 +922,15 @@ async function saveParticipantData(data) {
       fs.mkdirSync(dir, { recursive: true });
     }
     
+    const participantId = data.participantId || 'unknown';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filePath = path.join(dir, `participant_${participantId}_${timestamp}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     console.log(`Participant data saved locally to ${filePath}`);
     return { success: true, filePath };
   } catch (error) {
-    console.error("Error saving participant data:", error);
+    console.error("Error saving participant data to file:", error);
     return { success: false, error: error.message };
   }
 }
@@ -1123,6 +1147,27 @@ app.post('/debate-results', requireSession, async (req, res) => {
     winnerSideValue: winnerSideValue,
     completedAt: new Date().toISOString()
   });
+
+  // Ensure completedDebates exists and is an array
+  if (!req.session.debateData.completedDebates) {
+    console.log("Creating new completedDebates array");
+    req.session.debateData.completedDebates = [];
+  } else {
+    console.log(`Found existing completedDebates array with ${req.session.debateData.completedDebates.length} items`);
+  }
+  
+  // Create a deep copy of the debate metadata to avoid reference issues
+  const debateMetadata = {
+    id: req.session.debateData.id,
+    topic: debate.topic.id,
+    side: debate.side,
+    winnerSideValue: winnerSideValue,
+    completedAt: new Date().toISOString()
+  };
+  
+  // Add to completed debates and log
+  req.session.debateData.completedDebates.push(debateMetadata);
+  console.log(`Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
   
   // Save participant data (includes all completed debates)
   try {
@@ -1142,7 +1187,6 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Check nextAction to determine where to redirect
   const nextAction = req.body.nextAction;
-  
   if (nextAction === 'continue') {
     // Check if user has completed all 5 debates
     if (req.session.debateData.completedDebates.length >= 5) {
@@ -1150,21 +1194,43 @@ app.post('/debate-results', requireSession, async (req, res) => {
       return res.redirect('/completion');
     }
     
-    // Prepare for next debate but keep completed debates history
-    // Create a new debate ID while preserving the session
+    console.log("Continuing to next debate. Preserving session data...");
+    console.log(`Current completed debates: ${req.session.debateData.completedDebates.length}`);
+    
+    // Store important user data
+    const preservedData = {
+      participantId: req.session.debateData.participantId,
+      demographics: req.session.debateData.demographics,
+      completedDebates: req.session.debateData.completedDebates || []
+    };
+    
+    // Create a new debate ID but carefully update the session
+    const oldDebateId = req.session.debateData.id;
     req.session.debateData.id = 'debate-' + Date.now();
     req.session.debateData.startTimestamp = new Date().toISOString();
     
     // Remove current debate data to prepare for next one
     delete req.session.debateData.debate;
     
-    // Redirect to dashboard
-    return res.redirect('/dashboard');
+    // Explicitly ensure completedDebates is preserved
+    req.session.debateData.completedDebates = preservedData.completedDebates;
+    req.session.debateData.demographics = preservedData.demographics;
+    req.session.debateData.participantId = preservedData.participantId;
+    
+    console.log(`Updated session. Completed debates count: ${req.session.debateData.completedDebates.length}`);
+    console.log(`Previous debate ID: ${oldDebateId}, New debate ID: ${req.session.debateData.id}`);
+    
+    // Force session save
+    req.session.save(err => {
+      if (err) {
+        console.error("Error saving session:", err);
+      }
+      return res.redirect('/dashboard');
+    });
   } else {
     // User wants to exit - go to exit page
     return res.redirect('/exit');
   }
-});
 
 // Update completion route to show certificate only after all debates
 app.get('/completion', requireSession, (req, res) => {
