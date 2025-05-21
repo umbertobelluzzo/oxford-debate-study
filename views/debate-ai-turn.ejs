@@ -84,14 +84,34 @@
                 <p>This debate has concluded. Click the button below to see the results.</p>
               <% } %>
             </div>
-            
             <div class="button-container">
               <% if (debate.currentTurn < 5) { %>
-                <button type="submit" class="button">Continue to Your <%= 
-                  debate.currentTurn === 1 || debate.currentTurn === 3 ? 
-                  (debate.currentTurn === 1 ? 'Opening' : 'Rebuttal') : 
-                  'Closing' 
-                %> Statement</button>
+                <%
+                  // Determine the next turn type based on the current turn index and side assignment
+                  let nextTurnType;
+                  if (debate.side === 'proposition') {
+                    // If human is proposition
+                    if (debate.currentTurn === 1) {
+                      nextTurnType = 'Rebuttal';
+                    } else if (debate.currentTurn === 3) {
+                      nextTurnType = 'Closing';
+                    } else {
+                      nextTurnType = 'Next'; // Fallback
+                    }
+                  } else {
+                    // If human is opposition
+                    if (debate.currentTurn === 0) {
+                      nextTurnType = 'Opening';
+                    } else if (debate.currentTurn === 2) {
+                      nextTurnType = 'Rebuttal';
+                    } else if (debate.currentTurn === 4) {
+                      nextTurnType = 'Closing';
+                    } else {
+                      nextTurnType = 'Next'; // Fallback
+                    }
+                  }
+                %>
+                <button type="submit" class="button">Continue to Your <%= nextTurnType %> Statement</button>
               <% } else { %>
                 <button type="submit" class="button">View Debate Results</button>
               <% } %>
