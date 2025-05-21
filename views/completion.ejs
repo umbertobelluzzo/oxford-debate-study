@@ -53,6 +53,17 @@
             <div class="signature-title">Lead Researcher</div>
           </div>
         </div>
+
+        <% if (typeof participantId !== 'undefined') { %>
+          <div class="participant-name">Participant ID: <%= participantId %></div>
+        <% } %>
+        
+        <% if (typeof completedDebates !== 'undefined' && completedDebates.length > 0) { %>
+          <!-- Your debate summary HTML -->
+        <% } else { %>
+          <p>No completed debates found in your session.</p>
+        <% } %>
+        
       </div>
       
       <div class="debate-summary">

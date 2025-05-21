@@ -813,24 +813,63 @@ app.post('/debate-results', requireSession, async (req, res) => {
     // Redirect to setup for new debate
     return res.redirect('/setup');
   } else {
-    // Finish the session - go to completion page
-    return res.redirect('/completion');
+    // User wants to exit - go to completion page
+    // IMPORTANT: Make a copy of necessary data before potentially destroying the session
+    const completionData = {
+      participantId: req.session.debateData.participantId,
+      completedDebates: req.session.debateData.completedDebates || [],
+      completionCode: generateCompletionCode(),
+      debateTopics: debateTopics // Pass the global debateTopics
+    };
+    
+    // Store this completion data in a new session variable instead of destroying the session
+    req.session.completionData = completionData;
+    
+    // Save the session before redirecting
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session with completion data:", err);
+      }
+      return res.redirect('/completion');
+    });
   }
 });
 
 // COMPLETION
 app.get('/completion', requireSession, (req, res) => {
-  // Generate a completion code for the participant
-  const completionCode = generateCompletionCode();
-  
-  // Final completion page
-  res.render('completion', {
-    debate: req.session.debateData.debate,
-    completionCode: completionCode
-  });
-  
-  // Clear session after completion
-  req.session.destroy();
+  // Check if we have completion data (from the previous step)
+  if (req.session.completionData) {
+    const completionData = req.session.completionData;
+    
+    // Render completion page with the saved data
+    res.render('completion', {
+      participantId: completionData.participantId,
+      completedDebates: completionData.completedDebates,
+      completionCode: completionData.completionCode,
+      debateTopics: debateTopics // This should be available globally
+    });
+    
+    // After successful rendering, you can clear the completion data if desired
+    // But don't destroy the entire session as the user might still need to print their certificate
+    // req.session.completionData = null;
+  } else {
+    // Check if the user has completedDebates in their regular session
+    // This is a fallback for users who might have reached this page without going through the proper flow
+    if (req.session.debateData && req.session.debateData.completedDebates) {
+      const completionCode = generateCompletionCode();
+      
+      // Render the completion page with data from the regular session
+      res.render('completion', {
+        participantId: req.session.debateData.participantId,
+        completedDebates: req.session.debateData.completedDebates,
+        completionCode: completionCode,
+        debateTopics: debateTopics
+      });
+    } else {
+      // If we have no data at all, redirect to dashboard
+      res.redirect('/dashboard');
+    }
+  }
 });
 
 // Function to generate a Prolific completion code
@@ -1414,8 +1453,13 @@ app.get('/completion', requireSession, (req, res) => {
 
 // Add a final logout route that clears the session
 app.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
+  // Only destroy the session after confirmation or after printing the certificate
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+    }
+    res.redirect('/');
+  });
 });
 
 
@@ -2107,7 +2151,15 @@ function getAgeRange(age) {
   else return '65+';
 }
 
-
+app.use((err, req, res, next) => {
+  console.error("Global error caught:", err);
+  console.error(err.stack);
+  
+  res.status(500).render('error', {
+    message: 'An internal server error occurred. Please try again or contact the researcher if the problem persists.',
+    header: 'Internal Server Error'
+  });
+});
 
 // Start server
 app.listen(port, () => {
