@@ -881,7 +881,16 @@ async function loadParticipantData(participantId) {
         
         const response = await s3Client.send(new GetObjectCommand(getParams));
         const dataString = await streamToString(response.Body);
-        return JSON.parse(dataString);
+        const participantData = JSON.parse(dataString);
+        
+        console.log(`Loaded participant data with ${participantData.completedDebates ? participantData.completedDebates.length : 0} completed debates`);
+        
+        // Ensure completedDebates exists
+        if (!participantData.completedDebates) {
+          participantData.completedDebates = [];
+        }
+        
+        return participantData;
       } else {
         console.log('No files found in S3 for this participant');
       }
@@ -968,6 +977,9 @@ async function saveParticipantData(data) {
     
     // Log data structure before saving
     console.log(`Saving participant data for ${data.participantId}. Completed debates: ${data.completedDebates ? data.completedDebates.length : 0}`);
+    if (data.completedDebates) {
+      console.log("CompletedDebates content:", JSON.stringify(data.completedDebates));
+    }
     
     const participantId = data.participantId;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -976,9 +988,7 @@ async function saveParticipantData(data) {
     try {
       const key = `participants/${participantId}/participant_${timestamp}.json`;
       
-      // Log the data we're about to save
       console.log(`S3 save attempt: ${key}`);
-      console.log(`Data structure: ${Object.keys(data).join(', ')}`);
       
       const params = {
         Bucket: bucketName,
@@ -987,12 +997,18 @@ async function saveParticipantData(data) {
         ContentType: 'application/json'
       };
       
-      await s3Client.send(new PutObjectCommand(params));
-      console.log(`Participant data saved to S3: ${key}`);
-      return { success: true, key };
+      return await s3Client.send(new PutObjectCommand(params))
+        .then(() => {
+          console.log(`Participant data saved to S3: ${key}`);
+          return { success: true, key };
+        })
+        .catch(s3Error => {
+          console.error("S3 save failed with error:", s3Error);
+          throw s3Error; // Rethrow to trigger fallback
+        });
     } catch (s3Error) {
-      console.error("S3 save failed with error:", s3Error);
-      throw s3Error; // Rethrow to trigger fallback
+      console.error("S3 save attempt failed:", s3Error);
+      throw s3Error;
     }
   } catch (error) {
     console.error("Error in saveParticipantData:", error);
@@ -1095,7 +1111,7 @@ app.post('/login', async (req, res) => {
       startTimestamp: new Date().toISOString(),
       lastActive: new Date().toISOString(),
       demographics: {}, // Empty demographics object
-      completedDebates: [],
+      completedDebates: [], // Initialize as empty array
       consent: 'yes' // Auto-consent for pre-assigned IDs, modify if needed
     };
     
@@ -1273,15 +1289,21 @@ app.post('/debate-results', requireSession, async (req, res) => {
     isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
   };
   
-  // Ensure completedDebates exists and is an array
+  // Save final debate data
+  try {
+    await saveDebateData(req.session.debateData);
+    console.log("Debate data saved successfully");
+  } catch (error) {
+    console.error("Error saving final debate data:", error);
+  }
+  
+  // IMPORTANT: Initialize completedDebates array if it doesn't exist
   if (!req.session.debateData.completedDebates) {
     console.log("Creating new completedDebates array");
     req.session.debateData.completedDebates = [];
-  } else {
-    console.log(`Found existing completedDebates array with ${req.session.debateData.completedDebates.length} items`);
   }
   
-  // Create a deep copy of the debate metadata to avoid reference issues
+  // Create a deep copy of debate metadata to avoid reference issues
   const debateMetadata = {
     id: req.session.debateData.id,
     topic: debate.topic.id,
@@ -1290,24 +1312,16 @@ app.post('/debate-results', requireSession, async (req, res) => {
     completedAt: new Date().toISOString()
   };
   
-  // Add to completed debates and log (just once!)
+  // Add to completed debates array
   req.session.debateData.completedDebates.push(debateMetadata);
   console.log(`Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
   
-  // Save participant data (includes all completed debates)
+  // CRITICAL FIX: Save updated participant data with completedDebates array
   try {
-    await saveParticipantData(req.session.debateData);
-    console.log("Participant data saved successfully");
+    const saveResult = await saveParticipantData(req.session.debateData);
+    console.log("Participant data with completedDebates saved successfully:", saveResult);
   } catch (error) {
-    console.error("Error saving participant data:", error);
-  }
-  
-  // Also save debate data separately (for debate-specific analysis)
-  try {
-    await saveDebateData(req.session.debateData);
-    console.log("Debate data saved successfully");
-  } catch (error) {
-    console.error("Error saving final debate data:", error);
+    console.error("Error saving participant data with completedDebates:", error);
   }
   
   // Check nextAction to determine where to redirect
@@ -1320,33 +1334,24 @@ app.post('/debate-results', requireSession, async (req, res) => {
       return res.redirect('/completion');
     }
     
-    console.log("Continuing to next debate. Preserving session data...");
-    console.log(`Current completed debates: ${req.session.debateData.completedDebates.length}`);
-    
-    // Store important user data
+    // Create a new debate ID but carefully preserve important user data
     const preservedData = {
       participantId: req.session.debateData.participantId,
       demographics: req.session.debateData.demographics,
-      completedDebates: req.session.debateData.completedDebates || []
+      completedDebates: req.session.debateData.completedDebates // Keep completedDebates array
     };
     
-    // Create a new debate ID but carefully update the session
-    const oldDebateId = req.session.debateData.id;
+    // Update session with new debate ID
     req.session.debateData.id = 'debate-' + Date.now();
     req.session.debateData.startTimestamp = new Date().toISOString();
     
     // Remove current debate data to prepare for next one
     delete req.session.debateData.debate;
     
-    // Explicitly ensure completedDebates is preserved
+    // CRITICAL FIX: Explicitly ensure completedDebates is preserved
     req.session.debateData.completedDebates = preservedData.completedDebates;
-    req.session.debateData.demographics = preservedData.demographics;
-    req.session.debateData.participantId = preservedData.participantId;
     
-    console.log(`Updated session. Completed debates count: ${req.session.debateData.completedDebates.length}`);
-    console.log(`Previous debate ID: ${oldDebateId}, New debate ID: ${req.session.debateData.id}`);
-    
-    // Force session save
+    // Force session save before redirecting
     req.session.save(err => {
       if (err) {
         console.error("Error saving session:", err);
@@ -1358,6 +1363,27 @@ app.post('/debate-results', requireSession, async (req, res) => {
     return res.redirect('/exit');
   }
 });
+
+// Added this route temporarily to diagnose issues
+app.get('/debug-participant', requireSession, async (req, res) => {
+  try {
+    const participantId = req.session.debateData.participantId;
+    const participantData = await loadParticipantData(participantId);
+    
+    res.json({
+      participantId: participantId,
+      sessionData: {
+        completedDebates: req.session.debateData.completedDebates || []
+      },
+      savedData: {
+        completedDebates: participantData.completedDebates || []
+      }
+    });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 
 // Update completion route to show certificate only after all debates
 app.get('/completion', requireSession, (req, res) => {
