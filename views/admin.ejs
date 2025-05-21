@@ -26,11 +26,12 @@
               <label for="count">Number of IDs to generate:</label>
               <input type="number" id="count" name="count" min="1" max="100" value="10" required>
             </div>
+            <!-- Add a hidden input field to pass the token -->
+            <input type="hidden" name="token" value="<%= token %>">
             <div class="button-container" style="justify-content: flex-start;">
               <button type="submit" class="button">Generate IDs</button>
             </div>
           </form>
-        </div>
         
         <% if (locals.generatedIds && generatedIds.length > 0) { %>
           <div class="admin-section">

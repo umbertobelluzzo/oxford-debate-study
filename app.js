@@ -1149,13 +1149,21 @@ app.get('/logout', (req, res) => {
 // Store generated participant IDs in memory and S3
 let generatedParticipantIds = [];
 
-// Admin access middleware with environment variable
+// Admin access middleware with improved error handling
 function requireAdmin(req, res, next) {
   // Check for token in query params (GET requests) or in request body (POST requests)
   const adminToken = req.query.token || req.body.token;
   const validToken = process.env.ADMIN_TOKEN || 'research-admin-access';
   
   console.log("Admin access attempt with token:", adminToken);
+  
+  if (!adminToken) {
+    console.log("No token provided");
+    return res.status(403).render('error', { 
+      header: 'Access Denied', 
+      message: 'No authentication token provided. Please include a valid token.'
+    });
+  }
   
   if (adminToken === validToken) {
     console.log("Token matched, granting access");
@@ -1164,10 +1172,11 @@ function requireAdmin(req, res, next) {
     console.log("Token mismatch, denying access");
     res.status(403).render('error', { 
       header: 'Access Denied', 
-      message: 'You do not have permission to access this page.'
+      message: 'The provided authentication token is invalid.'
     });
   }
 }
+
 // Admin dashboard route
 app.get('/admin', requireAdmin, async (req, res) => {
   // Load generated IDs from S3 first to ensure we have the latest data
@@ -1176,9 +1185,13 @@ app.get('/admin', requireAdmin, async (req, res) => {
   // Load participant data for the admin dashboard
   const participants = await loadAllParticipants();
   
+  // Pass the token to the template
+  const adminToken = req.query.token || process.env.ADMIN_TOKEN;
+  
   res.render('admin', {
     generatedIds: generatedParticipantIds,
-    participants: participants
+    participants: participants,
+    token: adminToken // Pass the token to the template
   });
 });
 
