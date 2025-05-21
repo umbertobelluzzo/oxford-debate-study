@@ -58,8 +58,17 @@
           <% } %>
 
         <div class="current-turn">
-            <h3>Your <%= turnTitle %></h3>
-          
+          <h3>
+            <% if (turnType === 'opening') { %>
+              Your Opening Statement
+            <% } else if (turnType === 'rebuttal') { %>
+              Your Rebuttal
+            <% } else if (turnType === 'closing') { %>
+              Your Closing Statement
+            <% } else { %>
+              Your <%= turnTitle %>
+            <% } %>
+          </h3>
           <% if (locals.error) { %>
             <div class="error-message">
               <%= error %>
@@ -132,7 +141,17 @@
               </div>
 
               <div class="button-container">
-                <button type="submit" id="submitButton" class="button" disabled>Submit <%= turnTitle %></button>
+                <button type="submit" id="submitButton" class="button" disabled>
+                  <% if (turnType === 'opening') { %>
+                    Submit Opening Statement
+                  <% } else if (turnType === 'rebuttal') { %>
+                    Submit Rebuttal
+                  <% } else if (turnType === 'closing') { %>
+                    Submit Closing Statement
+                  <% } else { %>
+                    Submit <%= turnTitle %>
+                  <% } %>
+                </button>
               </div>
           </form>
         </div>
@@ -456,9 +475,9 @@
       
       // Set time based on turn type
       if ('<%= turnType %>' === 'closing') {
-        timeLeft = 3 * 60; // 3 minutes for closing
+        timeLeft = 10 * 60; // 10 minutes for closing
       } else {
-        timeLeft = 4 * 60; // 4 minutes for opening and rebuttal
+        timeLeft = 10 * 60; // 10 minutes for opening and rebuttal
       }
       
       const timer = setInterval(function() {

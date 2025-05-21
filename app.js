@@ -40,6 +40,48 @@ const s3Client = new S3Client({
 });
 const bucketName = process.env.AWS_S3_BUCKET;
 
+(async function validateS3Configuration() {
+  try {
+    // Test simple list operation to verify credentials and bucket access
+    const testParams = {
+      Bucket: bucketName,
+      MaxKeys: 1
+    };
+    
+    console.log("Testing S3 connection with:");
+    console.log("- Region:", process.env.AWS_REGION);
+    console.log("- Bucket:", bucketName);
+    console.log("- Access Key ID exists:", !!process.env.AWS_ACCESS_KEY_ID);
+    console.log("- Secret Access Key exists:", !!process.env.AWS_SECRET_ACCESS_KEY);
+    
+    const result = await s3Client.send(new ListObjectsCommand(testParams));
+    console.log("✅ S3 connection test successful!");
+    
+  } catch (error) {
+    console.error("❌ S3 CONNECTION TEST FAILED:");
+    console.error("Error:", error.message);
+    console.error("Error code:", error.code);
+    
+    if (error.code === 'NoSuchBucket') {
+      console.error("The specified bucket does not exist:", bucketName);
+      console.error("Please create the bucket or check the bucket name in your .env file.");
+    } else if (error.code === 'AccessDenied') {
+      console.error("Access denied to S3 bucket. Check your IAM permissions.");
+      console.error("The IAM user needs permissions for s3:ListObjects, s3:PutObject, and s3:GetObject.");
+    } else if (error.code === 'CredentialsError') {
+      console.error("Invalid AWS credentials. Check your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.");
+    } else if (error.code === 'InvalidAccessKeyId') {
+      console.error("Invalid AWS access key ID. Check your AWS_ACCESS_KEY_ID.");
+    } else if (error.code === 'SignatureDoesNotMatch') {
+      console.error("Signature does not match. Check your AWS_SECRET_ACCESS_KEY.");
+    } else if (error.code === 'NetworkingError') {
+      console.error("Network error. Check your internet connection and AWS_REGION setting.");
+    }
+    
+    console.error("Falling back to local file storage for all operations.");
+  }
+})();
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -181,11 +223,12 @@ app.get('/dev', async (req, res) => {
     id: 'test-debate-' + Date.now(),
     participantId: 'test-user',
     startTimestamp: new Date().toISOString(),
-    demographics: {},
+    demographics: {}, // Empty demographics object
     debateResponses: [],
   };
   
-  res.redirect('/setup');
+  // Redirect to demographics for development testing
+  res.redirect('/demographics');
 });
 
 // CONSENT
@@ -224,7 +267,7 @@ app.get('/demographics', requireSession, (req, res) => {
 });
 
 // DEMOGRAPHICS - POST
-app.post('/demographics', requireSession, (req, res) => {
+app.post('/demographics', requireSession, async (req, res) => {
   // Save demographics data
   req.session.debateData.demographics = {
     age: req.body.age,
@@ -238,6 +281,14 @@ app.post('/demographics', requireSession, (req, res) => {
     aiUsage: req.body.aiUsage,
     aiKnowledge: req.body.aiKnowledge
   };
+
+  // Save the participant data to ensure demographics are persisted
+  try {
+    await saveParticipantData(req.session.debateData);
+    console.log("Demographics data saved successfully");
+  } catch (error) {
+    console.error("Error saving demographics data:", error);
+  }
 
   // Continue to setup
   res.redirect('/setup');
@@ -482,6 +533,7 @@ if (isProposition) {
 
 // DEBATE HUMAN TURN - POST
 app.post('/debate-turn', requireSession, async (req, res) => {
+  console.log("Processing human turn submission...");
   const debate = req.session.debateData.debate;
   const currentTurnIndex = debate.currentTurn;
   const humanArgument = req.body.argument;
@@ -489,7 +541,10 @@ app.post('/debate-turn', requireSession, async (req, res) => {
   
   // Word count validation
   const wordCount = humanArgument.trim().split(/\s+/).length;
+  console.log(`Human ${turnType} - Word count: ${wordCount}`);
+  
   if (wordCount < 100 || wordCount > 150) {
+    console.log("Word count validation failed - returning error");
     return res.render('debate-human-turn', {
       debate: debate,
       turnType: turnType,
@@ -502,29 +557,47 @@ app.post('/debate-turn', requireSession, async (req, res) => {
   }
   
   // Save human's turn
-  debate.turns.push({
+  const humanTurn = {
     side: debate.side,
     type: turnType,
     content: humanArgument,
     timestamp: new Date().toISOString(),
     isAI: false,
     wordCount: wordCount // Also store the word count for reference
-  });
+  };
+
+  console.log(`Adding human turn to debate: ${debate.side} ${turnType}`);
+  debate.turns.push(humanTurn);
   
   // Increment turn counter
   debate.currentTurn++;
   
   // Check if debate is over - always using standard format (6 turns)
-if (debate.currentTurn >= 6) {
-  debate.status = 'completed';
-  return res.redirect('/debate-results');
-}
+  if (debate.currentTurn >= 6) {
+    debate.status = 'completed';
   
-  // Save progress
+  // Save before redirecting
   try {
+    console.log("Saving completed debate data...");
     await saveDebateData(req.session.debateData);
+    console.log("Debate data saved successfully before redirect to results");
   } catch (error) {
     console.error("Error saving debate data:", error);
+  }
+  
+  return res.redirect('/debate-results');
+}
+
+  // Save progress
+  try {
+    console.log("Saving human turn...");
+    console.log(`Current turn data: ${JSON.stringify(humanTurn).substring(0, 100)}...`);
+    console.log(`Total turns now: ${debate.turns.length}`);
+    
+    const saveResult = await saveDebateData(req.session.debateData);
+    console.log("Human turn save result:", saveResult);
+  } catch (error) {
+    console.error("Error saving debate data after human turn:", error);
   }
   
   // If not over, continue to next turn
@@ -533,6 +606,7 @@ if (debate.currentTurn >= 6) {
 
 // DEBATE AI TURN
 app.get('/debate-ai-turn', requireSession, async (req, res) => {
+  console.log("Processing AI turn...");
   const debate = req.session.debateData.debate;
   const currentTurnIndex = debate.currentTurn;
   const model = debateModels.find(m => m.id === debate.opponentModel);
@@ -565,6 +639,10 @@ app.get('/debate-ai-turn', requireSession, async (req, res) => {
     }
   }
   
+  console.log(`Generating AI ${turnType} for ${aiSide} side...`);
+  console.log(`Current turn index: ${currentTurnIndex}`);
+  console.log(`Previous turns: ${debate.turns.length}`);
+
   try {
     // Generate AI's argument
     const aiArgument = await generateDebateArgument(
@@ -575,29 +653,40 @@ app.get('/debate-ai-turn', requireSession, async (req, res) => {
       debate.turns
     );
     
+    console.log("AI argument generated successfully");
+    
     // Save AI's turn
-    debate.turns.push({
+    const aiTurn = {
       side: aiSide,
       type: turnType,
       content: aiArgument,
       timestamp: new Date().toISOString(),
       isAI: true,
       model: model.id
-    });
+    };
+    
+    console.log(`Adding AI turn to debate: ${aiSide} ${turnType}`);
+    debate.turns.push(aiTurn);
     
     // Increment turn counter
     debate.currentTurn++;
     
     // Save progress
     try {
-      await saveDebateData(req.session.debateData);
+      console.log("Saving AI turn...");
+      console.log(`Current turn data: ${JSON.stringify(aiTurn).substring(0, 100)}...`);
+      console.log(`Total turns now: ${debate.turns.length}`);
+      
+      const saveResult = await saveDebateData(req.session.debateData);
+      console.log("AI turn save result:", saveResult);
     } catch (error) {
-      console.error("Error saving debate data:", error);
+      console.error("Error saving debate data after AI turn:", error);
     }
     
     // Check if debate is over
     if (debate.currentTurn >= 6) {
       debate.status = 'completed';
+      console.log("Debate completed, redirecting to results");
       return res.redirect('/debate-results');
     }
     
@@ -611,6 +700,7 @@ app.get('/debate-ai-turn', requireSession, async (req, res) => {
     
   } catch (error) {
     console.error("Error generating AI argument:", error);
+    console.error(error.stack);
     res.render('error', { message: 'Error generating AI response. Please try again.' });
   }
 });
@@ -944,43 +1034,92 @@ app.get('/', (req, res) => {
 app.post('/login', async (req, res) => {
   const participantId = req.body.participantId;
   
-  // Validate the participant ID (basic format check)
+  // Validate the participant ID format
   if (!participantId || !participantId.startsWith('OXD-') || participantId.length !== 10) {
     return res.render('login', { error: 'Invalid participant ID format. Please check and try again.' });
   }
   
-  // Get latest generated IDs from S3
+  // Ensure we have the latest generated IDs from S3
   await loadGeneratedIdsFromS3();
-
-  // Add some console logging
-  console.log(`Attempting login with ID: ${participantId}`);
-  console.log(`Total generated IDs in memory: ${generatedParticipantIds.length}`);
   
   // Check if ID exists in our generated IDs list
-  const idEntry = generatedParticipantIds.find(id => id.code === participantId);
-  
-  console.log(`Found ID entry: ${idEntry ? 'Yes' : 'No'}`);
+  const idEntry = generatedIdsFromS3.find(id => id.code === participantId);
   
   if (!idEntry) {
     return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
   }
-
-  // Try to load the participant data
+  
+  // Try to load existing participant data
   const participantData = await loadParticipantData(participantId);
   
-  if (!participantData) {
-    return res.render('login', { error: 'Participant ID not found. Please check and try again.' });
+  if (participantData) {
+    // Returning participant - use existing data
+    req.session.debateData = participantData;
+    
+    // Mark the ID as used if not already
+    if (!idEntry.used) {
+      idEntry.used = true;
+      await saveGeneratedIdsToS3();
+    }
+    
+    // Update last active timestamp
+    req.session.debateData.lastActive = new Date().toISOString();
+    
+    // Save the updated timestamp
+    try {
+      await saveParticipantData(req.session.debateData);
+    } catch (error) {
+      console.error("Error saving updated participant timestamp:", error);
+    }
+    
+    // Check if demographics data exists and is not empty
+    if (!req.session.debateData.demographics || 
+        Object.keys(req.session.debateData.demographics).length === 0) {
+      // No demographics data, redirect to demographics page
+      return res.redirect('/demographics');
+    }
+    
+    // Demographics data exists, redirect to dashboard
+    res.redirect('/dashboard');
+  } else {
+    // First time using this ID - create new participant data
+    
+    // Mark the ID as used
+    idEntry.used = true;
+    await saveGeneratedIdsToS3();
+    
+    // Initialize session with new participant data
+    req.session.debateData = {
+      id: 'debate-' + Date.now(),
+      participantId: participantId,
+      startTimestamp: new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      demographics: {}, // Empty demographics object
+      completedDebates: [],
+      consent: 'yes' // Auto-consent for pre-assigned IDs, modify if needed
+    };
+    
+    // Save initial participant data
+    try {
+      await saveParticipantData(req.session.debateData);
+    } catch (error) {
+      console.error("Error saving new participant data:", error);
+    }
+    
+    // For new participants, redirect to demographics first
+    res.redirect('/demographics');
   }
-  
-  // Store the participant data in the session
-  req.session.debateData = participantData;
-  
-  // Redirect to the dashboard
-  res.redirect('/dashboard');
 });
 
 // Dashboard route to show progress
 app.get('/dashboard', requireSession, (req, res) => {
+  // Check if demographics data exists and is not empty
+  if (!req.session.debateData.demographics || 
+      Object.keys(req.session.debateData.demographics).length === 0) {
+    // No demographics data, redirect to demographics page
+    return res.redirect('/demographics');
+  }
+
   const user = {
     participantId: req.session.debateData.participantId,
     demographics: req.session.debateData.demographics || {}
@@ -1717,6 +1856,18 @@ Keep your response between 100-150 words.`;
 
 // Save debate data to storage
 async function saveDebateData(data) {
+  
+  let dataToSave;
+  try {
+    dataToSave = JSON.parse(JSON.stringify(data));
+  } catch (error) {
+    console.error("Error cloning debate data:", error);
+    console.error("Attempting to continue with original data");
+    dataToSave = data;
+  }
+  
+  console.log(`Saving debate data. Current turn: ${dataToSave.debate?.currentTurn}, Turns count: ${dataToSave.debate?.turns?.length}`);
+  
   // Add metadata to help with Phase 2
   if (!data.metadata) {
     data.metadata = {
@@ -1762,16 +1913,31 @@ async function saveDebateData(data) {
       data.metadata.participantPosition = data.debate.side;
     }
   }
+
+  // Log key data before saving
+  if (dataToSave.debate && dataToSave.debate.turns) {
+    console.log(`Turn data to save: ${dataToSave.debate.turns.length} turns`);
+    dataToSave.debate.turns.forEach((turn, index) => {
+      console.log(`Turn ${index}: ${turn.side} (${turn.isAI ? 'AI' : 'Human'}) - ${turn.type} - ${turn.content.substring(0, 30)}...`);
+    });
+  }
   
   try {
     // First try to save to S3
-    const s3Result = await saveDebateDataToS3(data);
+    console.log("Attempting to save to S3...");
+    const s3Result = await saveDebateDataToS3(dataToSave);
+    console.log("S3 save successful:", s3Result);
     return s3Result;
   } catch (error) {
-    console.error("S3 save failed, falling back to local storage:", error);
+    console.error("S3 save failed with error:", error);
+    console.error("Error code:", error.code);
+    console.error("Error stack:", error.stack);
+    
     // Fallback to local file storage
-    saveDebateDataToFile(data);
-    return { success: false, error: error.message };
+    console.log("Falling back to local file storage");
+    const localResult = saveDebateDataToFile(dataToSave);
+    console.log("Local save result:", localResult);
+    return { success: false, error: error.message, localResult };
   }
 }
 
@@ -1813,8 +1979,12 @@ function getModelVersion(modelId) {
 // Function to save debate data to S3
 async function saveDebateDataToS3(data) {
   try {
-    const filename = `debate_${data.id}.json`;
+    // Create a unique filename with timestamp to prevent overwrites
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `debate_${data.id}_${timestamp}.json`;
 
+    console.log(`Saving debate data to S3 bucket '${bucketName}' with key 'debates/${filename}'`);
+    
     const params = {
       Bucket: bucketName,
       Key: `debates/${filename}`,
@@ -1824,9 +1994,22 @@ async function saveDebateDataToS3(data) {
 
     const result = await s3Client.send(new PutObjectCommand(params));
     console.log(`Data saved to S3: debates/${filename}`);
+    console.log(`S3 result: ${JSON.stringify(result.$metadata)}`);
+    
     return { success: true, key: `debates/${filename}` };
   } catch (error) {
     console.error('Error saving data to S3:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    
+    if (error.code === 'NetworkingError') {
+      console.error('Network error - check your internet connection');
+    } else if (error.code === 'NoSuchBucket') {
+      console.error(`The bucket '${bucketName}' does not exist`);
+    } else if (error.code === 'AccessDenied') {
+      console.error(`Access denied to bucket '${bucketName}'`);
+    }
+    
     throw error; // Rethrow to trigger fallback
   }
 }
