@@ -1672,6 +1672,7 @@ app.post('/login', async (req, res) => {
   await loadGeneratedIdsFromS3();
   
   // Check if ID exists in our generated IDs list
+  // FIXED: Use generatedParticipantIds instead of generatedIdsFromS3
   const idEntry = generatedParticipantIds.find(id => id.code === participantId);
   
   if (!idEntry) {
