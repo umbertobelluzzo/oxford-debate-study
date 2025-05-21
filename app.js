@@ -388,15 +388,14 @@ app.post('/setup', requireSession, async (req, res) => {
     status: 'setup'
   };
   
-  // Save the data immediately to persist the assignments
-  try {
-    await saveDebateData(req.session.debateData);
-  } catch (error) {
-    console.error("Error saving initial debate configuration:", error);
-  }
-  
-  // Continue to debate preparation
-  res.redirect('/debate-prep');
+  // Instead of saving to S3, just save the session
+  req.session.save((err) => {
+    if (err) {
+      console.error("Error saving session:", err);
+    }
+    // Continue to debate preparation
+    res.redirect('/debate-prep');
+  });
 });
 
 // DEBATE PREPARATION
@@ -563,7 +562,7 @@ app.post('/debate-turn', requireSession, async (req, res) => {
     content: humanArgument,
     timestamp: new Date().toISOString(),
     isAI: false,
-    wordCount: wordCount // Also store the word count for reference
+    wordCount: wordCount
   };
 
   console.log(`Adding human turn to debate: ${debate.side} ${turnType}`);
@@ -575,33 +574,27 @@ app.post('/debate-turn', requireSession, async (req, res) => {
   // Check if debate is over - always using standard format (6 turns)
   if (debate.currentTurn >= 6) {
     debate.status = 'completed';
-  
-  // Save before redirecting
-  try {
-    console.log("Saving completed debate data...");
-    await saveDebateData(req.session.debateData);
-    console.log("Debate data saved successfully before redirect to results");
-  } catch (error) {
-    console.error("Error saving debate data:", error);
-  }
-  
-  return res.redirect('/debate-results');
-}
-
-  // Save progress
-  try {
-    console.log("Saving human turn...");
-    console.log(`Current turn data: ${JSON.stringify(humanTurn).substring(0, 100)}...`);
-    console.log(`Total turns now: ${debate.turns.length}`);
     
-    const saveResult = await saveDebateData(req.session.debateData);
-    console.log("Human turn save result:", saveResult);
-  } catch (error) {
-    console.error("Error saving debate data after human turn:", error);
+    // Save completed debate to S3
+    try {
+      console.log("Saving completed debate data...");
+      await saveDebateData(req.session.debateData);
+      console.log("Debate data saved successfully before redirect to results");
+    } catch (error) {
+      console.error("Error saving debate data:", error);
+    }
+    
+    return res.redirect('/debate-results');
   }
-  
-  // If not over, continue to next turn
-  res.redirect('/debate-turn');
+
+  // Save session but don't write to S3 yet
+  req.session.save((err) => {
+    if (err) {
+      console.error("Error saving session:", err);
+    }
+    // If not over, continue to next turn
+    res.redirect('/debate-turn');
+  });
 });
 
 // DEBATE AI TURN
@@ -671,33 +664,44 @@ app.get('/debate-ai-turn', requireSession, async (req, res) => {
     // Increment turn counter
     debate.currentTurn++;
     
-    // Save progress
-    try {
-      console.log("Saving AI turn...");
-      console.log(`Current turn data: ${JSON.stringify(aiTurn).substring(0, 100)}...`);
-      console.log(`Total turns now: ${debate.turns.length}`);
-      
-      const saveResult = await saveDebateData(req.session.debateData);
-      console.log("AI turn save result:", saveResult);
-    } catch (error) {
-      console.error("Error saving debate data after AI turn:", error);
-    }
-    
     // Check if debate is over
     if (debate.currentTurn >= 6) {
       debate.status = 'completed';
-      console.log("Debate completed, redirecting to results");
-      return res.redirect('/debate-results');
+      console.log("Debate completed, saving to S3");
+      
+      // Save completed debate to S3
+      try {
+        console.log("Saving completed debate data...");
+        await saveDebateData(req.session.debateData);
+        console.log("Debate data saved successfully");
+      } catch (error) {
+        console.error("Error saving debate data:", error);
+      }
+      
+      // Save session after S3 save
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+        }
+        return res.redirect('/debate-results');
+      });
+      return; // Return early to prevent rendering
     }
     
-    // Render AI's turn for the human to read
-    res.render('debate-ai-turn', {
-      debate: debate,
-      aiArgument: aiArgument,
-      turnType: turnType,
-      aiSide: aiSide
+    // If not complete, just save the session and render
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session:", err);
+      }
+      
+      // Render AI's turn for the human to read
+      res.render('debate-ai-turn', {
+        debate: debate,
+        aiArgument: aiArgument,
+        turnType: turnType,
+        aiSide: aiSide
+      });
     });
-    
   } catch (error) {
     console.error("Error generating AI argument:", error);
     console.error(error.stack);
@@ -742,7 +746,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
   debate.ratings = {
     // Continuous values (0-100)
     winnerSideValue: winnerSideValue,
-    winnerSide: winnerSideInterpretation, // Interpreted categorical value for backward compatibility
+    winnerSide: winnerSideInterpretation, 
     humanPerformance: humanPerformanceValue,
     aiPerformance: aiPerformanceValue,
     aiFactualAccuracy: aiFactualAccuracyValue,
@@ -761,19 +765,19 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Add some analysis for easier data processing later
   debate.analysis = {
-    performanceGap: humanPerformanceValue - aiPerformanceValue, // Positive means human performed better
-    winnerMargin: Math.abs(50 - winnerSideValue), // How decisive was the win
+    performanceGap: humanPerformanceValue - aiPerformanceValue, 
+    winnerMargin: Math.abs(50 - winnerSideValue), 
     isHumanWin: winnerSideValue < 45,
     isAIWin: winnerSideValue > 55,
     isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
   };
   
-  // Save final debate data
+  // Save final debate data - this should now actually write to S3
   try {
     await saveDebateData(req.session.debateData);
-    console.log("Debate data saved successfully");
+    console.log("Final rated debate data saved successfully to S3");
   } catch (error) {
-    console.error("Error saving final debate data:", error);
+    console.error("Error saving final rated debate data:", error);
   }
   
   // Check nextAction to determine where to redirect
@@ -1882,7 +1886,12 @@ Keep your response between 100-150 words.`;
 
 // Save debate data to storage
 async function saveDebateData(data) {
-  
+    // Only save to S3 if the debate is completed or rated
+    if (!data.debate || (data.debate.status !== 'completed' && data.debate.status !== 'rated')) {
+      console.log("Debate not completed yet, not saving to S3");
+      return { success: true, skipped: true, reason: "Debate in progress" };
+    }
+    
   let dataToSave;
   try {
     dataToSave = JSON.parse(JSON.stringify(data));
@@ -2005,38 +2014,31 @@ function getModelVersion(modelId) {
 // Function to save debate data to S3
 async function saveDebateDataToS3(data) {
   try {
-    // Create a unique filename with timestamp to prevent overwrites
+    // Create a unique filename that indicates it's the complete debate
+    // Include user ID, topic, and completion status in filename
+    const topicId = data.debate.topic.id;
+    const participantId = data.participantId;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `debate_${data.id}_${timestamp}.json`;
+    const status = data.debate.status; // 'completed' or 'rated'
+    const filename = `debate_${participantId}_${topicId}_${status}_${timestamp}.json`;
 
-    console.log(`Saving debate data to S3 bucket '${bucketName}' with key 'debates/${filename}'`);
+    console.log(`Saving complete debate data to S3 bucket '${bucketName}' with key 'completed_debates/${filename}'`);
     
     const params = {
       Bucket: bucketName,
-      Key: `debates/${filename}`,
+      Key: `completed_debates/${filename}`, // Store in a different prefix
       Body: JSON.stringify(data, null, 2),
       ContentType: 'application/json'
     };
 
     const result = await s3Client.send(new PutObjectCommand(params));
-    console.log(`Data saved to S3: debates/${filename}`);
+    console.log(`Complete debate data saved to S3: completed_debates/${filename}`);
     console.log(`S3 result: ${JSON.stringify(result.$metadata)}`);
     
-    return { success: true, key: `debates/${filename}` };
+    return { success: true, key: `completed_debates/${filename}` };
   } catch (error) {
     console.error('Error saving data to S3:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    
-    if (error.code === 'NetworkingError') {
-      console.error('Network error - check your internet connection');
-    } else if (error.code === 'NoSuchBucket') {
-      console.error(`The bucket '${bucketName}' does not exist`);
-    } else if (error.code === 'AccessDenied') {
-      console.error(`Access denied to bucket '${bucketName}'`);
-    }
-    
-    throw error; // Rethrow to trigger fallback
+    throw error;
   }
 }
 
