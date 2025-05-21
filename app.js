@@ -1134,20 +1134,6 @@ app.post('/debate-results', requireSession, async (req, res) => {
     isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
   };
   
-  // Initialize completedDebates array if it doesn't exist
-  if (!req.session.debateData.completedDebates) {
-    req.session.debateData.completedDebates = [];
-  }
-  
-  // Add current debate to completed list with metadata
-  req.session.debateData.completedDebates.push({
-    id: req.session.debateData.id,
-    topic: debate.topic.id,
-    side: debate.side,
-    winnerSideValue: winnerSideValue,
-    completedAt: new Date().toISOString()
-  });
-
   // Ensure completedDebates exists and is an array
   if (!req.session.debateData.completedDebates) {
     console.log("Creating new completedDebates array");
@@ -1165,7 +1151,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
     completedAt: new Date().toISOString()
   };
   
-  // Add to completed debates and log
+  // Add to completed debates and log (just once!)
   req.session.debateData.completedDebates.push(debateMetadata);
   console.log(`Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
   
@@ -1187,6 +1173,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Check nextAction to determine where to redirect
   const nextAction = req.body.nextAction;
+  
   if (nextAction === 'continue') {
     // Check if user has completed all 5 debates
     if (req.session.debateData.completedDebates.length >= 5) {
