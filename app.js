@@ -765,6 +765,8 @@ function generateParticipantId() {
 // Function to load participant data from storage
 async function loadParticipantData(participantId) {
   try {
+    console.log(`Attempting to load participant data for: ${participantId}`);
+    
     // Try to find the participant data in S3 or local storage
     // First try S3
     try {
@@ -773,9 +775,11 @@ async function loadParticipantData(participantId) {
         Prefix: `participants/${participantId}/`,
       };
       
+      console.log(`Searching S3 with prefix: participants/${participantId}/`);
       const result = await s3Client.send(new ListObjectsCommand(params));
       
       if (result.Contents && result.Contents.length > 0) {
+        console.log(`Found ${result.Contents.length} files in S3 for this participant`);
         // Get the most recent file
         const latestObject = result.Contents.sort((a, b) => 
           new Date(b.LastModified) - new Date(a.LastModified))[0];
@@ -788,6 +792,8 @@ async function loadParticipantData(participantId) {
         const response = await s3Client.send(new GetObjectCommand(getParams));
         const dataString = await streamToString(response.Body);
         return JSON.parse(dataString);
+      } else {
+        console.log('No files found in S3 for this participant');
       }
     } catch (s3Error) {
       console.error("S3 retrieval failed, trying local backup:", s3Error);
@@ -799,28 +805,59 @@ async function loadParticipantData(participantId) {
     const dir = path.join(__dirname, 'data', 'participants');
     
     if (!fs.existsSync(dir)) {
-      return null;
+      console.log(`Local participant directory does not exist: ${dir}`);
+    } else {
+      const files = fs.readdirSync(dir);
+      const participantFiles = files.filter(file => file.startsWith(`participant_${participantId}_`));
+      
+      if (participantFiles.length === 0) {
+        console.log(`No local files found for participant: ${participantId}`);
+      } else {
+        console.log(`Found ${participantFiles.length} local files for this participant`);
+        // Get the most recent file
+        const latestFile = participantFiles.sort().pop();
+        const filePath = path.join(dir, latestFile);
+        const fileData = fs.readFileSync(filePath, 'utf8');
+        
+        return JSON.parse(fileData);
+      }
     }
     
-    const files = fs.readdirSync(dir);
-    const participantFiles = files.filter(file => file.startsWith(`participant_${participantId}_`));
+    // If we get here with no data found, but the ID is valid in the generated list, create new data
+    console.log(`Checking if ID ${participantId} exists in generated list with ${generatedParticipantIds.length} entries`);
+    const validId = generatedParticipantIds.find(id => id.code === participantId);
     
-    if (participantFiles.length === 0) {
-      return null;
+    if (validId) {
+      console.log('ID exists in generated list but no data file found. Creating new participant data.');
+      const newData = {
+        id: 'debate-' + Date.now(),
+        participantId: participantId,
+        startTimestamp: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+        demographics: {},
+        completedDebates: [],
+        consent: 'yes' // Pre-consent for testing purposes
+      };
+      
+      // Save this data for future use
+      try {
+        await saveParticipantData(newData);
+        console.log(`Created and saved new participant data for ${participantId}`);
+      } catch (saveError) {
+        console.error(`Error saving new participant data: ${saveError}`);
+      }
+      
+      return newData;
+    } else {
+      console.log(`ID ${participantId} not found in generated IDs list`);
     }
     
-    // Get the most recent file
-    const latestFile = participantFiles.sort().pop();
-    const filePath = path.join(dir, latestFile);
-    const fileData = fs.readFileSync(filePath, 'utf8');
-    
-    return JSON.parse(fileData);
+    return null;
   } catch (error) {
     console.error("Error loading participant data:", error);
     return null;
   }
 }
-
 // Helper function to convert stream to string
 function streamToString(stream) {
   return new Promise((resolve, reject) => {
