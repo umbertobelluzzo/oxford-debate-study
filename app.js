@@ -1010,7 +1010,7 @@ function streamToString(stream) {
   });
 }
 
-// Function to save participant data
+// Function to save participant data - IMPROVED VERSION
 async function saveParticipantData(data) {
   try {
     // Validate data before saving
@@ -1018,49 +1018,57 @@ async function saveParticipantData(data) {
       throw new Error('Invalid participant data provided');
     }
     
+    // Create a clean copy of the data to save
+    const dataToSave = {
+      ...data,
+      // Ensure these fields exist
+      completedDebates: data.completedDebates || [],
+      lastActive: data.lastActive || new Date().toISOString(),
+      // Remove any debate-specific data that shouldn't be in participant file
+      debate: undefined
+    };
+    
     // Log data structure before saving
-    console.log(`Saving participant data for ${data.participantId}. Completed debates: ${data.completedDebates ? data.completedDebates.length : 0}`);
-    if (data.completedDebates) {
-      console.log("CompletedDebates content:", JSON.stringify(data.completedDebates));
+    console.log(`📝 Saving participant data for ${dataToSave.participantId}`);
+    console.log(`   - Completed debates: ${dataToSave.completedDebates.length}`);
+    console.log(`   - Last active: ${dataToSave.lastActive}`);
+    if (dataToSave.completedDebates.length > 0) {
+      console.log(`   - Latest debate: ${dataToSave.completedDebates[dataToSave.completedDebates.length - 1].topic}`);
     }
     
-    const participantId = data.participantId;
+    const participantId = dataToSave.participantId;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     
     // Try to save to S3
     try {
       const key = `participants/${participantId}/participant_${timestamp}.json`;
       
-      console.log(`S3 save attempt: ${key}`);
+      console.log(`☁️ Saving to S3: ${key}`);
       
       const params = {
         Bucket: bucketName,
         Key: key,
-        Body: JSON.stringify(data, null, 2),
+        Body: JSON.stringify(dataToSave, null, 2),
         ContentType: 'application/json'
       };
       
-      return await s3Client.send(new PutObjectCommand(params))
-        .then(() => {
-          console.log(`Participant data saved to S3: ${key}`);
-          return { success: true, key };
-        })
-        .catch(s3Error => {
-          console.error("S3 save failed with error:", s3Error);
-          throw s3Error; // Rethrow to trigger fallback
-        });
+      const result = await s3Client.send(new PutObjectCommand(params));
+      console.log(`✅ Successfully saved participant data to S3: ${key}`);
+      
+      return { success: true, key, location: 's3' };
     } catch (s3Error) {
-      console.error("S3 save attempt failed:", s3Error);
+      console.error("❌ S3 save failed:", s3Error.message);
       throw s3Error;
     }
   } catch (error) {
-    console.error("Error in saveParticipantData:", error);
-    // We should still try local fallback
+    console.error("❌ Error in saveParticipantData:", error.message);
+    // Try local fallback
+    console.log("🔄 Attempting local file backup...");
     return saveParticipantDataToFile(data);
   }
 }
 
-// Add a local fallback function if it doesn't exist
+// Also improve the local fallback function
 function saveParticipantDataToFile(data) {
   try {
     const fs = require('fs');
@@ -1071,15 +1079,25 @@ function saveParticipantDataToFile(data) {
       fs.mkdirSync(dir, { recursive: true });
     }
     
-    const participantId = data.participantId || 'unknown';
+    // Create clean data copy (same as S3 version)
+    const dataToSave = {
+      ...data,
+      completedDebates: data.completedDebates || [],
+      lastActive: data.lastActive || new Date().toISOString(),
+      debate: undefined
+    };
+    
+    const participantId = dataToSave.participantId || 'unknown';
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filePath = path.join(dir, `participant_${participantId}_${timestamp}.json`);
     
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    console.log(`Participant data saved locally to ${filePath}`);
-    return { success: true, filePath };
+    fs.writeFileSync(filePath, JSON.stringify(dataToSave, null, 2));
+    console.log(`💾 Participant data saved locally to ${filePath}`);
+    console.log(`   - Completed debates: ${dataToSave.completedDebates.length}`);
+    
+    return { success: true, filePath, location: 'local' };
   } catch (error) {
-    console.error("Error saving participant data to file:", error);
+    console.error("❌ Error saving participant data to file:", error);
     return { success: false, error: error.message };
   }
 }
@@ -1284,7 +1302,7 @@ app.post('/consent', (req, res) => {
   res.redirect('/demographics');
 });
 
-// Modify the debate-results POST handler to update completedDebates
+// DEBATE RESULTS - POST (final ratings) - FIXED VERSION
 app.post('/debate-results', requireSession, async (req, res) => {
   const debate = req.session.debateData.debate;
   
@@ -1306,7 +1324,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
   debate.ratings = {
     // Continuous values (0-100)
     winnerSideValue: winnerSideValue,
-    winnerSide: winnerSideInterpretation, // Interpreted categorical value for backward compatibility
+    winnerSide: winnerSideInterpretation, 
     humanPerformance: humanPerformanceValue,
     aiPerformance: aiPerformanceValue,
     aiFactualAccuracy: aiFactualAccuracyValue,
@@ -1325,22 +1343,22 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Add some analysis for easier data processing later
   debate.analysis = {
-    performanceGap: humanPerformanceValue - aiPerformanceValue, // Positive means human performed better
-    winnerMargin: Math.abs(50 - winnerSideValue), // How decisive was the win
+    performanceGap: humanPerformanceValue - aiPerformanceValue, 
+    winnerMargin: Math.abs(50 - winnerSideValue), 
     isHumanWin: winnerSideValue < 45,
     isAIWin: winnerSideValue > 55,
     isDraw: winnerSideValue >= 45 && winnerSideValue <= 55
   };
   
-  // Save final debate data
+  // Save the debate transcript first
   try {
     await saveDebateData(req.session.debateData);
-    console.log("Debate data saved successfully");
+    console.log("Debate transcript saved successfully");
   } catch (error) {
-    console.error("Error saving final debate data:", error);
+    console.error("Error saving debate transcript:", error);
   }
   
-  // IMPORTANT: Initialize completedDebates array if it doesn't exist
+  // CRITICAL FIX: Initialize completedDebates array if it doesn't exist
   if (!req.session.debateData.completedDebates) {
     console.log("Creating new completedDebates array");
     req.session.debateData.completedDebates = [];
@@ -1359,46 +1377,60 @@ app.post('/debate-results', requireSession, async (req, res) => {
   req.session.debateData.completedDebates.push(debateMetadata);
   console.log(`Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
   
-  // CRITICAL FIX: Save updated participant data with completedDebates array
+  // Update last active timestamp
+  req.session.debateData.lastActive = new Date().toISOString();
+  
+  // CRITICAL FIX: Save the updated participant data with completedDebates array
   try {
     const saveResult = await saveParticipantData(req.session.debateData);
-    console.log("Participant data with completedDebates saved successfully:", saveResult);
+    console.log("✅ Participant data with completedDebates saved successfully:", saveResult);
+    
+    // Verify the data was saved correctly
+    const savedData = await loadParticipantData(req.session.debateData.participantId);
+    if (savedData && savedData.completedDebates) {
+      console.log("✅ Verification: Saved data contains", savedData.completedDebates.length, "completed debates");
+    } else {
+      console.log("❌ Verification: Failed to load saved data or completedDebates missing");
+    }
   } catch (error) {
-    console.error("Error saving participant data with completedDebates:", error);
+    console.error("❌ Error saving participant data with completedDebates:", error);
+    // Continue with the flow even if saving fails
   }
   
   // Check nextAction to determine where to redirect
   const nextAction = req.body.nextAction;
   
   if (nextAction === 'continue') {
-    // Check if user has completed all 5 debates
+    // Check if user has completed 5 debates
     if (req.session.debateData.completedDebates.length >= 5) {
       // All debates complete - redirect to final completion
       return res.redirect('/completion');
     }
     
-    // Create a new debate ID but carefully preserve important user data
+    // Prepare for next debate - preserve important user data
     const preservedData = {
       participantId: req.session.debateData.participantId,
       demographics: req.session.debateData.demographics,
-      completedDebates: req.session.debateData.completedDebates // Keep completedDebates array
+      completedDebates: req.session.debateData.completedDebates, // KEEP this array
+      consent: req.session.debateData.consent,
+      startTimestamp: req.session.debateData.startTimestamp,
+      lastActive: req.session.debateData.lastActive
     };
     
-    // Update session with new debate ID
-    req.session.debateData.id = 'debate-' + Date.now();
-    req.session.debateData.startTimestamp = new Date().toISOString();
-    
-    // Remove current debate data to prepare for next one
-    delete req.session.debateData.debate;
-    
-    // CRITICAL FIX: Explicitly ensure completedDebates is preserved
-    req.session.debateData.completedDebates = preservedData.completedDebates;
+    // Create new debate session but keep participant data
+    req.session.debateData = {
+      ...preservedData,
+      id: 'debate-' + Date.now(), // New debate ID
+      // Remove current debate data to prepare for next one
+      debate: undefined
+    };
     
     // Force session save before redirecting
     req.session.save(err => {
       if (err) {
         console.error("Error saving session:", err);
       }
+      console.log("Redirecting to dashboard with", req.session.debateData.completedDebates.length, "completed debates");
       return res.redirect('/dashboard');
     });
   } else {
@@ -1497,21 +1529,50 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// Admin dashboard route
-app.get('/admin', requireAdmin, async (req, res) => {
-  // Load generated IDs from S3 first to ensure we have the latest data
-  await loadgeneratedParticipantIds();
+// Dashboard route to show progress - WITH DEBUGGING
+app.get('/dashboard', requireSession, async (req, res) => {
+  // Check if demographics data exists and is not empty
+  if (!req.session.debateData.demographics || 
+      Object.keys(req.session.debateData.demographics).length === 0) {
+    // No demographics data, redirect to demographics page
+    return res.redirect('/demographics');
+  }
+
+  const user = {
+    participantId: req.session.debateData.participantId,
+    demographics: req.session.debateData.demographics || {}
+  };
   
-  // Load participant data for the admin dashboard
-  const participants = await loadAllParticipants();
+  // Debug logging
+  console.log(`🏠 Dashboard accessed by ${user.participantId}`);
+  console.log(`   - Session completedDebates:`, req.session.debateData.completedDebates?.length || 0);
   
-  // Pass the token to the template
-  const adminToken = req.query.token || process.env.ADMIN_TOKEN;
+  // Try to load fresh data from storage to compare
+  try {
+    const freshData = await loadParticipantData(user.participantId);
+    if (freshData) {
+      console.log(`   - Stored completedDebates:`, freshData.completedDebates?.length || 0);
+      
+      // If stored data has more completed debates than session, update session
+      if (freshData.completedDebates && freshData.completedDebates.length > (req.session.debateData.completedDebates?.length || 0)) {
+        console.log(`   - 🔄 Syncing session with stored data`);
+        req.session.debateData.completedDebates = freshData.completedDebates;
+      }
+    }
+  } catch (error) {
+    console.error(`   - ❌ Error loading fresh participant data:`, error.message);
+  }
   
-  res.render('admin', {
-    generatedIds: generatedParticipantIds,
-    participants: participants,
-    token: adminToken // Pass the token to the template
+  // Get completed debates information
+  const completedDebates = req.session.debateData.completedDebates || [];
+  
+  console.log(`   - Final completedDebates count: ${completedDebates.length}`);
+  
+  // Render the dashboard
+  res.render('dashboard', {
+    user,
+    completedDebates,
+    debateTopics
   });
 });
 
