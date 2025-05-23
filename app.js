@@ -1631,6 +1631,24 @@ function requireAdmin(req, res, next) {
   }
 }
 
+// Admin dashboard route
+app.get('/admin', requireAdmin, async (req, res) => {
+  // Load generated IDs from S3 first to ensure we have the latest data
+  await loadgeneratedParticipantIds();
+  
+  // Load participant data for the admin dashboard
+  const participants = await loadAllParticipants();
+  
+  // Pass the token to the template
+  const adminToken = req.query.token || process.env.ADMIN_TOKEN;
+  
+  res.render('admin', {
+    generatedIds: generatedParticipantIds,
+    participants: participants,
+    token: adminToken // Pass the token to the template
+  });
+});
+
 // Dashboard route to show progress - WITH DEBUGGING
 app.get('/dashboard', requireSession, async (req, res) => {
   // Check if demographics data exists and is not empty
