@@ -863,40 +863,85 @@ app.post('/debate-results', requireSession, async (req, res) => {
 });
 
 // COMPLETION
-app.get('/completion', requireSession, (req, res) => {
-  // Check if we have completion data (from the previous step)
-  if (req.session.completionData) {
-    const completionData = req.session.completionData;
-    
-    // Render completion page with the saved data
-    res.render('completion', {
-      participantId: completionData.participantId,
-      completedDebates: completionData.completedDebates,
-      completionCode: completionData.completionCode,
-      debateTopics: debateTopics // This should be available globally
-    });
-    
-    // After successful rendering, you can clear the completion data if desired
-    // But don't destroy the entire session as the user might still need to print their certificate
-    // req.session.completionData = null;
-  } else {
-    // Check if the user has completedDebates in their regular session
-    // This is a fallback for users who might have reached this page without going through the proper flow
-    if (req.session.debateData && req.session.debateData.completedDebates) {
-      const completionCode = generateCompletionCode();
+app.get('/completion', requireSession, async (req, res) => {
+  const participantId = req.session.debateData.participantId;
+  
+  // ALWAYS load fresh data from storage to verify completion status
+  let completedDebates = [];
+  let participantData = null;
+  
+  try {
+    participantData = await loadParticipantData(participantId);
+    if (participantData && participantData.completedDebates) {
+      completedDebates = participantData.completedDebates;
+      console.log(`🎓 Completion check: Found ${completedDebates.length} completed debates in storage`);
       
-      // Render the completion page with data from the regular session
-      res.render('completion', {
-        participantId: req.session.debateData.participantId,
-        completedDebates: req.session.debateData.completedDebates,
-        completionCode: completionCode,
-        debateTopics: debateTopics
-      });
+      // Sync session with stored data
+      req.session.debateData.completedDebates = completedDebates;
     } else {
-      // If we have no data at all, redirect to dashboard
-      res.redirect('/dashboard');
+      // Fallback to session data if no stored data found
+      completedDebates = req.session.debateData.completedDebates || [];
+      console.log(`🎓 Completion check: Using session data - ${completedDebates.length} completed debates`);
     }
+  } catch (error) {
+    console.error("❌ Error loading participant data for completion check:", error);
+    // Fallback to session data
+    completedDebates = req.session.debateData.completedDebates || [];
   }
+  
+  // STRICT REQUIREMENT: Must have exactly 5 completed debates
+  if (completedDebates.length < 5) {
+    console.log(`🚫 Completion access denied: Only ${completedDebates.length}/5 debates completed`);
+    
+    // Redirect to dashboard with a message about incomplete status
+    req.session.completionMessage = {
+      type: 'warning',
+      text: `You have completed ${completedDebates.length} out of 5 required debates. Please complete all debates to receive your certificate.`
+    };
+    
+    return res.redirect('/dashboard');
+  }
+  
+  console.log(`✅ Completion access granted: ${completedDebates.length}/5 debates completed`);
+  
+  // Generate completion code
+  const completionCode = generateCompletionCode();
+  
+  // Check if we have completion data from debate-results flow
+  let completionData = req.session.completionData;
+  
+  if (!completionData) {
+    // Create completion data if it doesn't exist
+    completionData = {
+      participantId: participantId,
+      completedDebates: completedDebates,
+      completionCode: completionCode,
+      debateTopics: debateTopics
+    };
+    
+    // Store it in session for consistency
+    req.session.completionData = completionData;
+  } else {
+    // Update with fresh data
+    completionData.completedDebates = completedDebates;
+    completionData.completionCode = completionCode;
+  }
+  
+  // Final security check before rendering certificate
+  if (completionData.completedDebates.length < 5) {
+    console.log(`🚫 Final security check failed: ${completionData.completedDebates.length}/5 debates`);
+    return res.redirect('/dashboard');
+  }
+  
+  console.log(`🎓 Rendering completion certificate for ${participantId}`);
+  
+  // Render completion page with certificate
+  res.render('completion', {
+    participantId: completionData.participantId,
+    completedDebates: completionData.completedDebates,
+    completionCode: completionData.completionCode,
+    debateTopics: debateTopics
+  });
 });
 
 // Function to generate a Prolific completion code
@@ -1371,18 +1416,13 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Save ratings and comments with continuous values
   debate.ratings = {
-    // Continuous values (0-100)
     winnerSideValue: winnerSideValue,
     winnerSide: winnerSideInterpretation, 
     humanPerformance: humanPerformanceValue,
     aiPerformance: aiPerformanceValue,
     aiFactualAccuracy: aiFactualAccuracyValue,
-    
-    // Other feedback
     comments: req.body.comments,
     participateAgain: req.body.participateAgain === 'yes',
-    
-    // Timestamp for the ratings
     ratedAt: new Date().toISOString()
   };
   
@@ -1390,7 +1430,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
   debate.status = 'rated';
   debate.endTime = new Date().toISOString();
   
-  // Add some analysis for easier data processing later
+  // Add analysis
   debate.analysis = {
     performanceGap: humanPerformanceValue - aiPerformanceValue, 
     winnerMargin: Math.abs(50 - winnerSideValue), 
@@ -1402,18 +1442,18 @@ app.post('/debate-results', requireSession, async (req, res) => {
   // Save the debate transcript first
   try {
     await saveDebateData(req.session.debateData);
-    console.log("Debate transcript saved successfully");
+    console.log("✅ Debate transcript saved successfully");
   } catch (error) {
-    console.error("Error saving debate transcript:", error);
+    console.error("❌ Error saving debate transcript:", error);
   }
   
-  // CRITICAL FIX: Initialize completedDebates array if it doesn't exist
+  // Initialize completedDebates array if it doesn't exist
   if (!req.session.debateData.completedDebates) {
-    console.log("Creating new completedDebates array");
+    console.log("📝 Creating new completedDebates array");
     req.session.debateData.completedDebates = [];
   }
   
-  // Create a deep copy of debate metadata to avoid reference issues
+  // Create debate metadata
   const debateMetadata = {
     id: req.session.debateData.id,
     topic: debate.topic.id,
@@ -1424,43 +1464,46 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Add to completed debates array
   req.session.debateData.completedDebates.push(debateMetadata);
-  console.log(`Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
+  console.log(`✅ Added debate to completedDebates. New count: ${req.session.debateData.completedDebates.length}`);
   
   // Update last active timestamp
   req.session.debateData.lastActive = new Date().toISOString();
   
-  // CRITICAL FIX: Save the updated participant data with completedDebates array
+  // ALWAYS save the participant data regardless of next action
   try {
     const saveResult = await saveParticipantData(req.session.debateData);
     console.log("✅ Participant data with completedDebates saved successfully:", saveResult);
-    
-    // Verify the data was saved correctly
-    const savedData = await loadParticipantData(req.session.debateData.participantId);
-    if (savedData && savedData.completedDebates) {
-      console.log("✅ Verification: Saved data contains", savedData.completedDebates.length, "completed debates");
-    } else {
-      console.log("❌ Verification: Failed to load saved data or completedDebates missing");
-    }
   } catch (error) {
     console.error("❌ Error saving participant data with completedDebates:", error);
-    // Continue with the flow even if saving fails
   }
   
   // Check nextAction to determine where to redirect
   const nextAction = req.body.nextAction;
+  const currentCompletedCount = req.session.debateData.completedDebates.length;
   
   if (nextAction === 'continue') {
-    // Check if user has completed 5 debates
-    if (req.session.debateData.completedDebates.length >= 5) {
-      // All debates complete - redirect to final completion
+    // Check if user has completed exactly 5 debates
+    if (currentCompletedCount >= 5) {
+      console.log(`🎓 User completed ${currentCompletedCount} debates - redirecting to completion`);
+      
+      // Set up completion data for the certificate
+      req.session.completionData = {
+        participantId: req.session.debateData.participantId,
+        completedDebates: req.session.debateData.completedDebates,
+        completionCode: generateCompletionCode(),
+        debateTopics: debateTopics
+      };
+      
       return res.redirect('/completion');
     }
+    
+    console.log(`🔄 User has ${currentCompletedCount}/5 debates - continuing to next debate`);
     
     // Prepare for next debate - preserve important user data
     const preservedData = {
       participantId: req.session.debateData.participantId,
       demographics: req.session.debateData.demographics,
-      completedDebates: req.session.debateData.completedDebates, // KEEP this array
+      completedDebates: req.session.debateData.completedDebates,
       consent: req.session.debateData.consent,
       startTimestamp: req.session.debateData.startTimestamp,
       lastActive: req.session.debateData.lastActive
@@ -1469,21 +1512,31 @@ app.post('/debate-results', requireSession, async (req, res) => {
     // Create new debate session but keep participant data
     req.session.debateData = {
       ...preservedData,
-      id: 'debate-' + Date.now(), // New debate ID
-      // Remove current debate data to prepare for next one
+      id: 'debate-' + Date.now(),
       debate: undefined
     };
     
     // Force session save before redirecting
     req.session.save(err => {
       if (err) {
-        console.error("Error saving session:", err);
+        console.error("❌ Error saving session:", err);
       }
-      console.log("Redirecting to dashboard with", req.session.debateData.completedDebates.length, "completed debates");
       return res.redirect('/dashboard');
     });
   } else {
-    // User wants to exit - go to exit page
+    // User wants to exit
+    console.log(`🚪 User chose to exit with ${currentCompletedCount}/5 debates completed`);
+    
+    // If they have 5 debates, they can still access completion later
+    if (currentCompletedCount >= 5) {
+      req.session.completionData = {
+        participantId: req.session.debateData.participantId,
+        completedDebates: req.session.debateData.completedDebates,
+        completionCode: generateCompletionCode(),
+        debateTopics: debateTopics
+      };
+    }
+    
     return res.redirect('/exit');
   }
 });
@@ -1583,7 +1636,6 @@ app.get('/dashboard', requireSession, async (req, res) => {
   // Check if demographics data exists and is not empty
   if (!req.session.debateData.demographics || 
       Object.keys(req.session.debateData.demographics).length === 0) {
-    // No demographics data, redirect to demographics page
     return res.redirect('/demographics');
   }
 
@@ -1596,41 +1648,34 @@ app.get('/dashboard', requireSession, async (req, res) => {
   console.log(`🏠 Dashboard accessed by ${user.participantId}`);
   console.log(`   - Session completedDebates: ${req.session.debateData.completedDebates?.length || 0}`);
   
-  // ALWAYS try to load fresh data from storage to ensure accuracy
+  // Always try to load fresh data from storage
   try {
     const freshData = await loadParticipantData(user.participantId);
-    if (freshData) {
-      console.log(`   - Stored completedDebates: ${freshData.completedDebates?.length || 0}`);
-      
-      // Always use the stored data if it exists (it's the source of truth)
-      if (freshData.completedDebates) {
-        if (freshData.completedDebates.length !== (req.session.debateData.completedDebates?.length || 0)) {
-          console.log(`   - 🔄 Syncing session with stored data (${freshData.completedDebates.length} stored vs ${req.session.debateData.completedDebates?.length || 0} in session)`);
-        }
-        req.session.debateData.completedDebates = freshData.completedDebates;
-        
-        // Also sync other important data
-        if (freshData.demographics) {
-          req.session.debateData.demographics = freshData.demographics;
-        }
-      }
-    } else {
-      console.log(`   - ⚠️ No stored data found, using session data`);
+    if (freshData && freshData.completedDebates) {
+      console.log(`   - Stored completedDebates: ${freshData.completedDebates.length}`);
+      req.session.debateData.completedDebates = freshData.completedDebates;
     }
   } catch (error) {
     console.error(`   - ❌ Error loading fresh participant data: ${error.message}`);
   }
   
-  // Get completed debates information (now guaranteed to be fresh)
+  // Get completed debates information
   const completedDebates = req.session.debateData.completedDebates || [];
-  
   console.log(`   - Final completedDebates count for dashboard: ${completedDebates.length}`);
+  
+  // Check for completion message
+  const completionMessage = req.session.completionMessage;
+  if (completionMessage) {
+    // Clear the message after reading it
+    delete req.session.completionMessage;
+  }
   
   // Render the dashboard
   res.render('dashboard', {
     user,
     completedDebates,
-    debateTopics
+    debateTopics,
+    completionMessage // Pass any completion-related messages
   });
 });
 

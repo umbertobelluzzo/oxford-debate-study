@@ -38,6 +38,26 @@
           </div>
         </div>
       </div>
+
+      <% if (typeof completionMessage !== 'undefined' && completionMessage) { %>
+        <div class="completion-message-banner">
+          <div class="message-icon">
+            <% if (completionMessage.type === 'warning') { %>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            <% } else { %>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="#3b82f6" stroke-width="2"/>
+                <path d="M12 6v6m0 4h.01" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            <% } %>
+          </div>
+          <div class="message-content">
+            <p><%= completionMessage.text %></p>
+          </div>
+        </div>
+      <% } %>
       
       <div class="completed-debates">
         <h2>Completed Debates</h2>
@@ -302,6 +322,27 @@
       margin-top: 0;
       color: #155724;
     }
+
+    .completion-message-banner {
+  display: flex;
+  align-items: center;
+  background-color: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.message-icon {
+  flex-shrink: 0;
+}
+
+.message-content p {
+  margin: 0;
+  color: #92400e;
+  font-weight: 500;
+}
   </style>
   <script src="/button-disable.js"></script>
 </body>
