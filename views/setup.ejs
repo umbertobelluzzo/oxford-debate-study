@@ -12,77 +12,37 @@
   <div class="container" style="width: 800px;">
     <div class="study-card">
       <h1>Debate Setup</h1>
-      <br>
-      <p>Your debate topic and position (Proposition or Opposition) will be assigned automatically to ensure balanced participation across the study.</p>
-      <br>
+      
       <form action="/setup" method="POST">
-        <!-- Replace topic selection with info about random assignment -->
         <div class="info-box">
-          <h3>Random Debate Assignment</h3>
-          <p>For research integrity, debate topics are randomly assigned to participants. You will receive one of the following topics:</p>
-          <ul class="topics-preview">
-            <% debateTopics.slice(0, 3).forEach(topic => { %>
-              <li><strong><%= topic.title %></strong></li>
-            <% }); %>
-            <li><em>... and others</em></li>
-          </ul>
-          <p>The system ensures you won't debate the same topic twice across your five required debates.</p>
+          <h3>Your Debate</h3>
+          <p>You will be randomly assigned a topic and position (either Proposition or Opposition). After the assignment, you'll have time to prepare your arguments.</p>
         </div>
-
-        <!-- Information about AI Opponent -->
-        <div class="ai-opponent-info">
-          <h3>About Your AI Opponent</h3>
-          <div class="opponent-details">
-            <div class="opponent-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#4285f4"/>
-                <path d="M9 9h6v6H9z" fill="#4285f4"/>
-              </svg>
-            </div>
-            <div class="opponent-info">
-              <div class="opponent-name">Llama 3.1 405B Instruct</div>
-              <div class="opponent-provider">Provider: Meta</div>
-              <div class="opponent-description">A powerful large language model designed for instruction-following tasks and engaging in structured debates.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hidden input for AI Model -->
-        <input type="hidden" name="opponentModel" value="llama3-1-405b">
-
-        <!-- Hidden input for Standard Oxford Style format -->
-        <input type="hidden" name="formatId" value="standard">
 
         <!-- Word Limit Reminder -->
         <div class="info-box">
-            <p><strong>Debate Format:</strong> This research uses the Standard Oxford Style debate format.</p>
-            <p><strong>Remember:</strong> Each debate turn should be between 100-150 words. The system will help you track your word count.</p>
-            <p>The debate will consist of:</p>
+            <h3>Format</h3>
+            <p>The debate consists of three turns with a <strong>100-150 word limit</strong> per turn:</p>
             <ul>
-            <li><strong>Opening Statement:</strong> Introduce your position and key arguments</li>
-            <li><strong>Rebuttal:</strong> Respond to your opponent's arguments</li>
-            <li><strong>Closing Statement:</strong> Summarize your position and refute counterarguments</li>
+              <li><strong>Opening Statement:</strong> Introduce your position</li>
+              <li><strong>Rebuttal:</strong> Respond to your opponent's arguments</li>
+              <li><strong>Closing Statement:</strong> Summarize your position</li>
             </ul>
         </div>
 
+        <!-- Hidden inputs for required values -->
+        <input type="hidden" name="opponentModel" value="llama3-1-405b">
+        <input type="hidden" name="formatId" value="standard">
+
         <div class="button-container">
-          <button type="submit" class="button">Continue to Preparation</button>
+          <button type="submit" class="button">Continue</button>
         </div>
       </form>
     </div>
   </div>
 
   <style>
-    /* Additional styles for the setup page */
-    .topics-preview {
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-
-    .topics-preview li {
-      margin-bottom: 5px;
-    }
-
+    /* Simplified styles for the setup page */
     .info-box {
       background-color: #f8f9fa;
       border-left: 4px solid #4285f4;
@@ -94,52 +54,29 @@
     .info-box h3 {
       margin-top: 0;
       color: #4285f4;
+      margin-bottom: 10px;
     }
 
     .info-box ul {
       margin-top: 10px;
+      margin-bottom: 0;
       padding-left: 20px;
     }
 
     .info-box li {
       margin-bottom: 5px;
     }
-
-    .ai-opponent-info {
-      background-color: #f0f7ff;
-      border-radius: 8px;
-      padding: 15px;
-      margin: 25px 0;
+    
+    .info-box li:last-child {
+      margin-bottom: 0;
     }
-
-    .opponent-details {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-top: 10px;
+    
+    .info-box p {
+      margin-bottom: 10px;
     }
-
-    .opponent-icon {
-      padding: 10px;
-      background-color: #e6f2ff;
-      border-radius: 50%;
-    }
-
-    .opponent-name {
-      font-weight: bold;
-      font-size: 1.1em;
-      margin-bottom: 5px;
-    }
-
-    .opponent-provider {
-      font-size: 0.9em;
-      color: #666;
-      margin-bottom: 8px;
-    }
-
-    .opponent-description {
-      font-size: 0.9em;
-      line-height: 1.5;
+    
+    .info-box p:last-child {
+      margin-bottom: 0;
     }
   </style>
   <script src="/button-disable.js"></script>

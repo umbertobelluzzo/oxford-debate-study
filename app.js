@@ -268,18 +268,18 @@ app.get('/demographics', requireSession, (req, res) => {
 
 // DEMOGRAPHICS - POST
 app.post('/demographics', requireSession, async (req, res) => {
-  // Save demographics data
+  // Save demographics data with adjusted fields
   req.session.debateData.demographics = {
     age: req.body.age,
     gender: req.body.gender,
     education: req.body.education,
     english: req.body.english,
     debateExperience: req.body.debateExperience,
-    debateTraining: req.body.debateTraining,
-    debateTrainingSpecify: req.body.debateTrainingSpecify,
+    // Only store debateTrainingSpecify if it was provided (when experience isn't "No experience")
+    debateTrainingSpecify: req.body.debateTrainingSpecify || '',
     oxfordDebate: req.body.oxfordDebate,
     aiUsage: req.body.aiUsage,
-    aiKnowledge: req.body.aiKnowledge
+    // Removed aiKnowledge field as per feedback
   };
 
   // Save the participant data to ensure demographics are persisted
@@ -728,13 +728,13 @@ app.get('/debate-results', requireSession, (req, res) => {
 app.post('/debate-results', requireSession, async (req, res) => {
   const debate = req.session.debateData.debate;
   
-  // Parse slider values as numbers
+  // Parse values - now handling radio button input for winnerSide
   const winnerSideValue = parseInt(req.body.winnerSide);
   const humanPerformanceValue = parseInt(req.body.humanPerformance);
   const aiPerformanceValue = parseInt(req.body.aiPerformance);
-  const aiFactualAccuracyValue = parseInt(req.body.aiFactualAccuracy);
   
-  // Interpret winner based on slider value
+  // Interpret winner based on winnerSide value
+  // Values should already be pre-set (30 for human, 50 for draw, 70 for AI)
   let winnerSideInterpretation = "draw";
   if (winnerSideValue < 45) {
     winnerSideInterpretation = "human";
@@ -744,12 +744,12 @@ app.post('/debate-results', requireSession, async (req, res) => {
   
   // Save ratings and comments with continuous values
   debate.ratings = {
-    // Continuous values (0-100)
+    // Continuous values from form
     winnerSideValue: winnerSideValue,
     winnerSide: winnerSideInterpretation, 
     humanPerformance: humanPerformanceValue,
     aiPerformance: aiPerformanceValue,
-    aiFactualAccuracy: aiFactualAccuracyValue,
+    // Removed aiFactualAccuracy as per feedback
     
     // Other feedback
     comments: req.body.comments,

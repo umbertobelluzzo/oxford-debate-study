@@ -23,50 +23,43 @@
         <div class="debate-topic">
           <h3>Motion:</h3>
           <p class="motion-text"><%= topic.title %></p>
-          <p class="motion-description"><%= topic.description %></p>
+          <!-- Removed motion description as per feedback -->
         </div>
 
         <div class="debate-position">
-            <h3>Your Assigned Position:</h3>
+            <h3>Your Position:</h3>
             <p class="position-badge <%= side %>"><%= side === 'proposition' ? 'PROPOSITION (For)' : 'OPPOSITION (Against)' %></p>
-            <p>You have been assigned to argue <strong><%= side === 'proposition' ? 'in favor of' : 'against' %></strong> this motion.</p>
+            <p>You will argue <strong><%= side === 'proposition' ? 'in favor of' : 'against' %></strong> this motion.</p>
             <% if (side === 'proposition') { %>
               <p>As Proposition, you will speak first with your opening statement.</p>
             <% } else { %>
               <p>As Opposition, you will respond to the AI's opening statement.</p>
             <% } %>
-            <div class="position-info">
-              <p><em>Note: Positions are automatically assigned to ensure balanced participation across the study.</em></p>
-            </div>
           </div>
-
-          <div class="debate-opponent">
-            <h3>Your AI Opponent:</h3>
-            <p>Llama 3.1 405B Instruct from Meta</p>
-          </div>
+      </div>
 
       <div class="debate-structure">
-        <h3>Oxford-Style Format:</h3>
+        <h3>Format:</h3>
         <div class="structure-steps">
           <div class="structure-step">
             <div class="step-number">1</div>
             <div class="step-content">
               <h4>Opening Statement (max 150 words)</h4>
-              <p>Introduce your position and key arguments. You'll have up to 4 minutes to write this.</p>
+              <p>Introduce your position and key arguments.</p>
             </div>
           </div>
           <div class="structure-step">
             <div class="step-number">2</div>
             <div class="step-content">
               <h4>Rebuttal (max 150 words)</h4>
-              <p>Respond to your opponent's arguments and reinforce your position. You'll have up to 4 minutes.</p>
+              <p>Respond to your opponent's arguments and reinforce your position.</p>
             </div>
           </div>
           <div class="structure-step">
             <div class="step-number">3</div>
             <div class="step-content">
               <h4>Closing Statement (max 150 words)</h4>
-              <p>Summarize your case and refute counterarguments. You'll have up to 3 minutes.</p>
+              <p>Summarize your case and refute counterarguments.</p>
             </div>
           </div>
         </div>
@@ -75,22 +68,10 @@
       <div class="prep-container">
         <form action="/debate-prep" method="POST">
           <h3>Preparation Notes</h3>
-          <p class="form-hint">Private preparation notes (visible to you during writing)</p>
+          <p class="form-hint">These notes will be visible to you during the debate.</p>
           
           <div class="form-group">
-            <label for="prepNotes">Your Notes:</label>
             <textarea id="prepNotes" name="prepNotes" rows="8" placeholder="Outline your key points, potential counterarguments, and responses here..."></textarea>
-          </div>
-
-          <div class="info-box study-info">
-            <h3>About This Study</h3>
-            <p>This research examines how well large language models (LLMs) perform in structured Oxford-style debates when judged against experienced human debaters. Your participation will help establish a high-quality human benchmark for evaluating AI-generated argumentation.</p>
-            
-            <p>You'll participate in approximately 5 debates against one LLM. Each debate contains three short turns per side, with a 100-150 word limit per turn. A single debate typically lasts 10-15 minutes.</p>
-            
-            <p>Your texts will be saved automatically in an encrypted database and later shown—without any identifying details—to independent raters in Phase 2 of the study.</p>
-            
-            <p>If at any point you need to stop, you can return later to continue. Remember that you may skip any motion you find uncomfortable.</p>
           </div>
 
           <div class="button-container">
@@ -204,43 +185,6 @@
       color: #666;
       font-style: italic;
       margin-bottom: 15px;
-    }
-
-    .study-info {
-      background-color: #fcf8e3;
-      border-left: 4px solid #f0ad4e;
-    }
-
-    .info-box {
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 4px;
-    }
-
-    .info-box h3 {
-      margin-top: 0;
-    }
-
-    .info-box p {
-      margin-bottom: 10px;
-    }
-
-    .info-box p:last-child {
-      margin-bottom: 0;
-    }
-
-    .position-info {
-    background-color: #f0f7ff;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-top: 10px;
-    font-size: 0.9em;
-    }
-
-    .opponent-description {
-    font-size: 0.9em;
-    color: #555;
-    margin-top: 5px;
     }
   </style>
 

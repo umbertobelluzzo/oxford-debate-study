@@ -20,7 +20,7 @@
 
       <div class="thank-you-message">
         <h3>Thank you for your participation!</h3>
-        <p>Your contribution is valuable to our research on comparing LLM and human debate performance. The debate transcript below will be anonymized and shown to independent evaluators in Phase 2 of the study.</p>
+        <p>Your contribution is valuable to our research on comparing LLM and human debate performance.</p>
       </div>
 
       <div class="debate-transcript">
@@ -53,30 +53,26 @@
 
       <div class="self-assessment">
         <h2>Self-Assessment and Feedback</h2>
-        <p>Please take a moment to reflect on your debate experience and provide some feedback.</p>
+        <p>Please take a moment to reflect on your debate experience.</p>
       
         <form action="/debate-results" method="POST">
           <div class="assessment-section">
             <h3>Debate Outcome</h3>
             <div class="form-group">
               <label for="winnerSide">Who made the stronger arguments?</label>
-              <div class="slider-container">
-                <span class="slider-label-left">You completely</span>
-                <div class="slider-with-markers">
-                  <div class="slider-markers">
-                    <span class="marker" style="left: 0%;">0</span>
-                    <span class="marker" style="left: 50%;">50</span>
-                    <span class="marker" style="left: 100%;">100</span>
-                  </div>
-                  <input type="range" id="winnerSide" name="winnerSide" min="0" max="100" value="50" class="continuous-slider" required>
+              <div class="radio-group">
+                <div class="radio-option outcome-option">
+                  <input type="radio" id="human-win" name="winnerSide" value="30" required>
+                  <label for="human-win">You made stronger arguments</label>
                 </div>
-                <span class="slider-label-right">AI completely</span>
-                <div class="slider-value-display" id="winnerSideValue">50 (Draw)</div>
-              </div>
-              <div class="slider-explanation">
-                <p><strong>0</strong> = You made much stronger arguments</p>
-                <p><strong>50</strong> = Equal strength or a draw</p>
-                <p><strong>100</strong> = The AI made much stronger arguments</p>
+                <div class="radio-option outcome-option">
+                  <input type="radio" id="draw" name="winnerSide" value="50" required>
+                  <label for="draw">It was a draw</label>
+                </div>
+                <div class="radio-option outcome-option">
+                  <input type="radio" id="ai-win" name="winnerSide" value="70" required>
+                  <label for="ai-win">AI made stronger arguments</label>
+                </div>
               </div>
             </div>
           </div>
@@ -93,10 +89,10 @@
                     <span class="marker" style="left: 50%;">50</span>
                     <span class="marker" style="left: 100%;">100</span>
                   </div>
-                  <input type="range" id="humanPerformance" name="humanPerformance" min="0" max="100" value="50" class="continuous-slider" required>
+                  <input type="range" id="humanPerformance" name="humanPerformance" min="0" max="100" class="continuous-slider unset-slider" required>
                 </div>
                 <span class="slider-label-right">Excellent</span>
-                <div class="slider-value-display" id="humanPerformanceValue">50</div>
+                <div class="slider-value-display" id="humanPerformanceValue">Not set</div>
               </div>
             </div>
       
@@ -110,30 +106,10 @@
                     <span class="marker" style="left: 50%;">50</span>
                     <span class="marker" style="left: 100%;">100</span>
                   </div>
-                  <input type="range" id="aiPerformance" name="aiPerformance" min="0" max="100" value="50" class="continuous-slider" required>
+                  <input type="range" id="aiPerformance" name="aiPerformance" min="0" max="100" class="continuous-slider unset-slider" required>
                 </div>
                 <span class="slider-label-right">Excellent</span>
-                <div class="slider-value-display" id="aiPerformanceValue">50</div>
-              </div>
-            </div>
-          </div>
-      
-          <div class="assessment-section">
-            <h3>AI Factual Accuracy</h3>
-            <div class="form-group">
-              <label for="aiFactualAccuracy">How factually accurate were the AI's statements?</label>
-              <div class="slider-container">
-                <span class="slider-label-left">Completely inaccurate</span>
-                <div class="slider-with-markers">
-                  <div class="slider-markers">
-                    <span class="marker" style="left: 0%;">0</span>
-                    <span class="marker" style="left: 50%;">50</span>
-                    <span class="marker" style="left: 100%;">100</span>
-                  </div>
-                  <input type="range" id="aiFactualAccuracy" name="aiFactualAccuracy" min="0" max="100" value="50" class="continuous-slider" required>
-                </div>
-                <span class="slider-label-right">Completely accurate</span>
-                <div class="slider-value-display" id="aiFactualAccuracyValue">50</div>
+                <div class="slider-value-display" id="aiPerformanceValue">Not set</div>
               </div>
             </div>
           </div>
@@ -141,6 +117,20 @@
           <div class="form-group">
             <label for="comments">Additional Comments (Optional)</label>
             <textarea id="comments" name="comments" rows="4" placeholder="Please share any additional thoughts about your debate experience, the AI's performance, or suggestions for improvement..."></textarea>
+          </div>
+
+          <div class="form-group" style="margin-top: 20px;">
+            <label>Would you be interested in participating in similar studies in the future?</label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input type="radio" id="participateAgainYes" name="participateAgain" value="yes" required>
+                <label for="participateAgainYes">Yes</label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" id="participateAgainNo" name="participateAgain" value="no">
+                <label for="participateAgainNo">No</label>
+              </div>
+            </div>
           </div>
       
           <div class="continue-options">
@@ -157,7 +147,8 @@
           </div>
         </form>
       </div>
-
+    </div>
+  </div>
 
   <style>
     /* Custom styles for the results page */
@@ -298,8 +289,9 @@
       color: #495057;
     }
 
-    .radio-options, .rating-options {
+    .radio-group {
       display: flex;
+      flex-wrap: wrap;
       gap: 15px;
       margin-top: 10px;
     }
@@ -310,28 +302,23 @@
       gap: 5px;
     }
 
-    .rating-scale {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .outcome-option {
+      flex: 1;
+      min-width: 200px;
+      background-color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.2s;
     }
 
-    .rating-label {
-      font-size: 0.9em;
-      color: #6c757d;
-      width: 80px;
+    .outcome-option:hover {
+      background-color: #f0f0f0;
     }
 
-    .rating-option {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .rating-option label {
-      font-size: 0.9em;
-      color: #495057;
+    .outcome-option input[type="radio"]:checked + label {
+      font-weight: bold;
+      color: #4285f4;
     }
 
     .continue-options {
@@ -344,6 +331,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .option-header h3 {
@@ -359,146 +347,158 @@
     .option-buttons {
       display: flex;
       gap: 15px;
+      margin-top: 15px;
     }
 
     .button-secondary {
       background-color: #6c757d;
     }
 
-    .checkbox-option {
+    .slider-container {
+      margin: 15px 0 25px;
       display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
+      flex-direction: column;
+      width: 100%;
     }
 
-    .slider-container {
-    margin: 15px 0 25px;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
+    .slider-with-markers {
+      position: relative;
+      width: 100%;
+      padding-top: 15px;
+      margin: 10px 0;
+    }
 
-  .slider-with-markers {
-    position: relative;
-    width: 100%;
-    padding-top: 15px;
-    margin: 10px 0;
-  }
+    .slider-markers {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7em;
+      color: #666;
+    }
 
-  .slider-markers {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.7em;
-    color: #666;
-  }
+    .marker {
+      position: absolute;
+      transform: translateX(-50%);
+    }
 
-  .marker {
-    position: absolute;
-    transform: translateX(-50%);
-  }
+    .continuous-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #e9ecef;
+      outline: none;
+      margin: 10px 0;
+    }
 
-  .continuous-slider {
-    webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 4px;
-    background: #e9ecef;
-    outline: none;
-    margin: 10px 0;
-  }
+    .continuous-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4285f4;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
 
-  .continuous-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #4285f4;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
+    .continuous-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4285f4;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
 
-  .continuous-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #4285f4;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
+    .slider-label-left, .slider-label-right {
+      font-size: 0.85em;
+      color: #666;
+      margin: 0 5px;
+    }
 
-  .slider-label-left, .slider-label-right {
-    font-size: 0.85em;
-    color: #666;
-    margin: 0 5px;
-  }
-
-  .slider-value-display {
-    text-align: center;
-    font-weight: bold;
-    color: #4285f4;
-    margin-top: 10px;
-    font-size: 1.1em;
-  }
-
-  .slider-explanation {
-    margin-top: 10px;
-    font-size: 0.85em;
-    color: #666;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-  }
-
-  .slider-explanation p {
-    margin: 5px 0;
-  }
+    .slider-value-display {
+      text-align: center;
+      font-weight: bold;
+      color: #4285f4;
+      margin-top: 10px;
+      font-size: 1.1em;
+    }
+    
+    /* Style for unset sliders */
+    .unset-slider {
+      opacity: 0.7;
+    }
+    
+    .unset-slider::-webkit-slider-thumb {
+      display: none;
+    }
+    
+    .unset-slider::-moz-range-thumb {
+      display: none;
+    }
+    
+    .unset-slider.set {
+      opacity: 1;
+    }
+    
+    .unset-slider.set::-webkit-slider-thumb {
+      display: block;
+    }
+    
+    .unset-slider.set::-moz-range-thumb {
+      display: block;
+    }
   </style>
 
-
-<script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Setup all sliders
-      setupSlider('winnerSide', function(value) {
-        let displayText = value;
-        if (value < 45) {
-          displayText += " (You)";
-        } else if (value > 55) {
-          displayText += " (AI)";
-        } else {
-          displayText += " (Draw)";
+      // Setup slider logic for performance ratings
+      setupUnsetSlider('humanPerformance');
+      setupUnsetSlider('aiPerformance');
+      
+      // Add form validation to ensure all required fields are set before submission
+      document.querySelector('form').addEventListener('submit', function(e) {
+        const humanPerformance = document.getElementById('humanPerformance');
+        const aiPerformance = document.getElementById('aiPerformance');
+        const winnerRadios = document.querySelectorAll('input[name="winnerSide"]');
+        
+        // Check if winner is selected
+        let winnerSelected = false;
+        winnerRadios.forEach(radio => {
+          if (radio.checked) winnerSelected = true;
+        });
+        
+        // Check if sliders have been interacted with
+        const humanPerformanceSet = humanPerformance.classList.contains('set');
+        const aiPerformanceSet = aiPerformance.classList.contains('set');
+        
+        if (!winnerSelected || !humanPerformanceSet || !aiPerformanceSet) {
+          e.preventDefault();
+          alert('Please complete all ratings before continuing.');
         }
-        return displayText;
       });
       
-      setupSlider('humanPerformance');
-      setupSlider('aiPerformance');
-      setupSlider('aiFactualAccuracy');
-      
-      function setupSlider(id, customFormatter) {
+      function setupUnsetSlider(id) {
         const slider = document.getElementById(id);
         const valueDisplay = document.getElementById(id + 'Value');
         
-        function updateValue() {
-          const value = slider.value;
-          if (customFormatter) {
-            valueDisplay.textContent = customFormatter(value);
-          } else {
-            valueDisplay.textContent = value;
-          }
-        }
+        slider.value = 50; // Set default value but don't show the thumb
         
-        slider.addEventListener('input', updateValue);
-        updateValue(); // Initialize
+        slider.addEventListener('input', function() {
+          if (!this.classList.contains('set')) {
+            this.classList.add('set');
+          }
+          valueDisplay.textContent = this.value;
+        });
       }
     });
   </script>
+  <script src="/button-disable.js"></script>
 </body>
 
 </html>
