@@ -753,7 +753,7 @@ app.post('/debate-results', requireSession, async (req, res) => {
     
     // Other feedback
     comments: req.body.comments,
-    participateAgain: req.body.participateAgain === 'yes',
+    // participateAgain: req.body.participateAgain === 'yes', // This line is now removed/commented out
     
     // Timestamp for the ratings
     ratedAt: new Date().toISOString()
@@ -1422,7 +1422,6 @@ app.post('/debate-results', requireSession, async (req, res) => {
     aiPerformance: aiPerformanceValue,
     aiFactualAccuracy: aiFactualAccuracyValue,
     comments: req.body.comments,
-    participateAgain: req.body.participateAgain === 'yes',
     ratedAt: new Date().toISOString()
   };
   
@@ -1996,15 +1995,15 @@ app.post('/login', async (req, res) => {
 // Generate LLM debate arguments
 async function generateDebateArgument(topic, side, turnType, modelConfig, previousTurns) {
   // Base system prompt that's consistent for all turn types
-  let systemPrompt = `You are an expert debater participating in an Oxford-style debate.
+  let systemPrompt = `You are an expert debater participating in a formal, **written** Oxford-style debate. Your responses should reflect a sophisticated, written argumentation style, not a casual spoken one.
 You are on the ${side === 'proposition' ? 'PROPOSITION' : 'OPPOSITION'} side, which means you ${side === 'proposition' ? 'SUPPORT' : 'OPPOSE'} the motion: "${topic.title}".
 
 Follow these guidelines:
-1. Make compelling, logical arguments supported by evidence
-2. Address counterarguments raised by the other side when relevant
-3. Use formal debate language and structure
-4. Be persuasive but fair in your representation of facts
-5. For Oxford-style debates, focus on clarity, reasoning, and persuasion
+1. Construct **compelling, logical arguments**. Your primary focus should be on the strength and coherence of your reasoning.
+2. If you use evidence, ensure it directly supports your logical points and is integrated smoothly, not just listed.
+3. Address counterarguments raised by the other side when relevant by dissecting their logic and strengthening your own.
+4. Use formal, precise, and academic language appropriate for a written debate.
+5. The core of an Oxford-style debate is **clarity of thought, rigorous reasoning, and overall persuasiveness stemming from well-structured arguments.**
 6. IMPORTANT: Your response MUST be between 100-150 words ONLY`;
 
   // Specialized prompts for each turn type
