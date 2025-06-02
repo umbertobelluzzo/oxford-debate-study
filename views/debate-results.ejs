@@ -420,25 +420,26 @@
       opacity: 0.7;
     }
     
-    .unset-slider::-webkit-slider-thumb {
-      display: none;
-    }
+    /* Remove display:none for slider thumb to allow interaction */
+    /* .unset-slider::-webkit-slider-thumb {
+      display: none; 
+    } */
     
-    .unset-slider::-moz-range-thumb {
-      display: none;
-    }
+    /* .unset-slider::-moz-range-thumb {
+      display: none; 
+    } */
     
     .unset-slider.set {
       opacity: 1;
     }
     
-    .unset-slider.set::-webkit-slider-thumb {
-      display: block;
-    }
+    /* .unset-slider.set::-webkit-slider-thumb {
+      display: block; 
+    } */
     
-    .unset-slider.set::-moz-range-thumb {
-      display: block;
-    }
+    /* .unset-slider.set::-moz-range-thumb {
+      display: block; 
+    } */
   </style>
 
   <script>
@@ -473,12 +474,17 @@
         const slider = document.getElementById(id);
         const valueDisplay = document.getElementById(id + 'Value');
         
-        slider.value = 50; // Set default value but don't show the thumb
+        // Set the initial display text
+        valueDisplay.textContent = 'Not set';
+        // Set a default underlying value for the slider
+        slider.value = 50; 
         
         slider.addEventListener('input', function() {
+          // Add 'set' class on first interaction to change styling if needed
           if (!this.classList.contains('set')) {
             this.classList.add('set');
           }
+          // Update the display with the slider's current value
           valueDisplay.textContent = this.value;
         });
       }
