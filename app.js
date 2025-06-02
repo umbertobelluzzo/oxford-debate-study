@@ -304,23 +304,6 @@ app.get('/setup', requireSession, (req, res) => {
 });
 
 // SETUP - POST
-let globalPositionCounter = 0;
-
-// Function to get position counts from the database or storage
-async function getPositionCounts() {
-  try {
-    // In a production system, this would query your database
-    // For now, use the global counter as a simple implementation
-    return {
-      proposition: Math.floor(globalPositionCounter / 2),
-      opposition: Math.ceil(globalPositionCounter / 2)
-    };
-  } catch (error) {
-    console.error("Error getting position counts:", error);
-    return { proposition: 0, opposition: 0 };
-  }
-}
-
 app.post('/setup', requireSession, async (req, res) => {
   // Always randomly assign a topic
   
@@ -348,7 +331,7 @@ app.post('/setup', requireSession, async (req, res) => {
   }
   
   // If the participant already has a side assigned, use that
-  // Otherwise, assign based on balancing
+  // Otherwise, assign randomly
   let assignedSide;
   
   if (req.session.debateData.debate && req.session.debateData.debate.side) {
@@ -356,19 +339,9 @@ app.post('/setup', requireSession, async (req, res) => {
     assignedSide = req.session.debateData.debate.side;
     console.log(`Continuing with previously assigned side: ${assignedSide}`);
   } else {
-    // User needs a new assignment - balance positions
-    const counts = await getPositionCounts();
-    
-    // Assign to the position with fewer assignments
-    if (counts.proposition <= counts.opposition) {
-      assignedSide = 'proposition';
-    } else {
-      assignedSide = 'opposition';
-    }
-    
-    // Increment the counter to balance future assignments
-    globalPositionCounter++;
-    console.log(`Assigned new side: ${assignedSide} (Counts - Prop: ${counts.proposition}, Opp: ${counts.opposition})`);
+    // User needs a new assignment - assign randomly
+    assignedSide = Math.random() < 0.5 ? 'proposition' : 'opposition';
+    console.log(`Randomly assigned new side: ${assignedSide}`);
   }
   
   // Always use the Llama 3.1 405B model
