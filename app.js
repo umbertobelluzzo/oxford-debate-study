@@ -441,45 +441,45 @@ app.get('/debate-turn', requireSession, (req, res) => {
   const format = debateFormats.find(f => f.id === debate.format);
   
   // Determine turn type based on current turn index
-let turnType;
-let humanSide;
-let aiSide;
-let turnTitle; // Added variable for the properly formatted turn title
+  let turnType;
+  let humanSide;
+  let aiSide;
+  let turnTitle;
 
-const isProposition = debate.side === 'proposition';
+  const isProposition = debate.side === 'proposition';
 
-if (isProposition) {
-  // Human is proposition
-  humanSide = 'proposition';
-  aiSide = 'opposition';
-  
-  if (currentTurnIndex === 0) {
-    turnType = 'opening';
-    turnTitle = 'Opening Statement';
-  } else if (currentTurnIndex === debate.turns.length - 1) {
-    turnType = 'closing';
-    turnTitle = 'Closing Statement';
+  if (isProposition) {
+    // Human is proposition
+    humanSide = 'proposition';
+    aiSide = 'opposition';
+    
+    if (currentTurnIndex === 0) {
+      turnType = 'opening';
+      turnTitle = 'Opening Statement';
+    } else if (currentTurnIndex === 4) { // Fixed: Use specific turn index
+      turnType = 'closing';
+      turnTitle = 'Closing Statement';
+    } else {
+      turnType = 'rebuttal';
+      turnTitle = 'Rebuttal';
+    }
   } else {
-    turnType = 'rebuttal';
-    turnTitle = 'Rebuttal';
+    // Human is opposition
+    humanSide = 'opposition';
+    aiSide = 'proposition';
+    
+    if (currentTurnIndex === 1) {
+      turnType = 'opening';
+      turnTitle = 'Opening Statement';
+    } else if (currentTurnIndex === 5) { // Fixed: Use specific turn index
+      turnType = 'closing';
+      turnTitle = 'Closing Statement';
+    } else {
+      turnType = 'rebuttal';
+      turnTitle = 'Rebuttal';
+    }
   }
-} else {
-  // Human is opposition
-  humanSide = 'opposition';
-  aiSide = 'proposition';
   
-  if (currentTurnIndex === 1) {
-    turnType = 'opening';
-    turnTitle = 'Opening Statement';
-  } else if (currentTurnIndex === debate.turns.length) {
-    turnType = 'closing';
-    turnTitle = 'Closing Statement';
-  } else {
-    turnType = 'rebuttal';
-    turnTitle = 'Rebuttal';
-  }
-}
-
   // Check if it's the human's turn
   const isHumanTurn = (
     (isProposition && currentTurnIndex % 2 === 0) || // Proposition speaks on even turns
@@ -491,7 +491,7 @@ if (isProposition) {
     res.render('debate-human-turn', {
       debate: debate,
       turnType: turnType,
-      turnTitle: turnTitle, // Add this
+      turnTitle: turnTitle,
       turnIndex: currentTurnIndex,
       humanSide: humanSide,
       aiSide: aiSide,
