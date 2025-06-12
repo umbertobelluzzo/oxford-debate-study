@@ -658,3 +658,25 @@ input[type="radio"] {
     padding-bottom: 15px;
   }
 }
+
+/* Copy-paste warning styles */
+.paste-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85em;
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px solid #ffeaa7;
+}
+
+.paste-warning svg {
+  flex-shrink: 0;
+}
+
+.paste-blocked-message {
+  /* Styles are applied inline via JavaScript for better control */
+}
