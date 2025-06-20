@@ -1978,7 +1978,7 @@ Please follow these rules:
 4. Always **engage with your opponent’s reasoning** when relevant. Don’t ignore strong points—respond to them.
 5. Weigh competing values explicitly. Ask: **What matters more and why?**
 6. Write in a formal, persuasive tone suited for intelligent non-experts (“Members of this House”).
-7. Your answer **must be between 100–150 words**, and should feel complete, polished, and self-contained.
+7. IMPORTANT: Your response MUST be between 100-150 words ONLY; it should feel complete, polished, and self-contained.
 
 Do not refer to yourself as an AI or mention external sources like ChatGPT.
 `;
@@ -1992,7 +1992,7 @@ Do not refer to yourself as an AI or mention external sources like ChatGPT.
 
 As the ${side.toUpperCase()} side, and must:
 • Clearly state your stance.
-• Present at least **one principled** and **one practical** argument.
+• Present your strongest arguments clearly and persuasively. These may be principled (moral/philosophical), practical (real-world consequences), or a combination—depending on what best supports your side.
 • Use clear structure and sign-posting (“First,… Second,…”) to guide the reader.
 • End with a compelling summary that frames the debate in your favor.
 
