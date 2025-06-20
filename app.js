@@ -1968,16 +1968,20 @@ app.post('/login', async (req, res) => {
 // Generate LLM debate arguments
 async function generateDebateArgument(topic, side, turnType, modelConfig, previousTurns) {
   // Base system prompt that's consistent for all turn types
-  let systemPrompt = `You are an expert debater participating in a formal, **written** Oxford-style debate. Your responses should reflect a sophisticated, written argumentation style, not a casual spoken one.
+  let systemPrompt = `You are an expert debater participating in a **written Oxford-style debate**, where clarity of thought, structured reasoning, and value-based argumentation are paramount.
 You are on the ${side === 'proposition' ? 'PROPOSITION' : 'OPPOSITION'} side, which means you ${side === 'proposition' ? 'SUPPORT' : 'OPPOSE'} the motion: "${topic.title}".
 
-Follow these guidelines:
-1. Construct **compelling, logical arguments**. Your primary focus should be on the strength and coherence of your reasoning.
-2. If you use evidence, ensure it directly supports your logical points and is integrated smoothly, not just listed.
-3. Address counterarguments raised by the other side when relevant by dissecting their logic and strengthening your own.
-4. Use formal, precise, and academic language appropriate for a written debate.
-5. The core of an Oxford-style debate is **clarity of thought, rigorous reasoning, and overall persuasiveness stemming from well-structured arguments.**
-6. IMPORTANT: Your response MUST be between 100-150 words ONLY`;
+Please follow these rules:
+1. Construct **rigorous logical arguments** from first principles.
+2. Use **principled** (moral/philosophical) and **practical** (real-world impact) reasoning.
+3. Evidence may be used but should only **support logic**, not replace it. Avoid obscure or unverifiable studies.
+4. Always **engage with your opponent’s reasoning** when relevant. Don’t ignore strong points—respond to them.
+5. Weigh competing values explicitly. Ask: **What matters more and why?**
+6. Write in a formal, persuasive tone suited for intelligent non-experts (“Members of this House”).
+7. Your answer **must be between 100–150 words**, and should feel complete, polished, and self-contained.
+
+Do not refer to yourself as an AI or mention external sources like ChatGPT.
+`;
 
   // Specialized prompts for each turn type
   let userPrompt = '';
@@ -1986,22 +1990,26 @@ Follow these guidelines:
     // Opening statement prompt - no previous context needed
     userPrompt = `Write your opening statement for the motion: "${topic.title}"
 
-As the ${side.toUpperCase()} side, you should:
-- Clearly state your position 
-- Present 2-3 key arguments
-- Establish a strong foundation for your case
+As the ${side.toUpperCase()} side, and must:
+• Clearly state your stance.
+• Present at least **one principled** and **one practical** argument.
+• Use clear structure and sign-posting (“First,… Second,…”) to guide the reader.
+• End with a compelling summary that frames the debate in your favor.
 
-Keep your response between 100-150 words.`;
+Keep your statement between **100–150 words**.
+`;
   } 
   else if (turnType === 'rebuttal') {
     // Rebuttal prompt - include opening statements
-    userPrompt = `Respond to your opponent's opening statement and strengthen your own case.
+    userPrompt = `Write your **rebuttal statement** in response to your opponent’s opening statement in the debate.
 
 As the ${side.toUpperCase()} side, you should:
-- Address the key points raised by your opponent
-- Defend your position against their criticisms
-- Reinforce your strongest arguments
-- Identify weaknesses in their reasoning
+• Identify the **key claims** made by your opponent.
+• Refute their logic or values with clear counter-reasoning.
+• Defend your original arguments or restate them more forcefully.
+• **Compare the competing values**—show why your side’s priorities matter more.
+• Use both principled and practical responses if applicable.
+• Use clear sign-posting to structure your argument.
 
 Keep your response between 100-150 words.`;
 
@@ -2021,16 +2029,16 @@ Keep your response between 100-150 words.`;
   } 
   else if (turnType === 'closing') {
     // Enhanced closing statement prompt - include ALL previous turns for comprehensive context
-    userPrompt = `Summarize and close your case for the motion: "${topic.title}"
+    userPrompt = `Write your **closing statement** for the debate: "${topic.title}"
 
 As the ${side.toUpperCase()} side, you should:
-- Recap your strongest arguments throughout the debate
-- Address ALL key points of contention raised by your opponent
-- Specifically respond to your opponent's most recent arguments
-- Emphasize why your position is more compelling overall
-- Provide a coherent, persuasive final summary of your case
+• Recap your most persuasive principled and practical arguments.
+• Address the major points of contention raised in the debate.
+• **Respond to your opponent’s most recent arguments**, showing why they are weaker or flawed.
+• Weigh the competing values explicitly—make the case for why your values should guide the outcome.
+• Finish with a clear, persuasive summary of why the audience should support your position.
 
-Keep your response between 100-150 words.`;
+Keep your closing statement between **100–150 words**`;
 
     // Include ALL previous arguments to provide complete context for closing
     if (previousTurns && previousTurns.length > 0) {
