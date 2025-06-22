@@ -74,28 +74,6 @@
             <div class="stat-value"><%= completedDebates.length %></div>
             <div class="stat-label">Debates Completed</div>
           </div>
-          
-          <% 
-            // Calculate statistics
-            const winsByHuman = completedDebates.filter(d => d.winnerSideValue < 45).length;
-            const winsByAI = completedDebates.filter(d => d.winnerSideValue > 55).length;
-            const draws = completedDebates.filter(d => d.winnerSideValue >= 45 && d.winnerSideValue <= 55).length;
-          %>
-          
-          <div class="stat-block">
-            <div class="stat-value"><%= winsByHuman %></div>
-            <div class="stat-label">Debates Won by You</div>
-          </div>
-          
-          <div class="stat-block">
-            <div class="stat-value"><%= winsByAI %></div>
-            <div class="stat-label">Debates Won by AI</div>
-          </div>
-          
-          <div class="stat-block">
-            <div class="stat-value"><%= draws %></div>
-            <div class="stat-label">Draws</div>
-          </div>
         </div>
         
         <div class="debate-list">
@@ -106,7 +84,6 @@
               <div class="header-cell">#</div>
               <div class="header-cell">Topic</div>
               <div class="header-cell">Your Position</div>
-              <div class="header-cell">Result</div>
               <div class="header-cell">Date</div>
             </div>
             
@@ -117,17 +94,6 @@
                 description: "Topic details not available" 
               };
               
-              // Determine result
-              let resultText = "Draw";
-              let resultClass = "draw";
-              
-              if (debate.winnerSideValue < 45) {
-                resultText = "You won";
-                resultClass = "win";
-              } else if (debate.winnerSideValue > 55) {
-                resultText = "AI won";
-                resultClass = "loss";
-              }
             %>
               <div class="table-row">
                 <div class="table-cell"><%= index + 1 %></div>
@@ -135,7 +101,6 @@
                 <div class="table-cell position-cell <%= debate.side %>">
                   <%= debate.side === 'proposition' ? 'Proposition (For)' : 'Opposition (Against)' %>
                 </div>
-                <div class="table-cell result-cell <%= resultClass %>"><%= resultText %></div>
                 <div class="table-cell date-cell">
                   <%= new Date(debate.completedAt).toLocaleDateString('en-GB', { 
                     day: 'numeric', 
@@ -367,22 +332,6 @@
     
     .position-cell.opposition {
       color: #721c24;
-    }
-    
-    .result-cell {
-      font-weight: bold;
-    }
-    
-    .result-cell.win {
-      color: #28a745;
-    }
-    
-    .result-cell.loss {
-      color: #dc3545;
-    }
-    
-    .result-cell.draw {
-      color: #6c757d;
     }
     
     .date-cell {
